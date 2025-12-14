@@ -3,6 +3,6 @@
     "output_dir": "llms_fixes_results",
     "clones_dir": "../TFReproducer/clones",
     "models": [
-        "gemini"
+        "gpt_oss_20b"
     ]
 }
