@@ -1,0 +1,7 @@
+LLM,pass@1,pass@5,pass@10
+chatgpt4.1_synthetic_fixes_outcomes.csv,0.48,0.9614873581011352,0.998898006018749
+codellama_synthetic_fixes_outcomes.csv,0.2099999999999999,0.6858036635706914,0.9063110264348656
+gemini_synthetic_fixes_outcomes.csv,0.8,0.9997871517027864,1.0
+chatgpt4.1_synthetic_fixes_outcomes.csv,0.5,0.9785861713106294,0.9999161055662604
+codellama_synthetic_fixes_outcomes.csv,0.2,0.7029153766769867,0.9357585139318886
+gemini_synthetic_fixes_outcomes.csv,0.77,0.9993292053663568,1.0

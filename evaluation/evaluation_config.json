@@ -1,0 +1,14 @@
+{
+    "fixes_dir": "llms_fixes_results",
+    "output_dir": "evaluation/data",
+    "results_dir": "evaluation/results",
+    "clones_dir": "../TFReproducer/clones",
+    "k_values": [
+        1,
+        5,
+        10
+    ],
+    "models": [],
+    "generate_synthetic_data": true,
+    "data_type": "all"
+}

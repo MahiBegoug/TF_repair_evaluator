@@ -1,0 +1,8 @@
+{
+    "input_dir": "llm_responses",
+    "output_dir": "llms_fixes_results",
+    "clones_dir": "../TFReproducer/clones",
+    "models": [
+        "gemini"
+    ]
+}
