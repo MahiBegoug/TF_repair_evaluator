@@ -12,13 +12,15 @@ from terraform_validation.writer import DiagnosticsWriter
 
 class RepairEvaluator:
 
-    def __init__(self, output_csv="repair_eval_diagnostics.csv", outcomes_csv="repair_outcomes.csv", clones_root="clones"):
+    def __init__(self, output_csv="repair_eval_diagnostics.csv", outcomes_csv="repair_outcomes.csv", clones_root="clones", repair_mode="auto"):
         """
         This CSV will contain the diagnostics AFTER each LLM repair.
         And will follow the EXACT SAME format as DiagnosticsWriter.
+        repair_mode: "auto", "block", "file"
         """
         self.output_csv = output_csv
         self.clones_root = clones_root
+        self.repair_mode = repair_mode
 
         if not os.path.exists(output_csv):
             # create empty file with header
@@ -54,22 +56,46 @@ class RepairEvaluator:
                 relative_path = relative_path[len("clones/"):]
             
             original_file = os.path.join(self.clones_root, relative_path)
-            fixed_file = row["fixed_file"]
+            # 1. Apply LLM fix
+            # Support both full file (fixed_file) and block partial (fixed_block_content)
             
-            if not os.path.exists(original_file):
-                print(f"Error: File not found: {original_file}")
+            fixed_file_content = None
+            start_line = None
+            end_line = None
+            
+            # Helper to extract block info
+            def extract_block_info(r):
+                content = r.get("fixed_block_content")
+                if pd.isna(content):
+                    content = r.get("fixed_code") # fallback
+                s = int(r["line_start"]) if "line_start" in r and pd.notna(r["line_start"]) else None
+                e = int(r["line_end"]) if "line_end" in r and pd.notna(r["line_end"]) else None
+                return content, s, e
+
+            if self.repair_mode == "file":
+                if "fixed_file" in row and pd.notna(row["fixed_file"]):
+                    fixed_file_content = row["fixed_file"]
+            elif self.repair_mode == "block":
+                fixed_file_content, start_line, end_line = extract_block_info(row)
+            else: # auto
+                if "fixed_file" in row and pd.notna(row["fixed_file"]):
+                    fixed_file_content = row["fixed_file"]
+                else:
+                    fixed_file_content, start_line, end_line = extract_block_info(row)
+            
+            if fixed_file_content is None or pd.isna(fixed_file_content):
+                print(f"Skipping row, no fixed content found for: {original_file} (Mode: {self.repair_mode})")
                 continue
 
-            module_dir = os.path.dirname(original_file)
-
-            print(f"\n=== Testing fix for file: {original_file} ===")
-
-            print('project_root ::')
-
-            # 1. Apply LLM fix
-            backup_path = FixApplier.apply_fix(original_file, fixed_file)
+            backup_path = FixApplier.apply_fix(
+                original_file, 
+                fixed_file_content, 
+                start_line=start_line, 
+                end_line=end_line
+            )
 
             # 2. Run terraform validate
+            module_dir = os.path.dirname(original_file)
             validation_result = TerraformValidator.validate(module_dir)
 
             # 3. Convert validation_result → diagnostics rows (same logic as initial extraction)

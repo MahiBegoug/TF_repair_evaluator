@@ -21,6 +21,7 @@ def main():
     output_dir = config.get("output_dir", "llms_fixes_results")
     clones_dir = config.get("clones_dir", "../TFReproducer/clones")
     target_models = config.get("models", [])
+    repair_mode = config.get("repair_mode", "auto")
 
     if not os.path.exists(input_dir):
         print(f"Error: Input directory '{input_dir}' does not exist.")
@@ -64,7 +65,8 @@ def main():
             "--fixes-csv", csv_file,
             "--outcomes-csv", outcomes_csv,
             "--output-csv", diagnostics_csv,
-            "--clones-dir", clones_dir
+            "--clones-dir", clones_dir,
+            "--repair-mode", repair_mode
         ]
         
         try:

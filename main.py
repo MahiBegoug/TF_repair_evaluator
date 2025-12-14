@@ -8,6 +8,7 @@ if __name__ == "__main__":
     parser.add_argument("--output-csv", default="repair_results.csv", help="Output CSV for repair results")
     parser.add_argument("--outcomes-csv", default="repair_outcomes.csv", help="Output CSV for repair outcomes (plausible/not)")
     parser.add_argument("--fixes-csv", required=True, help="Input CSV with LLM fixes")
+    parser.add_argument("--repair-mode", default="auto", choices=["auto", "block", "file"], help="Mode of repair: block or file")
     
     args = parser.parse_args()
     
@@ -21,7 +22,8 @@ if __name__ == "__main__":
     evaluator = RepairEvaluator(
         output_csv=args.output_csv,
         outcomes_csv=args.outcomes_csv,
-        clones_root=clones_dir
+        clones_root=clones_dir,
+        repair_mode=args.repair_mode
     )
     
     evaluator.evaluate_repairs(

@@ -4,5 +4,6 @@
     "clones_dir": "../TF_validation_reproducer/clones",
     "models": [
         "gpt_oss_20b"
-    ]
+    ],
+    "repair_mode": "block"
 }
