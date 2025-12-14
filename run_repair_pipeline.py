@@ -17,10 +17,13 @@ def main():
         print(f"Config file not found: {args.config}")
         return
 
-    input_dir = config.get("input_dir", "llm_responses")
+    responses_config = config.get("responses", {})
+    # Support both new nested structure and old flat structure (fallback)
+    input_dir = responses_config.get("input_dir", config.get("input_dir", "llm_responses"))
+    target_models = responses_config.get("models", config.get("models", []))
+    
     output_dir = config.get("output_dir", "llms_fixes_results")
     clones_dir = config.get("clones_dir", "../TFReproducer/clones")
-    target_models = config.get("models", [])
     repair_mode = config.get("repair_mode", "auto")
 
     if not os.path.exists(input_dir):
