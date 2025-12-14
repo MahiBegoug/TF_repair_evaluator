@@ -12,7 +12,7 @@ from terraform_validation.writer import DiagnosticsWriter
 
 class RepairEvaluator:
 
-    def __init__(self, output_csv="repair_eval_diagnostics.csv", outcomes_csv="repair_outcomes.csv", clones_root="clones", repair_mode="auto"):
+    def __init__(self, output_csv="repair_eval_diagnostics.csv", outcomes_csv="repair_outcomes.csv", clones_root="clones", repair_mode="auto", problems_dataset=None):
         """
         This CSV will contain the diagnostics AFTER each LLM repair.
         And will follow the EXACT SAME format as DiagnosticsWriter.
@@ -21,6 +21,7 @@ class RepairEvaluator:
         self.output_csv = output_csv
         self.clones_root = clones_root
         self.repair_mode = repair_mode
+        self.problems = pd.read_csv(problems_dataset) if problems_dataset and os.path.exists(problems_dataset) else None
 
         if not os.path.exists(output_csv):
             # create empty file with header
@@ -68,8 +69,40 @@ class RepairEvaluator:
                 content = r.get("fixed_block_content")
                 if pd.isna(content):
                     content = r.get("fixed_code") # fallback
-                s = int(r["line_start"]) if "line_start" in r and pd.notna(r["line_start"]) else None
-                e = int(r["line_end"]) if "line_end" in r and pd.notna(r["line_end"]) else None
+                
+                # Check problems dataset for impacted block coordinates
+                s = None
+                e = None
+                
+                if self.problems is not None:
+                    # Match by OID (unique identifier for the problem instance)
+                    # Use string comparison to avoid type mismatches
+                    
+                    if "oid" in r and pd.notna(r["oid"]):
+                        target_oid = str(r["oid"])
+                        
+                        # Ensure problems OID column is also treated as string
+                        # Optimally, we should enforce this at load time, but explicit conversion here is safer
+                        
+                        # We use .astype(str) on the column for comparison
+                        p_match = self.problems[self.problems["oid"].astype(str) == target_oid]
+                        
+                        if not p_match.empty:
+                            # Use the impacted block coordinates!
+                            s = int(p_match.iloc[0]["impacted_block_start_line"])
+                            e = int(p_match.iloc[0]["impacted_block_end_line"])
+                            # print(f"  Mapped coordinates (OID={target_oid}) to impacted block: {s}-{e}")
+                        else:
+                            print(f"Warning: No match found in problems dataset for OID: {target_oid}")
+                    else:
+                        print("Warning: Row missing OID, cannot map to impacted block coordinates.")
+                
+                # Fallback to row's own coordinates if no match or problems not loaded
+                if s is None:
+                    s = int(r["line_start"]) if "line_start" in r and pd.notna(r["line_start"]) else None
+                if e is None:
+                    e = int(r["line_end"]) if "line_end" in r and pd.notna(r["line_end"]) else None
+                    
                 return content, s, e
 
             if self.repair_mode == "file":

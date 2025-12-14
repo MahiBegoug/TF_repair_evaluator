@@ -25,10 +25,13 @@ def main():
     output_dir = config.get("output_dir", "llms_fixes_results")
     clones_dir = config.get("clones_dir", "../TFReproducer/clones")
     repair_mode = config.get("repair_mode", "auto")
+    problems_dataset = config.get("problems_dataset", None)
 
     if not os.path.exists(input_dir):
         print(f"Error: Input directory '{input_dir}' does not exist.")
         return
+
+    os.makedirs(output_dir, exist_ok=True)
 
     os.makedirs(output_dir, exist_ok=True)
 
@@ -71,6 +74,9 @@ def main():
             "--clones-dir", clones_dir,
             "--repair-mode", repair_mode
         ]
+        
+        if problems_dataset:
+             cmd.extend(["--problems-dataset", problems_dataset])
         
         try:
             subprocess.run(cmd, check=True)

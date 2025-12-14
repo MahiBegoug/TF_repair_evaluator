@@ -99,5 +99,69 @@ class TestRepairEvaluator(unittest.TestCase):
         mock_applier.restore_original.assert_called()
 
 
+    @patch("repair_pipeline.repair_driver.pd.read_csv")
+    @patch("repair_pipeline.repair_driver.FixApplier.apply_fix")
+    @patch("repair_pipeline.repair_driver.TerraformValidator")
+    @patch("repair_pipeline.repair_driver.DiagnosticsExtractor")
+    @patch("repair_pipeline.repair_driver.DiagnosticsWriter")
+    def test_evaluate_repairs_with_problems_mapping(self, MockWriter, MockExtractor, MockValidator, MockApplier, MockReadVal):
+        """
+        Verify that if problems_dataset is provided, we use coordinates from PROBLEMS csv
+        mapped via OID.
+        """
+        # Mock problems DF
+        problems_df = pd.DataFrame([{
+            "oid": "test-oid-123", # Key for mapping
+            "impacted_block_start_line": 5,
+            "impacted_block_end_line": 10
+        }])
+        
+        # Mock fixes DF
+        fixes_df = pd.DataFrame([{
+            "iteration_id": 1,
+            "project_name": "proj1",
+            "oid": "test-oid-123", # Matching key
+            "filename": "clones/proj1/main.tf",
+            "line_start": 2, 
+            "line_end": 2,
+            "fixed_block_content": "resource \"foo\" \"bar\" {}",
+            "raw_llm_output": "...",
+            "explanation": "..."
+        }])
+        
+        def side_effect_read_csv(filepath, *args, **kwargs):
+            if not isinstance(filepath, str):
+                 return fixes_df
+            if "problems.csv" in filepath:
+                return problems_df
+            return fixes_df
+            
+        MockReadVal.side_effect = side_effect_read_csv
+        
+        with patch("os.path.exists") as MockExists:
+            MockExists.return_value = True
+            
+            evaluator = RepairEvaluator(
+                output_csv="out.csv", 
+                outcomes_csv="outcome.csv", 
+                clones_root="clones",
+                repair_mode="block",
+                problems_dataset="problems.csv"
+            )
+            
+            MockValidator.validate.return_value = {}
+            MockExtractor.extract_rows.return_value = []
+            
+            evaluator.evaluate_repairs("fixes.csv")
+            
+            # Verify usage
+            MockApplier.apply_fix.assert_called()
+            args, kwargs = MockApplier.apply_fix.call_args
+            
+            # Should use 5 and 10 from problems_df via OID mapping
+            self.assertEqual(kwargs['start_line'], 5)
+            self.assertEqual(kwargs['end_line'], 10)
+
+
 if __name__ == '__main__':
     unittest.main()
