@@ -1,7 +1,7 @@
 {
     "input_dir": "llm_responses",
     "output_dir": "llms_fixes_results",
-    "clones_dir": "../TFReproducer/clones",
+    "clones_dir": "../TF_validation_reproducer/clones",
     "models": [
         "gpt_oss_20b"
     ]
