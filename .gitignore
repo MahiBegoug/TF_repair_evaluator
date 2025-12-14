@@ -4,3 +4,4 @@ __pycache__
 llms_fixes_results/llm_fullfile_repair_results_gemini_diagnostics.csv
 llms_fixes_results/llm_fullfile_repair_results_gemini.csv
 llm_responses/
+llms_fixes_results/
