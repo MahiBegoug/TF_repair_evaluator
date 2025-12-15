@@ -3,7 +3,7 @@
     "responses": {
         "input_dir": "llm_responses",
         "models": [
-            "gpt_oss_20b_snippet.csv"
+            "gpt_oss_20b_snippet_only.csv"
         ]
     },
     "output_dir": "llms_fixes_results",
