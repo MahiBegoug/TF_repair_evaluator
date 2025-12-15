@@ -40,8 +40,10 @@ def main():
 
     # Calculate n and c per problem (oid)
     # We assume the input fixes CSV corresponds to a single model
+    # Using 'line_is_clean' as the primary success metric (True if line has no errors after fix)
+    # Alternative: 'specific_error_fixed' tracks if the exact error type was resolved
     group_cols = ['oid']
-    stats = fixes_df.groupby(group_cols)['resolved_original'].agg(['count', 'sum']).reset_index()
+    stats = fixes_df.groupby(group_cols)['line_is_clean'].agg(['count', 'sum']).reset_index()
     stats.rename(columns={'count': 'n', 'sum': 'c'}, inplace=True)
 
     results = []
