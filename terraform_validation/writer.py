@@ -16,7 +16,12 @@ class DiagnosticsWriter:
         "col_start",
         "line_end",
         "col_end",
-        "file_content"
+        "file_content",
+        "block_type",
+        "block_identifiers",
+        "impacted_block_start_line",
+        "impacted_block_end_line",
+        "impacted_block_content"
     ]
 
     @staticmethod

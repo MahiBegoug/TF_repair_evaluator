@@ -1,1 +1,3 @@
 pandas
+tf-dependency-analyzer @ git+https://github.com/MahiBegoug/tf-dependency-analyzer.git ; sys_platform == 'win32'
+tf-dependency-analyzer @ git+ssh://git@github.com/MahiBegoug/tf-dependency-analyzer.git ; sys_platform != 'win32'

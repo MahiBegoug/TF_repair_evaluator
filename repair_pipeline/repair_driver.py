@@ -8,6 +8,7 @@ from repair_pipeline.apply_fix import FixApplier
 from terraform_validation.extractor import DiagnosticsExtractor
 from terraform_validation.validator import TerraformValidator
 from terraform_validation.writer import DiagnosticsWriter
+from tf_dependency_analyzer.static.static_analyzer import StaticAnalyzer
 
 
 class RepairEvaluator:
@@ -30,7 +31,7 @@ class RepairEvaluator:
 
         self.outcomes_csv = outcomes_csv
         if not os.path.exists(self.outcomes_csv):
-            pd.DataFrame([], columns=["oid", "iteration_id", "llm_name", "filename", "plausible_fix"]) \
+            pd.DataFrame([], columns=["oid", "iteration_id", "llm_name", "filename", "plausible_fix", "resolved_original", "new_error_count"]) \
                 .to_csv(self.outcomes_csv, index=False)
 
     def evaluate_repairs(self, llm_fixes_csv: str):
@@ -146,13 +147,97 @@ class RepairEvaluator:
 
             # 5. Log outcome
             is_plausible = len(extracted_rows) == 0
+            
+            resolved_original = None
+            new_error_count = len(extracted_rows)
+            
+            if self.problems is not None and "oid" in row:
+                target_oid = str(row["oid"])
+                p_match = self.problems[self.problems["oid"].astype(str) == target_oid]
+                
+                if not p_match.empty:
+                    original_summary = p_match.iloc[0].get("summary", "")
+                    original_identifiers = str(p_match.iloc[0].get("block_identifiers", "")).strip()
+                    
+                    # Heuristic: The original error is "resolved" if NO diagnostic in the new set 
+                    # matches the original summary AND the specific block identifiers.
+                    
+                    found_original = False
+                    for er in extracted_rows:
+                        # 1. Check if Identifiers match (Strongest check)
+                        current_identifiers = str(er.get("block_identifiers", "")).strip()
+                        
+                        # If we have identifiers from both sides, compare them.
+                        if original_identifiers and current_identifiers:
+                            is_same_block = (original_identifiers == current_identifiers)
+                        else:
+                            # Fallback: if we couldn't identify the block in diagnostics (e.g. syntax error at file level?)
+                            # or origin didn't have identifiers, we rely on address (if available) or strict filtering
+                            # But wait, we previously implemented address capture.
+                            # Let's use address as fallback or secondary check.
+                            
+                            # Actually, if identifiers are missing, it might be a file-level error.
+                            # Fallback to positional check?
+                            # Let's align with the user's request: "compare block_identifiers".
+                            # If identifiers don't match or are empty, we might skip or fail.
+                            # Let's keep a robust fallback: Address check -> Positional check.
+                            
+                            is_same_block = False
+                            
+                            # Fallback 1: Address
+                            er_address = er.get("address", "")
+                            # Try to reconstruct address from p_match identifiers if needed? 
+                            # (Strategy A logic was doing that).
+                            # Let's keep it simple: if identifiers match, it's the same block.
+                        
+                        if is_same_block:
+                            if er.get("summary") == original_summary:
+                                found_original = True
+                                break
+                        else:
+                             # Identifier Mismatch? Check fallback logic for safety 
+                             # (e.g. parser failed to get ID but line matches).
+                             # Only use fallback if current_identifiers is EMPTY (parser failure).
+                             if not current_identifiers:
+                                 # Fallback to positional check logic
+                                 if fixed_file_content:
+                                     new_lines_count = len(fixed_file_content.splitlines())
+                                 else:
+                                     new_lines_count = 0
+                                 buffer = 2 
+                                 check_start = (start_line if start_line else 1) - buffer
+                                 check_end = (start_line if start_line else 1) + new_lines_count + buffer
+                                 
+                                 try:
+                                     er_line = int(er.get("line_start", -1))
+                                 except:
+                                     er_line = -1
+                                 
+                                 if er_line != -1 and check_start <= er_line <= check_end:
+                                      if er.get("summary") == original_summary:
+                                          found_original = True
+                                          break
+                                          
+                    resolved_original = not found_original
+
             outcome_row = {
                 "oid": row.get("oid", ""),
                 "iteration_id": row.get("iteration_id", ""),
                 "llm_name": row.get("llm_name", ""),
                 "filename": original_file,
-                "plausible_fix": is_plausible
+                "plausible_fix": is_plausible,
+                "resolved_original": resolved_original,
+                "new_error_count": new_error_count
             }
+            # Append to CSV with new columns (might need header update if file exists, 
+            # but append mode without header assumes consistent schema. 
+            # If schema changes, we might need to recreate the file or handle it.)
+            
+            # To be safe, we should update outcomes_csv initialization to include these columns 
+            # or just rely on pandas to handle it if we rewrite/append correctly.
+            # But append mode 'a' with header=False relies on existing columns.
+            # We need to update the __init__ to include these columns in the empty file creation.
+            
             pd.DataFrame([outcome_row]).to_csv(self.outcomes_csv, mode='a', header=False, index=False)
 
             # 6. Restore original file
