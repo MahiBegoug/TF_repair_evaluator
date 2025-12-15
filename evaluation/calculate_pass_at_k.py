@@ -3,6 +3,7 @@ import numpy as np
 import argparse
 import os
 
+
 def pass_at_k(n, c, k):
     """
     Unbiased estimator for pass@k.
@@ -15,6 +16,7 @@ def pass_at_k(n, c, k):
         prob_all_fail *= (n - c - i) / (n - i)
 
     return 1.0 - prob_all_fail
+
 
 def main():
     parser = argparse.ArgumentParser(description="Calculate pass@k metric")
@@ -39,11 +41,11 @@ def main():
     # Calculate n and c per problem (oid)
     # We assume the input fixes CSV corresponds to a single model
     group_cols = ['oid']
-    stats = fixes_df.groupby(group_cols)['plausible_fix'].agg(['count', 'sum']).reset_index()
+    stats = fixes_df.groupby(group_cols)['resolved_original'].agg(['count', 'sum']).reset_index()
     stats.rename(columns={'count': 'n', 'sum': 'c'}, inplace=True)
 
     results = []
-    
+
     # Determine model name from filename if possible, or use generic
     model_name = os.path.basename(args.fixes_csv).replace("_synthetic_fixes.csv", "").replace("_fixes.csv", "")
 
@@ -62,6 +64,7 @@ def main():
     if args.save_to:
         results_df.to_csv(args.save_to, index=False)
         print(f"Results saved to {args.save_to}")
+
 
 if __name__ == "__main__":
     main()
