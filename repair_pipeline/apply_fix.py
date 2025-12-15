@@ -12,9 +12,9 @@ class FixApplier:
     @staticmethod
     def apply_fix(original_file: str, llm_fixed_content: str, start_line: int = None, end_line: int = None) -> str:
         """
-        original_file      → path to the .tf file inside clones/*
-        llm_fixed_content  → RAW Terraform code suggested by the LLM
-        start_line         → (Optional) Start line (1-based)
+        original_file → path to the .tf file inside clones/*
+        llm_fixed_content → RAW Terraform code suggested by the LLM
+        start_line → (Optional) Start line (1-based)
         end_line           → (Optional) End line (1-based)
 
         Returns:

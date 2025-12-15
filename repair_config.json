@@ -3,10 +3,10 @@
     "responses": {
         "input_dir": "llm_responses",
         "models": [
-            "gpt_oss_20b_snippet_only.csv"
+            "gpt_oss_20b_snippet.csv"
         ]
     },
     "output_dir": "llms_fixes_results",
-    "clones_dir": "../TF_validation_reproducer/clones",
+    "clones_dir": "../TF_repair_evaluator/clones",
     "repair_mode": "block"
 }

@@ -59,11 +59,12 @@ def main():
         print(f"\nProcessing: {filename}")
         
         # Define output paths
-        # We keep the same filename for the outcomes file in the output directory
-        outcomes_csv = os.path.join(output_dir, filename)
+        # Add "_repair_results" suffix to indicate the file contains repair attempt results
+        outcomes_filename = filename.replace(".csv", "_repair_results.csv")
+        outcomes_csv = os.path.join(output_dir, outcomes_filename)
         
-        # We also generate a detailed diagnostics file
-        diagnostics_filename = filename.replace(".csv", "_diagnostics.csv")
+        # We also generate a detailed diagnostics file after validation
+        diagnostics_filename = filename.replace(".csv", "_new_diagnostics_after_validation.csv")
         diagnostics_csv = os.path.join(output_dir, diagnostics_filename)
 
         cmd = [

@@ -8,6 +8,7 @@ class DiagnosticsWriter:
         "project_name",
         "working_directory",
         "oid",  # NEW COLUMN (HASH)
+        "iteration_id",  # Repair iteration identifier
         "severity",
         "summary",
         "detail",
@@ -36,14 +37,16 @@ class DiagnosticsWriter:
         return full_hash
 
     @staticmethod
-    def write_rows(rows, csv_path):
+    def write_rows(rows, csv_path, iteration_id=None):
         if not rows:
             return
 
         enriched_rows = []
         for r in rows:
             oid = DiagnosticsWriter.compute_oid(r)
-            enriched_rows.append({"oid": oid, **r})
+            # Add iteration_id to each row
+            enriched_row = {"oid": oid, "iteration_id": iteration_id, **r}
+            enriched_rows.append(enriched_row)
 
         df = pd.DataFrame(enriched_rows, columns=DiagnosticsWriter.COLUMNS)
 

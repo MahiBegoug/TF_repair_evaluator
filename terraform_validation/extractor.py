@@ -119,7 +119,8 @@ class DiagnosticsExtractor:
                 content = []
                 for fp, c in tf_cache.items():
                     posix_fp = fp.replace("\\", "/")
-                    content.append(f"\n##### FILE: {posix_fp}\n{c}")
+                    # content.append(f"\n##### FILE: {posix_fp}\n{c}")
+                    content.append(f"{c}")
                 row["file_content"] = "\n".join(content)
 
             rows.append(row)
