@@ -1,12 +1,12 @@
 {
-    "problems_dataset": "problems/problems_example.csv",
+    "problems_dataset": "problems/problems.csv",
     "responses": {
         "input_dir": "llm_responses",
         "models": [
-            "gpt_oss_20b_snippet_only_example_test.csv"
+            "gpt_oss_20b_snippet_only.csv"
         ]
     },
     "output_dir": "llms_fixes_results",
-    "clones_dir": "../TFReproducer/clones",
+    "clones_dir": "../TF_validation_reproducer/clones",
     "repair_mode": "block"
 }
