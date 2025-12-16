@@ -28,13 +28,22 @@ class FixApplier:
         if not os.path.exists(original_file):
             raise FileNotFoundError(f"Original missing: {original_file}")
 
-        # ---------- BACKUP ORIGINAL ----------
-        backup_path = original_file + ".bak"
-        if not os.path.exists(backup_path):
-             shutil.copyfile(original_file, backup_path)
+        # ---------- BACKUP ORIGINAL (MOVED OUTSIDE MODULE)----------
+        # Move original file to temp directory OUTSIDE the module
+        # This guarantees Terraform CANNOT see it during validation
+        
+        import tempfile
+        temp_dir = tempfile.gettempdir()
+        
+        # Create unique backup filename to avoid collisions
+        safe_name = original_file.replace(os.sep, '_').replace(':', '_').replace('.', '_')
+        backup_path = os.path.join(temp_dir, f"tfrepair_backup_{safe_name}.tf")
+        
+        print(f"[BACKUP] Moving original OUTSIDE module to: {backup_path}")
+        shutil.move(original_file, backup_path)
 
-        # ---------- READ ORIGINAL CONTENT ----------
-        with open(original_file, "r", encoding="utf-8") as f:
+        # ---------- READ BACKUP CONTENT ----------
+        with open(backup_path, "r", encoding="utf-8") as f:
             lines = f.readlines()
 
         # ---------- APPLY FIX ----------
@@ -48,13 +57,7 @@ class FixApplier:
             if idx_start < 0: idx_start = 0
             if idx_end > len(lines): idx_end = len(lines)
 
-            # We insert the new content. 
-            # Note: llm_fixed_content is a string, possibly multi-line.
-            # We treat it as a single block to insert/replace.
-            
-            # Ensure llm_fixed_content ends with newline if the block being replaced did?
-            # Or just blindly insert. Terraform files usually end in newline.
-            # Let's ensure the inserted content has a newline if it's not empty/just replacing in-place without one.
+            # Ensure llm_fixed_content ends with newline
             if not llm_fixed_content.endswith('\n'):
                 llm_fixed_content += '\n'
 
@@ -63,11 +66,12 @@ class FixApplier:
             # Full file replacement
             new_content = llm_fixed_content
 
-        # ---------- WRITE UTILITY ----------
+        # ---------- WRITE FIXED CONTENT TO ORIGINAL LOCATION ----------
         with open(original_file, "w", encoding="utf-8") as f:
             f.write(new_content)
 
-        print(f"[FIX] Wrote LLM repair directly into → {original_file}")
+        print(f"[FIX] Wrote LLM fix to → {original_file}")
+        print(f"[SAFEGUARD] ✓ Backup is OUTSIDE module - Terraform CANNOT see it!")
 
         return backup_path
 
@@ -75,11 +79,20 @@ class FixApplier:
     def restore_original(original_file: str, backup_path: str):
         """
         Restore original Terraform file after testing.
+        Moves backup from temp location back to original location.
         """
 
         original_file = os.path.abspath(original_file)
         backup_path = os.path.abspath(backup_path)
 
         if os.path.exists(backup_path):
+            # Remove the fixed file first
+            if os.path.exists(original_file):
+                os.remove(original_file)
+            
+            # Move backup from temp location back to original
             shutil.move(backup_path, original_file)
-            print(f"[RESTORE] Restored original → {original_file}")
+            print(f"[RESTORE] Restored original from temp backup → {original_file}")
+        else:
+            print(f"[WARNING] Backup not found: {backup_path}")
+

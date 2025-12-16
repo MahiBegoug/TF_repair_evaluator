@@ -14,11 +14,18 @@ from tf_dependency_analyzer.static.static_analyzer import StaticAnalyzer
 class RepairEvaluator:
 
     def __init__(self, output_csv="repair_eval_diagnostics.csv", outcomes_csv="repair_outcomes.csv",
-                 clones_root="clones", repair_mode="auto", problems_dataset=None):
+                 clones_root="clones", repair_mode="auto", problems_dataset=None, clear_existing=False):
         """
         This CSV will contain the diagnostics AFTER each LLM repair.
         And will follow the EXACT SAME format as DiagnosticsWriter.
-        repair_mode: "auto", "block", "file"
+        
+        Args:
+            output_csv: Path to diagnostics CSV file
+            outcomes_csv: Path to outcomes/results CSV file
+            clones_root: Root directory for cloned repositories
+            repair_mode: "auto", "block", or "file"
+            problems_dataset: Path to problems CSV (optional)
+            clear_existing: If True, DELETE existing CSV files before starting (fresh run)
         """
         self.output_csv = output_csv
         self.clones_root = clones_root
@@ -26,8 +33,17 @@ class RepairEvaluator:
         self.problems = pd.read_csv(problems_dataset) if problems_dataset and os.path.exists(problems_dataset) else None
         self.error_matcher = ErrorMatchingService(line_tolerance=3)
 
+        # Clear existing CSV files if requested (fresh start)
+        if clear_existing:
+            if os.path.exists(output_csv):
+                os.remove(output_csv)
+                print(f"[CLEAR] ✓ Deleted old diagnostics: {output_csv}")
+            if os.path.exists(outcomes_csv):
+                os.remove(outcomes_csv)
+                print(f"[CLEAR] ✓ Deleted old outcomes: {outcomes_csv}")
+
+        # Create empty CSV with headers if doesn't exist
         if not os.path.exists(output_csv):
-            # create empty file with header
             pd.DataFrame([], columns=DiagnosticsWriter.COLUMNS) \
                 .to_csv(output_csv, index=False)
 
@@ -104,14 +120,37 @@ class RepairEvaluator:
     
     def _apply_and_validate(self, original_file, project, fixed_content, start_line, end_line, iteration_id):
         """Apply fix, run terraform validate, and extract diagnostics."""
-        # Run terraform validate
         module_dir = os.path.dirname(original_file)
-        print('module_dir ', module_dir)
+        
+        # SAFEGUARD: Check for .bak files (should be ignored by Terraform)
+        bak_files = [f for f in os.listdir(module_dir) if f.endswith('.bak')]
+        if bak_files:
+            print(f"[SAFEGUARD] Found {len(bak_files)} .bak backup file(s) - will be IGNORED by Terraform")
+        
+        # Run terraform validate
+        print(f'[VALIDATE] Validating directory: {module_dir}')
         validation_result = TerraformValidator.validate(module_dir)
         
         # Debug: Check how many diagnostics terraform validate returned
         raw_diagnostics = validation_result.get("diagnostics", [])
         print(f"[DEBUG] Terraform validate returned {len(raw_diagnostics)} diagnostics")
+        
+        # SAFEGUARD: Verify no .bak files appear in diagnostics
+        if raw_diagnostics:
+            validated_files = set()
+            for diag in raw_diagnostics:
+                if isinstance(diag, dict) and "range" in diag:
+                    filename = diag.get("range", {}).get("filename", "")
+                    if filename:
+                        validated_files.add(filename)
+            
+            # Check if any .bak files were validated (should NEVER happen)
+            bak_validated = [f for f in validated_files if f.endswith('.bak')]
+            if bak_validated:
+                print(f"[ERROR] ❌ Terraform validated .bak files: {bak_validated}")
+                print(f"[ERROR] This should NEVER happen - backup files should be ignored!")
+            elif len(validated_files) > 0:
+                print(f"[SAFEGUARD] ✓ Only .tf files validated: {sorted(validated_files)}")
 
         # Convert validation_result → diagnostics rows
         project_root = os.path.join(self.clones_root, project)
