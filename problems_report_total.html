@@ -1,0 +1,1543 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+
+    <title>TFRepair - Problems Report</title>
+    <style>
+        html, body {
+            width: 100%;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .controls {
+            position: sticky;
+            top: 0;
+            background: white;
+            padding: 15px 20px;
+            border-bottom: 2px solid #e74c3c;
+            z-index: 100;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .controls label {
+            font-weight: 600;
+            margin-right: 8px;
+        }
+
+        .controls select {
+            padding: 6px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: white;
+            cursor: pointer;
+        }
+
+        h1 {
+            color: #2c3e50;
+            margin-top: 20px;
+        }
+
+        .stats {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .stats h2 {
+            margin: 0 0 10px 0;
+            color: white;
+            border: none;
+        }
+
+        h2 {
+            color: #34495e;
+            border-bottom: 2px solid #e74c3c;
+            padding-bottom: 8px;
+        }
+
+        h2 a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        h2 a:hover {
+            color: #e74c3c;
+        }
+
+        .file-group {
+            background-color: white;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .problem-card {
+            background-color: #fff8f8;
+            border-left: 4px solid #e74c3c;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+
+        .problem-card.warning {
+            background-color: #fffbf0;
+            border-left-color: #f39c12;
+        }
+
+        .problem-card.info {
+            background-color: #f0f8ff;
+            border-left-color: #3498db;
+        }
+
+        .problem-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .badge-error {
+            background-color: #e74c3c;
+            color: white;
+        }
+
+        .badge-warning {
+            background-color: #f39c12;
+            color: white;
+        }
+
+        .badge-info {
+            background-color: #3498db;
+            color: white;
+        }
+
+        .badge-secondary {
+            background-color: #95a5a6;
+            color: white;
+        }
+
+        pre {
+            margin: 10px 0;
+            background-color: #f6f8fa;
+            padding: 0;
+            border-radius: 4px;
+            font-size: 12px;
+            overflow-x: auto;
+        }
+
+        pre code {
+            display: block;
+            padding: 10px 10px 10px 0;
+            white-space: pre;
+        }
+        
+        pre code .code-line {
+            display: block;
+            padding-left: 10px;
+            background-color: #f6f8fa;
+        }
+        
+        pre code .code-line::before {
+            content: attr(data-marker) " " attr(data-line-num) " | ";
+            display: inline-block;
+            min-width: 4.5em;
+            padding-right: 0.5em;
+            margin-left: -10px;
+            padding-left: 10px;
+            margin-right: 0.5em;
+            text-align: left;
+            color: #6e7781;
+            background-color: #f6f8fa;
+            border-right: 2px solid #d0d7de;
+            user-select: none;
+            font-family: 'Courier New', Consolas, monospace;
+            font-size: 11px;
+        }
+        
+        pre code .code-line[data-marker="➤"]::before {
+            color: #d32f2f;
+            font-weight: 700;
+        }
+
+        .problem-detail {
+            margin: 10px 0;
+            padding: 10px;
+            background-color: rgba(255,255,255,0.5);
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .problem-summary {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+
+        .line-info {
+            color: #666;
+            font-size: 13px;
+            margin: 5px 0;
+        }
+
+        .no-problems {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+    <div class="controls">
+        <label for="severity-select">Filter by Severity:</label>
+        <select id="severity-select" onchange="filterResults()">
+            <option value="all">All Severities</option>
+            
+                <option value="error">Error</option>
+            
+                <option value="warning">Warning</option>
+            
+        </select>
+    </div>
+
+    <div class="container">
+        <h1>🐛 TFRepair - Problems Report</h1>
+        
+        <div class="stats">
+            <h2>📊 Overview</h2>
+            <p style="font-size: 18px; margin: 5px 0;">Total Problems Found: <strong>25</strong></p>
+        </div>
+        
+        
+            
+            <div class="file-group">
+                <h2 id="654bfb9e9865203054f4ad1fbc85f3db"><a href="#654bfb9e9865203054f4ad1fbc85f3db"><u></u>/</a></h2>
+                
+                
+                    
+                    <div class="problem-card error" data-severity="error">
+                        <div class="problem-header">
+                            <span class="badge badge-error">
+                                ERROR
+                            </span>
+                            
+                                <span class="line-info">
+                                    📍 Lines 21
+                                </span>
+                            
+                        </div>
+                        
+                        
+                        
+                            <div class="problem-summary">
+                                Unsupported block type
+                            </div>
+                        
+                        
+                        
+                        
+                            <div class="problem-detail">
+                                <strong>Detail:</strong> Blocks of type "tags" are not expected here. Did you mean to define argument "tags"? If so, use the equals sign to assign it a value.
+                            </div>
+                        
+                        
+                        
+                        
+                            <strong>Problematic Code:</strong>
+                            <pre><code><span class="code-line" data-line-num="17" data-marker=" ">resource &quot;aws_vpc&quot; &quot;mod&quot; {</span>
+<span class="code-line" data-line-num="18" data-marker=" ">  cidr_block           = &quot;${var.cidr}&quot;</span>
+<span class="code-line" data-line-num="19" data-marker=" ">  enable_dns_hostnames = &quot;${var.enable_dns_hostnames}&quot;</span>
+<span class="code-line" data-line-num="20" data-marker=" ">  enable_dns_support   = &quot;${var.enable_dns_support}&quot;</span>
+<span class="code-line" data-line-num="21" data-marker="➤">  tags {</span>
+<span class="code-line" data-line-num="22" data-marker=" ">    Name = &quot;${var.name}&quot;</span>
+<span class="code-line" data-line-num="23" data-marker=" ">  }</span>
+<span class="code-line" data-line-num="24" data-marker=" ">}</span></code></pre>
+                        
+                    </div>
+                
+            </div>
+        
+            
+            <div class="file-group">
+                <h2 id="113abfaf74b9609b15af971bd7f25215"><a href="#113abfaf74b9609b15af971bd7f25215"><u></u>/</a></h2>
+                
+                
+                    
+                    <div class="problem-card error" data-severity="error">
+                        <div class="problem-header">
+                            <span class="badge badge-error">
+                                ERROR
+                            </span>
+                            
+                                <span class="line-info">
+                                    📍 Lines 34
+                                </span>
+                            
+                        </div>
+                        
+                        
+                        
+                            <div class="problem-summary">
+                                Unsupported block type
+                            </div>
+                        
+                        
+                        
+                        
+                            <div class="problem-detail">
+                                <strong>Detail:</strong> Blocks of type "tags" are not expected here. Did you mean to define argument "tags"? If so, use the equals sign to assign it a value.
+                            </div>
+                        
+                        
+                        
+                        
+                            <strong>Problematic Code:</strong>
+                            <pre><code><span class="code-line" data-line-num="6" data-marker=" ">resource &quot;aws_security_group&quot; &quot;default&quot; {</span>
+<span class="code-line" data-line-num="7" data-marker=" ">  name        = &quot;${var.security_group_name}&quot;</span>
+<span class="code-line" data-line-num="8" data-marker=" ">  description = &quot;Default security group that allows all traffic&quot;</span>
+<span class="code-line" data-line-num="9" data-marker=" ">  vpc_id      = &quot;${var.vpc_id}&quot;</span>
+<span class="code-line" data-line-num="10" data-marker=" "></span>
+<span class="code-line" data-line-num="11" data-marker=" ">  # Allows inbound and outbound traffic from all instances in the VPC.</span>
+<span class="code-line" data-line-num="12" data-marker=" ">  ingress {</span>
+<span class="code-line" data-line-num="13" data-marker=" ">    from_port = &quot;0&quot;</span>
+<span class="code-line" data-line-num="14" data-marker=" ">    to_port   = &quot;0&quot;</span>
+<span class="code-line" data-line-num="15" data-marker=" ">    protocol  = &quot;-1&quot;</span>
+<span class="code-line" data-line-num="16" data-marker=" ">    self      = true</span>
+<span class="code-line" data-line-num="17" data-marker=" ">  }</span>
+<span class="code-line" data-line-num="18" data-marker=" "></span>
+<span class="code-line" data-line-num="19" data-marker=" ">  # Allows all inbound traffic</span>
+<span class="code-line" data-line-num="20" data-marker=" ">  ingress {</span>
+<span class="code-line" data-line-num="21" data-marker=" ">    from_port   = &quot;0&quot;</span>
+<span class="code-line" data-line-num="22" data-marker=" ">    to_port     = &quot;0&quot;</span>
+<span class="code-line" data-line-num="23" data-marker=" ">    protocol    = &quot;-1&quot;</span>
+<span class="code-line" data-line-num="24" data-marker=" ">    cidr_blocks = [&quot;${var.source_cidr_block}&quot;]</span>
+<span class="code-line" data-line-num="25" data-marker=" ">  }</span>
+<span class="code-line" data-line-num="26" data-marker=" "></span>
+<span class="code-line" data-line-num="27" data-marker=" ">  # Allows all outbound traffic.</span>
+<span class="code-line" data-line-num="28" data-marker=" ">  egress {</span>
+<span class="code-line" data-line-num="29" data-marker=" ">    from_port   = 0</span>
+<span class="code-line" data-line-num="30" data-marker=" ">    to_port     = 0</span>
+<span class="code-line" data-line-num="31" data-marker=" ">    protocol    = &quot;-1&quot;</span>
+<span class="code-line" data-line-num="32" data-marker=" ">    cidr_blocks = [&quot;${var.source_cidr_block}&quot;]</span>
+<span class="code-line" data-line-num="33" data-marker=" ">  }</span>
+<span class="code-line" data-line-num="34" data-marker="➤">  tags {</span>
+<span class="code-line" data-line-num="35" data-marker=" ">    Name = &quot;apollo-default-sg&quot;</span>
+<span class="code-line" data-line-num="36" data-marker=" ">  }</span>
+<span class="code-line" data-line-num="37" data-marker=" ">}</span></code></pre>
+                        
+                    </div>
+                
+            </div>
+        
+            
+            <div class="file-group">
+                <h2 id="50bbb4d9e669d7ba7bfb32275e83fe29"><a href="#50bbb4d9e669d7ba7bfb32275e83fe29"><u></u>/</a></h2>
+                
+                
+                    
+                    <div class="problem-card error" data-severity="error">
+                        <div class="problem-header">
+                            <span class="badge badge-error">
+                                ERROR
+                            </span>
+                            
+                                <span class="line-info">
+                                    📍 Lines 16
+                                </span>
+                            
+                        </div>
+                        
+                        
+                        
+                            <div class="problem-summary">
+                                Unsupported argument
+                            </div>
+                        
+                        
+                        
+                        
+                            <div class="problem-detail">
+                                <strong>Detail:</strong> An argument named "roles" is not expected here. Did you mean "role"?
+                            </div>
+                        
+                        
+                        
+                        
+                            <strong>Problematic Code:</strong>
+                            <pre><code><span class="code-line" data-line-num="14" data-marker=" ">resource &quot;aws_iam_instance_profile&quot; &quot;master_profile&quot; {</span>
+<span class="code-line" data-line-num="15" data-marker=" ">  name  = &quot;master_profile&quot;</span>
+<span class="code-line" data-line-num="16" data-marker="➤">  roles = [&quot;${aws_iam_role.master_role.name}&quot;]</span>
+<span class="code-line" data-line-num="17" data-marker=" ">}</span></code></pre>
+                        
+                    </div>
+                
+                    
+                    <div class="problem-card error" data-severity="error">
+                        <div class="problem-header">
+                            <span class="badge badge-error">
+                                ERROR
+                            </span>
+                            
+                                <span class="line-info">
+                                    📍 Lines 34
+                                </span>
+                            
+                        </div>
+                        
+                        
+                        
+                            <div class="problem-summary">
+                                Unsupported argument
+                            </div>
+                        
+                        
+                        
+                        
+                            <div class="problem-detail">
+                                <strong>Detail:</strong> An argument named "roles" is not expected here. Did you mean "role"?
+                            </div>
+                        
+                        
+                        
+                        
+                            <strong>Problematic Code:</strong>
+                            <pre><code><span class="code-line" data-line-num="32" data-marker=" ">resource &quot;aws_iam_instance_profile&quot; &quot;worker_profile&quot; {</span>
+<span class="code-line" data-line-num="33" data-marker=" ">  name  = &quot;worker_profile&quot;</span>
+<span class="code-line" data-line-num="34" data-marker="➤">  roles = [&quot;${aws_iam_role.worker_role.name}&quot;]</span>
+<span class="code-line" data-line-num="35" data-marker=" ">}</span></code></pre>
+                        
+                    </div>
+                
+                    
+                    <div class="problem-card error" data-severity="error">
+                        <div class="problem-header">
+                            <span class="badge badge-error">
+                                ERROR
+                            </span>
+                            
+                                <span class="line-info">
+                                    📍 Lines 52
+                                </span>
+                            
+                        </div>
+                        
+                        
+                        
+                            <div class="problem-summary">
+                                Unsupported argument
+                            </div>
+                        
+                        
+                        
+                        
+                            <div class="problem-detail">
+                                <strong>Detail:</strong> An argument named "roles" is not expected here. Did you mean "role"?
+                            </div>
+                        
+                        
+                        
+                        
+                            <strong>Problematic Code:</strong>
+                            <pre><code><span class="code-line" data-line-num="50" data-marker=" ">resource &quot;aws_iam_instance_profile&quot; &quot;edge-router_profile&quot; {</span>
+<span class="code-line" data-line-num="51" data-marker=" ">  name  = &quot;edge-router_profile&quot;</span>
+<span class="code-line" data-line-num="52" data-marker="➤">  roles = [&quot;${aws_iam_role.edge-router_role.name}&quot;]</span>
+<span class="code-line" data-line-num="53" data-marker=" ">}</span></code></pre>
+                        
+                    </div>
+                
+            </div>
+        
+            
+            <div class="file-group">
+                <h2 id="74f7617d8460383459849231db24f89f"><a href="#74f7617d8460383459849231db24f89f"><u></u>/</a></h2>
+                
+                
+                    
+                    <div class="problem-card error" data-severity="error">
+                        <div class="problem-header">
+                            <span class="badge badge-error">
+                                ERROR
+                            </span>
+                            
+                                <span class="line-info">
+                                    📍 Lines 9
+                                </span>
+                            
+                        </div>
+                        
+                        
+                        
+                            <div class="problem-summary">
+                                Invalid Configuration for Read-Only Attribute
+                            </div>
+                        
+                        
+                        
+                        
+                            <div class="problem-detail">
+                                <strong>Detail:</strong> Cannot set value for this attribute as the provider has marked it as read-only. Remove the configuration line setting the value.
+
+Refer to the provider documentation or contact the provider developers for additional information about configurable and read-only attributes that are supported.
+                            </div>
+                        
+                        
+                        
+                        
+                            <strong>Problematic Code:</strong>
+                            <pre><code><span class="code-line" data-line-num="8" data-marker=" ">resource &quot;tls_cert_request&quot; &quot;etcd&quot; {</span>
+<span class="code-line" data-line-num="9" data-marker="➤">  key_algorithm   = &quot;RSA&quot;</span>
+<span class="code-line" data-line-num="10" data-marker=" ">  private_key_pem = &quot;${tls_private_key.etcd.private_key_pem}&quot;</span>
+<span class="code-line" data-line-num="11" data-marker=" "></span>
+<span class="code-line" data-line-num="12" data-marker=" ">  subject {</span>
+<span class="code-line" data-line-num="13" data-marker=" ">    common_name  = &quot;*&quot;</span>
+<span class="code-line" data-line-num="14" data-marker=" ">    organization = &quot;etcd&quot;</span>
+<span class="code-line" data-line-num="15" data-marker=" ">  }</span>
+<span class="code-line" data-line-num="16" data-marker=" ">}</span></code></pre>
+                        
+                    </div>
+                
+            </div>
+        
+            
+            <div class="file-group">
+                <h2 id="6c8fc95eeec1b223a4ed488769181787"><a href="#6c8fc95eeec1b223a4ed488769181787"><u></u>/</a></h2>
+                
+                
+                    
+                    <div class="problem-card error" data-severity="error">
+                        <div class="problem-header">
+                            <span class="badge badge-error">
+                                ERROR
+                            </span>
+                            
+                                <span class="line-info">
+                                    📍 Lines 33
+                                </span>
+                            
+                        </div>
+                        
+                        
+                        
+                            <div class="problem-summary">
+                                Unsupported block type
+                            </div>
+                        
+                        
+                        
+                        
+                            <div class="problem-detail">
+                                <strong>Detail:</strong> Blocks of type "set" are not expected here. Did you mean to define argument "set"? If so, use the equals sign to assign it a value.
+                            </div>
+                        
+                        
+                        
+                        
+                            <strong>Problematic Code:</strong>
+                            <pre><code><span class="code-line" data-line-num="8" data-marker=" ">resource &quot;helm_release&quot; &quot;chaosmesh&quot; {</span>
+<span class="code-line" data-line-num="9" data-marker=" ">  name       = &quot;chaosmesh&quot;</span>
+<span class="code-line" data-line-num="10" data-marker=" ">  namespace  = kubernetes_namespace.chaosmesh.metadata[0].name</span>
+<span class="code-line" data-line-num="11" data-marker=" ">  chart      = &quot;chaos-mesh&quot;</span>
+<span class="code-line" data-line-num="12" data-marker=" ">  repository = var.helm_chart_repository</span>
+<span class="code-line" data-line-num="13" data-marker=" ">  version    = var.helm_chart_version</span>
+<span class="code-line" data-line-num="14" data-marker=" "></span>
+<span class="code-line" data-line-num="15" data-marker=" ">  values = var.node_selector != null ? [yamlencode({</span>
+<span class="code-line" data-line-num="16" data-marker=" ">    controllerManager = {</span>
+<span class="code-line" data-line-num="17" data-marker=" ">      nodeSelector = var.node_selector</span>
+<span class="code-line" data-line-num="18" data-marker=" ">    }</span>
+<span class="code-line" data-line-num="19" data-marker=" ">    chaosDaemon = {</span>
+<span class="code-line" data-line-num="20" data-marker=" ">      nodeSelector = var.node_selector</span>
+<span class="code-line" data-line-num="21" data-marker=" ">    }</span>
+<span class="code-line" data-line-num="22" data-marker=" ">    dashboard = {</span>
+<span class="code-line" data-line-num="23" data-marker=" ">      nodeSelector = var.node_selector</span>
+<span class="code-line" data-line-num="24" data-marker=" ">    }</span>
+<span class="code-line" data-line-num="25" data-marker=" ">    dnsServer = {</span>
+<span class="code-line" data-line-num="26" data-marker=" ">      nodeSelector = var.node_selector</span>
+<span class="code-line" data-line-num="27" data-marker=" ">    }</span>
+<span class="code-line" data-line-num="28" data-marker=" ">    prometheus = {</span>
+<span class="code-line" data-line-num="29" data-marker=" ">      nodeSelector = var.node_selector</span>
+<span class="code-line" data-line-num="30" data-marker=" ">    }</span>
+<span class="code-line" data-line-num="31" data-marker=" ">  })] : []</span>
+<span class="code-line" data-line-num="32" data-marker=" "></span>
+<span class="code-line" data-line-num="33" data-marker="➤">  set {</span>
+<span class="code-line" data-line-num="34" data-marker=" ">    name  = &quot;image.chaosmesh.repository&quot;</span>
+<span class="code-line" data-line-num="35" data-marker=" ">    value = var.docker_image.chaosmesh.image</span>
+<span class="code-line" data-line-num="36" data-marker=" ">  }</span>
+<span class="code-line" data-line-num="37" data-marker=" ">  set {</span>
+<span class="code-line" data-line-num="38" data-marker=" ">    name  = &quot;image.chaosdaemon.tag&quot;</span>
+<span class="code-line" data-line-num="39" data-marker=" ">    value = var.docker_image.chaosdaemon.tag</span>
+<span class="code-line" data-line-num="40" data-marker=" ">  }</span>
+<span class="code-line" data-line-num="41" data-marker=" ">  set {</span>
+<span class="code-line" data-line-num="42" data-marker=" ">    name  = &quot;image.chaosdashboard.tag&quot;</span>
+<span class="code-line" data-line-num="43" data-marker=" ">    value = var.docker_image.chaosdashboard.tag</span>
+<span class="code-line" data-line-num="44" data-marker=" ">  }</span>
+<span class="code-line" data-line-num="45" data-marker=" "></span>
+<span class="code-line" data-line-num="46" data-marker=" ">  set {</span>
+<span class="code-line" data-line-num="47" data-marker=" ">    name  = &quot;dashboard.service.type&quot;</span>
+<span class="code-line" data-line-num="48" data-marker=" ">    value = var.service_type</span>
+<span class="code-line" data-line-num="49" data-marker=" ">  }</span>
+<span class="code-line" data-line-num="50" data-marker=" ">}</span></code></pre>
+                        
+                    </div>
+                
+                    
+                    <div class="problem-card warning" data-severity="warning">
+                        <div class="problem-header">
+                            <span class="badge badge-warning">
+                                WARNING
+                            </span>
+                            
+                                <span class="line-info">
+                                    📍 Lines 2
+                                </span>
+                            
+                        </div>
+                        
+                        
+                        
+                            <div class="problem-summary">
+                                Deprecated Resource
+                            </div>
+                        
+                        
+                        
+                        
+                            <div class="problem-detail">
+                                <strong>Detail:</strong> Deprecated; use kubernetes_namespace_v1.
+                            </div>
+                        
+                        
+                        
+                        
+                            <strong>Problematic Code:</strong>
+                            <pre><code><span class="code-line" data-line-num="2" data-marker="➤">resource &quot;kubernetes_namespace&quot; &quot;chaosmesh&quot; {</span>
+<span class="code-line" data-line-num="3" data-marker=" ">  metadata {</span>
+<span class="code-line" data-line-num="4" data-marker=" ">    name = var.namespace</span>
+<span class="code-line" data-line-num="5" data-marker=" ">  }</span>
+<span class="code-line" data-line-num="6" data-marker=" ">}</span></code></pre>
+                        
+                    </div>
+                
+            </div>
+        
+            
+            <div class="file-group">
+                <h2 id="46ceda50a2100bf23d4e91ca1251f327"><a href="#46ceda50a2100bf23d4e91ca1251f327"><u></u>/</a></h2>
+                
+                
+                    
+                    <div class="problem-card warning" data-severity="warning">
+                        <div class="problem-header">
+                            <span class="badge badge-warning">
+                                WARNING
+                            </span>
+                            
+                                <span class="line-info">
+                                    📍 Lines 6
+                                </span>
+                            
+                        </div>
+                        
+                        
+                        
+                            <div class="problem-summary">
+                                Attribute Deprecated
+                            </div>
+                        
+                        
+                        
+                        
+                            <div class="problem-detail">
+                                <strong>Detail:</strong> **NOTE**: This is deprecated, use `numeric` instead.
+                            </div>
+                        
+                        
+                        
+                        
+                            <strong>Problematic Code:</strong>
+                            <pre><code><span class="code-line" data-line-num="1" data-marker=" ">resource &quot;random_string&quot; &quot;api_gateway_service_account_id&quot; {</span>
+<span class="code-line" data-line-num="2" data-marker=" ">  length  = 20</span>
+<span class="code-line" data-line-num="3" data-marker=" ">  lower   = true</span>
+<span class="code-line" data-line-num="4" data-marker=" ">  upper   = false</span>
+<span class="code-line" data-line-num="5" data-marker=" ">  special = false</span>
+<span class="code-line" data-line-num="6" data-marker="➤">  number  = false</span>
+<span class="code-line" data-line-num="7" data-marker=" ">}</span></code></pre>
+                        
+                    </div>
+                
+            </div>
+        
+            
+            <div class="file-group">
+                <h2 id="f83867f44740a4d25f8535124d993813"><a href="#f83867f44740a4d25f8535124d993813"><u></u>/</a></h2>
+                
+                
+                    
+                    <div class="problem-card warning" data-severity="warning">
+                        <div class="problem-header">
+                            <span class="badge badge-warning">
+                                WARNING
+                            </span>
+                            
+                                <span class="line-info">
+                                    📍 Lines 6
+                                </span>
+                            
+                        </div>
+                        
+                        
+                        
+                            <div class="problem-summary">
+                                Attribute Deprecated
+                            </div>
+                        
+                        
+                        
+                        
+                            <div class="problem-detail">
+                                <strong>Detail:</strong> **NOTE**: This is deprecated, use `numeric` instead.
+                            </div>
+                        
+                        
+                        
+                        
+                            <strong>Problematic Code:</strong>
+                            <pre><code><span class="code-line" data-line-num="1" data-marker=" ">resource &quot;random_string&quot; &quot;function_service_account_id&quot; {</span>
+<span class="code-line" data-line-num="2" data-marker=" ">  length  = 20</span>
+<span class="code-line" data-line-num="3" data-marker=" ">  lower   = true</span>
+<span class="code-line" data-line-num="4" data-marker=" ">  upper   = false</span>
+<span class="code-line" data-line-num="5" data-marker=" ">  special = false</span>
+<span class="code-line" data-line-num="6" data-marker="➤">  number  = false</span>
+<span class="code-line" data-line-num="7" data-marker=" ">}</span></code></pre>
+                        
+                    </div>
+                
+                    
+                    <div class="problem-card warning" data-severity="warning">
+                        <div class="problem-header">
+                            <span class="badge badge-warning">
+                                WARNING
+                            </span>
+                            
+                                <span class="line-info">
+                                    📍 Lines 83
+                                </span>
+                            
+                        </div>
+                        
+                        
+                        
+                            <div class="problem-summary">
+                                Attribute Deprecated
+                            </div>
+                        
+                        
+                        
+                        
+                            <div class="problem-detail">
+                                <strong>Detail:</strong> **NOTE**: This is deprecated, use `numeric` instead.
+                            </div>
+                        
+                        
+                        
+                        
+                            <strong>Problematic Code:</strong>
+                            <pre><code><span class="code-line" data-line-num="76" data-marker=" ">resource &quot;random_string&quot; &quot;scheduler_service_account_id&quot; {</span>
+<span class="code-line" data-line-num="77" data-marker=" ">  count = var.schedule_interval == 0 ? 0 : 1</span>
+<span class="code-line" data-line-num="78" data-marker=" "></span>
+<span class="code-line" data-line-num="79" data-marker=" ">  length  = 20</span>
+<span class="code-line" data-line-num="80" data-marker=" ">  lower   = true</span>
+<span class="code-line" data-line-num="81" data-marker=" ">  upper   = false</span>
+<span class="code-line" data-line-num="82" data-marker=" ">  special = false</span>
+<span class="code-line" data-line-num="83" data-marker="➤">  number  = false</span>
+<span class="code-line" data-line-num="84" data-marker=" ">}</span></code></pre>
+                        
+                    </div>
+                
+            </div>
+        
+            
+            <div class="file-group">
+                <h2 id="8f67aea92a885c3d2130f64964591aeb"><a href="#8f67aea92a885c3d2130f64964591aeb"><u></u>/</a></h2>
+                
+                
+                    
+                    <div class="problem-card error" data-severity="error">
+                        <div class="problem-header">
+                            <span class="badge badge-error">
+                                ERROR
+                            </span>
+                            
+                                <span class="line-info">
+                                    📍 Lines 36
+                                </span>
+                            
+                        </div>
+                        
+                        
+                        
+                            <div class="problem-summary">
+                                bucket is not valid, please refer to the official documents: private-bucket-123
+                            </div>
+                        
+                        
+                        
+                        
+                            <div class="problem-detail">
+                                <strong>Detail:</strong> nan
+                            </div>
+                        
+                        
+                        
+                        
+                            <strong>Problematic Code:</strong>
+                            <pre><code><span class="code-line" data-line-num="35" data-marker=" ">resource &quot;tencentcloud_cos_bucket&quot; &quot;private_sbucket&quot; {</span>
+<span class="code-line" data-line-num="36" data-marker="➤">  bucket = &quot;private-bucket-123&quot;</span>
+<span class="code-line" data-line-num="37" data-marker=" ">  acl    = &quot;private&quot;</span>
+<span class="code-line" data-line-num="38" data-marker=" ">}</span></code></pre>
+                        
+                    </div>
+                
+            </div>
+        
+            
+            <div class="file-group">
+                <h2 id="382fa076a3a967b112bf046788fb530d"><a href="#382fa076a3a967b112bf046788fb530d"><u></u>/</a></h2>
+                
+                
+                    
+                    <div class="problem-card error" data-severity="error">
+                        <div class="problem-header">
+                            <span class="badge badge-error">
+                                ERROR
+                            </span>
+                            
+                                <span class="line-info">
+                                    📍 Lines 4
+                                </span>
+                            
+                        </div>
+                        
+                        
+                        
+                            <div class="problem-summary">
+                                Invalid function argument
+                            </div>
+                        
+                        
+                        
+                        
+                            <div class="problem-detail">
+                                <strong>Detail:</strong> Invalid value for "path" parameter: no file exists at "policy.json"; this function works only with files that are distributed as part of the configuration source code, so if this file will be created by a resource in this configuration you must instead obtain this result from an attribute of that resource.
+                            </div>
+                        
+                        
+                        
+                        
+                            <strong>Problematic Code:</strong>
+                            <pre><code><span class="code-line" data-line-num="1" data-marker=" ">resource &quot;aws_s3_bucket&quot; &quot;b&quot; {</span>
+<span class="code-line" data-line-num="2" data-marker=" ">  bucket = var.mybucket</span>
+<span class="code-line" data-line-num="3" data-marker=" ">  acl    = &quot;public-read&quot;</span>
+<span class="code-line" data-line-num="4" data-marker="➤">  policy = file(&quot;policy.json&quot;)</span>
+<span class="code-line" data-line-num="5" data-marker=" "></span>
+<span class="code-line" data-line-num="6" data-marker=" ">  tags = local.common_tags</span>
+<span class="code-line" data-line-num="7" data-marker=" "></span>
+<span class="code-line" data-line-num="8" data-marker=" ">  website {</span>
+<span class="code-line" data-line-num="9" data-marker=" ">    index_document = &quot;index.html&quot;</span>
+<span class="code-line" data-line-num="10" data-marker=" ">    error_document = &quot;error.html&quot;</span>
+<span class="code-line" data-line-num="11" data-marker=" "></span>
+<span class="code-line" data-line-num="12" data-marker=" ">    routing_rules = &lt;&lt;EOF</span>
+<span class="code-line" data-line-num="13" data-marker=" ">    [{</span>
+<span class="code-line" data-line-num="14" data-marker=" ">        &quot;Condition&quot;: {</span>
+<span class="code-line" data-line-num="15" data-marker=" ">	        &quot;KeyPrefixEquals&quot;: &quot;docs/&quot;</span>
+<span class="code-line" data-line-num="16" data-marker=" ">		    },</span>
+<span class="code-line" data-line-num="17" data-marker=" ">		        &quot;Redirect&quot;: {</span>
+<span class="code-line" data-line-num="18" data-marker=" ">			        &quot;ReplaceKeyPrefixWith&quot;: &quot;documents/&quot;</span>
+<span class="code-line" data-line-num="19" data-marker=" ">				    }</span>
+<span class="code-line" data-line-num="20" data-marker=" ">				    }]</span>
+<span class="code-line" data-line-num="21" data-marker=" ">				    </span>
+<span class="code-line" data-line-num="22" data-marker=" ">    EOF</span>
+<span class="code-line" data-line-num="23" data-marker=" ">  }</span>
+<span class="code-line" data-line-num="24" data-marker=" ">}</span></code></pre>
+                        
+                    </div>
+                
+            </div>
+        
+            
+            <div class="file-group">
+                <h2 id="78a363e572020cb52537caa245dfd836"><a href="#78a363e572020cb52537caa245dfd836"><u></u>/</a></h2>
+                
+                
+                    
+                    <div class="problem-card warning" data-severity="warning">
+                        <div class="problem-header">
+                            <span class="badge badge-warning">
+                                WARNING
+                            </span>
+                            
+                                <span class="line-info">
+                                    📍 Lines 112
+                                </span>
+                            
+                        </div>
+                        
+                        
+                        
+                            <div class="problem-summary">
+                                Deprecated Resource
+                            </div>
+                        
+                        
+                        
+                        
+                            <div class="problem-detail">
+                                <strong>Detail:</strong> Deprecated; use kubernetes_cluster_role_binding_v1.
+                            </div>
+                        
+                        
+                        
+                        
+                            <strong>Problematic Code:</strong>
+                            <pre><code><span class="code-line" data-line-num="112" data-marker="➤">resource &quot;kubernetes_cluster_role_binding&quot; &quot;client&quot; {</span>
+<span class="code-line" data-line-num="113" data-marker=" ">  provider = kubernetes.direct</span>
+<span class="code-line" data-line-num="114" data-marker=" "></span>
+<span class="code-line" data-line-num="115" data-marker=" ">  metadata {</span>
+<span class="code-line" data-line-num="116" data-marker=" ">    name = &quot;client-binding&quot;</span>
+<span class="code-line" data-line-num="117" data-marker=" ">  }</span>
+<span class="code-line" data-line-num="118" data-marker=" "></span>
+<span class="code-line" data-line-num="119" data-marker=" ">  role_ref {</span>
+<span class="code-line" data-line-num="120" data-marker=" ">    api_group = &quot;rbac.authorization.k8s.io&quot;</span>
+<span class="code-line" data-line-num="121" data-marker=" ">    kind      = &quot;ClusterRole&quot;</span>
+<span class="code-line" data-line-num="122" data-marker=" ">    name      = &quot;cluster-admin&quot;</span>
+<span class="code-line" data-line-num="123" data-marker=" ">  }</span>
+<span class="code-line" data-line-num="124" data-marker=" "></span>
+<span class="code-line" data-line-num="125" data-marker=" ">  subject {</span>
+<span class="code-line" data-line-num="126" data-marker=" ">    kind = &quot;User&quot;</span>
+<span class="code-line" data-line-num="127" data-marker=" ">    name = &quot;client&quot;</span>
+<span class="code-line" data-line-num="128" data-marker=" ">  }</span>
+<span class="code-line" data-line-num="129" data-marker=" ">}</span></code></pre>
+                        
+                    </div>
+                
+            </div>
+        
+            
+            <div class="file-group">
+                <h2 id="91c1a1d7390fb89db47e378e302f7af1"><a href="#91c1a1d7390fb89db47e378e302f7af1"><u></u>/</a></h2>
+                
+                
+                    
+                    <div class="problem-card error" data-severity="error">
+                        <div class="problem-header">
+                            <span class="badge badge-error">
+                                ERROR
+                            </span>
+                            
+                                <span class="line-info">
+                                    📍 Lines 6
+                                </span>
+                            
+                        </div>
+                        
+                        
+                        
+                            <div class="problem-summary">
+                                Invalid Configuration for Read-Only Attribute
+                            </div>
+                        
+                        
+                        
+                        
+                            <div class="problem-detail">
+                                <strong>Detail:</strong> Cannot set value for this attribute as the provider has marked it as read-only. Remove the configuration line setting the value.
+
+Refer to the provider documentation or contact the provider developers for additional information about configurable and read-only attributes that are supported.
+                            </div>
+                        
+                        
+                        
+                        
+                            <strong>Problematic Code:</strong>
+                            <pre><code><span class="code-line" data-line-num="5" data-marker=" ">resource &quot;tls_self_signed_cert&quot; &quot;ca&quot; {</span>
+<span class="code-line" data-line-num="6" data-marker="➤">  key_algorithm   = tls_private_key.ca-private.algorithm</span>
+<span class="code-line" data-line-num="7" data-marker=" ">  private_key_pem = tls_private_key.ca-private.private_key_pem</span>
+<span class="code-line" data-line-num="8" data-marker=" "></span>
+<span class="code-line" data-line-num="9" data-marker=" ">  dns_names             = [&quot;ca.${var.name}&quot;]</span>
+<span class="code-line" data-line-num="10" data-marker=" ">  is_ca_certificate     = true</span>
+<span class="code-line" data-line-num="11" data-marker=" ">  set_subject_key_id    = true</span>
+<span class="code-line" data-line-num="12" data-marker=" ">  validity_period_hours = 24 * 365 * 10</span>
+<span class="code-line" data-line-num="13" data-marker=" "></span>
+<span class="code-line" data-line-num="14" data-marker=" ">  allowed_uses = [</span>
+<span class="code-line" data-line-num="15" data-marker=" ">    &quot;cert_signing&quot;,</span>
+<span class="code-line" data-line-num="16" data-marker=" ">    &quot;digital_signature&quot;,</span>
+<span class="code-line" data-line-num="17" data-marker=" ">    &quot;key_encipherment&quot;,</span>
+<span class="code-line" data-line-num="18" data-marker=" ">    &quot;server_auth&quot;</span>
+<span class="code-line" data-line-num="19" data-marker=" ">  ]</span>
+<span class="code-line" data-line-num="20" data-marker=" "></span>
+<span class="code-line" data-line-num="21" data-marker=" ">  subject {</span>
+<span class="code-line" data-line-num="22" data-marker=" ">    common_name  = &quot;ca.${var.name}&quot;</span>
+<span class="code-line" data-line-num="23" data-marker=" ">    organization = &quot;Convox&quot;</span>
+<span class="code-line" data-line-num="24" data-marker=" ">  }</span>
+<span class="code-line" data-line-num="25" data-marker=" ">}</span></code></pre>
+                        
+                    </div>
+                
+            </div>
+        
+            
+            <div class="file-group">
+                <h2 id="a560925fc3fe6789a19bd21effadb709"><a href="#a560925fc3fe6789a19bd21effadb709"><u></u>/</a></h2>
+                
+                
+                    
+                    <div class="problem-card error" data-severity="error">
+                        <div class="problem-header">
+                            <span class="badge badge-error">
+                                ERROR
+                            </span>
+                            
+                                <span class="line-info">
+                                    📍 Lines 76
+                                </span>
+                            
+                        </div>
+                        
+                        
+                        
+                            <div class="problem-summary">
+                                Unsupported block type
+                            </div>
+                        
+                        
+                        
+                        
+                            <div class="problem-detail">
+                                <strong>Detail:</strong> Blocks of type "desired_auto_created_endpoints" are not expected here.
+                            </div>
+                        
+                        
+                        
+                        
+                            <strong>Problematic Code:</strong>
+                            <pre><code><span class="code-line" data-line-num="68" data-marker=" ">resource &quot;google_memorystore_instance&quot; &quot;valkey_cluster&quot; {</span>
+<span class="code-line" data-line-num="69" data-marker=" ">  project     = var.gcp_project_id</span>
+<span class="code-line" data-line-num="70" data-marker=" ">  location    = var.gcp_region</span>
+<span class="code-line" data-line-num="71" data-marker=" ">  instance_id = &quot;${var.prefix}redis-valkey-cluster&quot;</span>
+<span class="code-line" data-line-num="72" data-marker=" "></span>
+<span class="code-line" data-line-num="73" data-marker=" ">  engine_version = &quot;VALKEY_8_0&quot;</span>
+<span class="code-line" data-line-num="74" data-marker=" ">  mode           = &quot;CLUSTER&quot;</span>
+<span class="code-line" data-line-num="75" data-marker=" "></span>
+<span class="code-line" data-line-num="76" data-marker="➤">  desired_auto_created_endpoints {</span>
+<span class="code-line" data-line-num="77" data-marker=" ">    network    = &quot;projects/${var.gcp_project_id}/global/networks/${var.network_name}&quot;</span>
+<span class="code-line" data-line-num="78" data-marker=" ">    project_id = var.gcp_project_id</span>
+<span class="code-line" data-line-num="79" data-marker=" ">  }</span>
+<span class="code-line" data-line-num="80" data-marker=" "></span>
+<span class="code-line" data-line-num="81" data-marker=" ">  shard_count             = var.shard_count</span>
+<span class="code-line" data-line-num="82" data-marker=" ">  replica_count           = var.replica_count</span>
+<span class="code-line" data-line-num="83" data-marker=" ">  node_type               = &quot;STANDARD_SMALL&quot;</span>
+<span class="code-line" data-line-num="84" data-marker=" ">  transit_encryption_mode = &quot;SERVER_AUTHENTICATION&quot;</span>
+<span class="code-line" data-line-num="85" data-marker=" ">  authorization_mode      = &quot;AUTH_DISABLED&quot;</span>
+<span class="code-line" data-line-num="86" data-marker=" "></span>
+<span class="code-line" data-line-num="87" data-marker=" ">  zone_distribution_config {</span>
+<span class="code-line" data-line-num="88" data-marker=" ">    mode = &quot;MULTI_ZONE&quot;</span>
+<span class="code-line" data-line-num="89" data-marker=" ">  }</span>
+<span class="code-line" data-line-num="90" data-marker=" "></span>
+<span class="code-line" data-line-num="91" data-marker=" ">  deletion_protection_enabled = true</span>
+<span class="code-line" data-line-num="92" data-marker=" "></span>
+<span class="code-line" data-line-num="93" data-marker=" ">  maintenance_policy {</span>
+<span class="code-line" data-line-num="94" data-marker=" ">    weekly_maintenance_window {</span>
+<span class="code-line" data-line-num="95" data-marker=" ">      day = &quot;SUNDAY&quot;</span>
+<span class="code-line" data-line-num="96" data-marker=" ">      start_time {</span>
+<span class="code-line" data-line-num="97" data-marker=" ">        hours = 1</span>
+<span class="code-line" data-line-num="98" data-marker=" ">      }</span>
+<span class="code-line" data-line-num="99" data-marker=" ">    }</span>
+<span class="code-line" data-line-num="100" data-marker=" ">  }</span>
+<span class="code-line" data-line-num="101" data-marker=" "></span>
+<span class="code-line" data-line-num="102" data-marker=" ">  persistence_config {</span>
+<span class="code-line" data-line-num="103" data-marker=" ">    mode = &quot;AOF&quot;</span>
+<span class="code-line" data-line-num="104" data-marker=" ">    aof_config {</span>
+<span class="code-line" data-line-num="105" data-marker=" ">      append_fsync = &quot;EVERY_SEC&quot;</span>
+<span class="code-line" data-line-num="106" data-marker=" ">    }</span>
+<span class="code-line" data-line-num="107" data-marker=" ">  }</span>
+<span class="code-line" data-line-num="108" data-marker=" "></span>
+<span class="code-line" data-line-num="109" data-marker=" ">  depends_on = [</span>
+<span class="code-line" data-line-num="110" data-marker=" ">    google_network_connectivity_service_connection_policy.valkey,</span>
+<span class="code-line" data-line-num="111" data-marker=" ">    google_service_networking_connection.private_service_connection,</span>
+<span class="code-line" data-line-num="112" data-marker=" ">    google_project_service.memory_store,</span>
+<span class="code-line" data-line-num="113" data-marker=" ">    time_sleep.memory_store_api_wait_60_seconds</span>
+<span class="code-line" data-line-num="114" data-marker=" ">  ]</span>
+<span class="code-line" data-line-num="115" data-marker=" ">}</span></code></pre>
+                        
+                    </div>
+                
+            </div>
+        
+            
+            <div class="file-group">
+                <h2 id="335c665dc04e150c025f5fae47f8ec64"><a href="#335c665dc04e150c025f5fae47f8ec64"><u></u>/</a></h2>
+                
+                
+                    
+                    <div class="problem-card error" data-severity="error">
+                        <div class="problem-header">
+                            <span class="badge badge-error">
+                                ERROR
+                            </span>
+                            
+                                <span class="line-info">
+                                    📍 Lines 101
+                                </span>
+                            
+                        </div>
+                        
+                        
+                        
+                            <div class="problem-summary">
+                                Unsupported block type
+                            </div>
+                        
+                        
+                        
+                        
+                            <div class="problem-detail">
+                                <strong>Detail:</strong> Blocks of type "set" are not expected here. Did you mean to define argument "set"? If so, use the equals sign to assign it a value.
+                            </div>
+                        
+                        
+                        
+                        
+                            <strong>Problematic Code:</strong>
+                            <pre><code><span class="code-line" data-line-num="93" data-marker=" ">resource &quot;helm_release&quot; &quot;cert-manager&quot; {</span>
+<span class="code-line" data-line-num="94" data-marker=" ">  name             = &quot;cert-manager&quot;</span>
+<span class="code-line" data-line-num="95" data-marker=" ">  repository       = &quot;https://charts.jetstack.io&quot;</span>
+<span class="code-line" data-line-num="96" data-marker=" ">  chart            = &quot;cert-manager&quot;</span>
+<span class="code-line" data-line-num="97" data-marker=" ">  version          = &quot;v1.16.2&quot;</span>
+<span class="code-line" data-line-num="98" data-marker=" ">  namespace        = &quot;cert-manager&quot;</span>
+<span class="code-line" data-line-num="99" data-marker=" ">  create_namespace = true</span>
+<span class="code-line" data-line-num="100" data-marker=" "></span>
+<span class="code-line" data-line-num="101" data-marker="➤">  set {</span>
+<span class="code-line" data-line-num="102" data-marker=" ">    name  = &quot;installCRDs&quot;</span>
+<span class="code-line" data-line-num="103" data-marker=" ">    value = &quot;true&quot;</span>
+<span class="code-line" data-line-num="104" data-marker=" ">  }</span>
+<span class="code-line" data-line-num="105" data-marker=" ">}</span></code></pre>
+                        
+                    </div>
+                
+                    
+                    <div class="problem-card error" data-severity="error">
+                        <div class="problem-header">
+                            <span class="badge badge-error">
+                                ERROR
+                            </span>
+                            
+                                <span class="line-info">
+                                    📍 Lines 116
+                                </span>
+                            
+                        </div>
+                        
+                        
+                        
+                            <div class="problem-summary">
+                                Unsupported block type
+                            </div>
+                        
+                        
+                        
+                        
+                            <div class="problem-detail">
+                                <strong>Detail:</strong> Blocks of type "set" are not expected here. Did you mean to define argument "set"? If so, use the equals sign to assign it a value.
+                            </div>
+                        
+                        
+                        
+                        
+                            <strong>Problematic Code:</strong>
+                            <pre><code><span class="code-line" data-line-num="107" data-marker=" ">resource &quot;helm_release&quot; &quot;nginx-ingress-controller&quot; {</span>
+<span class="code-line" data-line-num="108" data-marker=" ">  count            = var.install_ingress_controller ? 1 : 0</span>
+<span class="code-line" data-line-num="109" data-marker=" ">  name             = &quot;nginx-ingress-controller&quot;</span>
+<span class="code-line" data-line-num="110" data-marker=" ">  repository       = &quot;https://kubernetes.github.io/ingress-nginx&quot;</span>
+<span class="code-line" data-line-num="111" data-marker=" ">  chart            = &quot;ingress-nginx&quot;</span>
+<span class="code-line" data-line-num="112" data-marker=" ">  version          = &quot;4.11.5&quot;</span>
+<span class="code-line" data-line-num="113" data-marker=" ">  namespace        = &quot;ingress-nginx&quot;</span>
+<span class="code-line" data-line-num="114" data-marker=" ">  create_namespace = true</span>
+<span class="code-line" data-line-num="115" data-marker=" "></span>
+<span class="code-line" data-line-num="116" data-marker="➤">  set {</span>
+<span class="code-line" data-line-num="117" data-marker=" ">    name  = &quot;fullnameOverride&quot;</span>
+<span class="code-line" data-line-num="118" data-marker=" ">    value = &quot;ingress-nginx&quot;</span>
+<span class="code-line" data-line-num="119" data-marker=" ">  }</span>
+<span class="code-line" data-line-num="120" data-marker=" "></span>
+<span class="code-line" data-line-num="121" data-marker=" ">  set {</span>
+<span class="code-line" data-line-num="122" data-marker=" ">    name  = &quot;controller.service.loadBalancerIP&quot;</span>
+<span class="code-line" data-line-num="123" data-marker=" ">    value = var.loadBalancerIP</span>
+<span class="code-line" data-line-num="124" data-marker=" ">  }</span>
+<span class="code-line" data-line-num="125" data-marker=" "></span>
+<span class="code-line" data-line-num="126" data-marker=" ">  set {</span>
+<span class="code-line" data-line-num="127" data-marker=" ">    name  = &quot;controller.allowSnippetAnnotations&quot;</span>
+<span class="code-line" data-line-num="128" data-marker=" ">    value = true</span>
+<span class="code-line" data-line-num="129" data-marker=" ">  }</span>
+<span class="code-line" data-line-num="130" data-marker=" ">}</span></code></pre>
+                        
+                    </div>
+                
+            </div>
+        
+            
+            <div class="file-group">
+                <h2 id="1a25ce64b33ecd6e47c239425a243349"><a href="#1a25ce64b33ecd6e47c239425a243349"><u></u>/</a></h2>
+                
+                
+                    
+                    <div class="problem-card error" data-severity="error">
+                        <div class="problem-header">
+                            <span class="badge badge-error">
+                                ERROR
+                            </span>
+                            
+                                <span class="line-info">
+                                    📍 Lines 15
+                                </span>
+                            
+                        </div>
+                        
+                        
+                        
+                            <div class="problem-summary">
+                                Unsupported argument
+                            </div>
+                        
+                        
+                        
+                        
+                            <div class="problem-detail">
+                                <strong>Detail:</strong> An argument named "vpc" is not expected here.
+                            </div>
+                        
+                        
+                        
+                        
+                            <strong>Problematic Code:</strong>
+                            <pre><code><span class="code-line" data-line-num="13" data-marker=" ">resource &quot;aws_eip&quot; &quot;cluster-nat-eip&quot; {</span>
+<span class="code-line" data-line-num="14" data-marker=" ">  count = length(var.aws_cidr_subnets_public)</span>
+<span class="code-line" data-line-num="15" data-marker="➤">  vpc   = true</span>
+<span class="code-line" data-line-num="16" data-marker=" ">}</span></code></pre>
+                        
+                    </div>
+                
+            </div>
+        
+            
+            <div class="file-group">
+                <h2 id="d9dd9cd6d2059ac6a86846ad8cc6276e"><a href="#d9dd9cd6d2059ac6a86846ad8cc6276e"><u></u>/</a></h2>
+                
+                
+                    
+                    <div class="problem-card error" data-severity="error">
+                        <div class="problem-header">
+                            <span class="badge badge-error">
+                                ERROR
+                            </span>
+                            
+                                <span class="line-info">
+                                    📍 Lines 1081
+                                </span>
+                            
+                        </div>
+                        
+                        
+                        
+                            <div class="problem-summary">
+                                Invalid resource type
+                            </div>
+                        
+                        
+                        
+                        
+                            <div class="problem-detail">
+                                <strong>Detail:</strong> The provider terraform-provider-openstack/openstack does not support resource type "openstack_blockstorage_volume_v2". Did you mean "openstack_blockstorage_volume_v3"?
+                            </div>
+                        
+                        
+                        
+                        
+                            <strong>Problematic Code:</strong>
+                            <pre><code><span class="code-line" data-line-num="1081" data-marker="➤">resource &quot;openstack_blockstorage_volume_v2&quot; &quot;glusterfs_volume&quot; {</span>
+<span class="code-line" data-line-num="1082" data-marker=" ">  name        = &quot;${var.cluster_name}-glusterfs_volume-${count.index + 1}&quot;</span>
+<span class="code-line" data-line-num="1083" data-marker=" ">  count       = var.gfs_root_volume_size_in_gb == 0 ? var.number_of_gfs_nodes_no_floating_ip : 0</span>
+<span class="code-line" data-line-num="1084" data-marker=" ">  description = &quot;Non-ephemeral volume for GlusterFS&quot;</span>
+<span class="code-line" data-line-num="1085" data-marker=" ">  size        = var.gfs_volume_size_in_gb</span>
+<span class="code-line" data-line-num="1086" data-marker=" ">}</span></code></pre>
+                        
+                    </div>
+                
+            </div>
+        
+            
+            <div class="file-group">
+                <h2 id="b5c51872887adb80d2ecc297916aa2be"><a href="#b5c51872887adb80d2ecc297916aa2be"><u></u>/</a></h2>
+                
+                
+                    
+                    <div class="problem-card warning" data-severity="warning">
+                        <div class="problem-header">
+                            <span class="badge badge-warning">
+                                WARNING
+                            </span>
+                            
+                                <span class="line-info">
+                                    📍 Lines 1
+                                </span>
+                            
+                        </div>
+                        
+                        
+                        
+                            <div class="problem-summary">
+                                Deprecated Resource
+                            </div>
+                        
+                        
+                        
+                        
+                            <div class="problem-detail">
+                                <strong>Detail:</strong> Support for neutron-lbaas will be removed. Make sure to use Octavia
+                            </div>
+                        
+                        
+                        
+                        
+                            <strong>Problematic Code:</strong>
+                            <pre><code><span class="code-line" data-line-num="1" data-marker="➤">resource &quot;openstack_lb_loadbalancer_v2&quot; &quot;k8s_lb&quot; {</span>
+<span class="code-line" data-line-num="2" data-marker=" ">  count             = var.k8s_master_loadbalancer_enabled ? 1 : 0</span>
+<span class="code-line" data-line-num="3" data-marker=" ">  name              = &quot;${var.cluster_name}-api-loadbalancer&quot;</span>
+<span class="code-line" data-line-num="4" data-marker=" ">  vip_subnet_id     = var.subnet_id</span>
+<span class="code-line" data-line-num="5" data-marker=" ">}</span></code></pre>
+                        
+                    </div>
+                
+                    
+                    <div class="problem-card warning" data-severity="warning">
+                        <div class="problem-header">
+                            <span class="badge badge-warning">
+                                WARNING
+                            </span>
+                            
+                                <span class="line-info">
+                                    📍 Lines 7
+                                </span>
+                            
+                        </div>
+                        
+                        
+                        
+                            <div class="problem-summary">
+                                Deprecated Resource
+                            </div>
+                        
+                        
+                        
+                        
+                            <div class="problem-detail">
+                                <strong>Detail:</strong> Support for neutron-lbaas will be removed. Make sure to use Octavia
+                            </div>
+                        
+                        
+                        
+                        
+                            <strong>Problematic Code:</strong>
+                            <pre><code><span class="code-line" data-line-num="7" data-marker="➤">resource &quot;openstack_lb_listener_v2&quot; &quot;api_listener&quot;{</span>
+<span class="code-line" data-line-num="8" data-marker=" ">  count             = var.k8s_master_loadbalancer_enabled ? 1 : 0</span>
+<span class="code-line" data-line-num="9" data-marker=" ">  name              = &quot;api-listener&quot;</span>
+<span class="code-line" data-line-num="10" data-marker=" ">  protocol          = &quot;TCP&quot;</span>
+<span class="code-line" data-line-num="11" data-marker=" ">  protocol_port     = var.k8s_master_loadbalancer_listener_port</span>
+<span class="code-line" data-line-num="12" data-marker=" ">  loadbalancer_id   = openstack_lb_loadbalancer_v2.k8s_lb[0].id</span>
+<span class="code-line" data-line-num="13" data-marker=" ">  depends_on        = [ openstack_lb_loadbalancer_v2.k8s_lb ]</span>
+<span class="code-line" data-line-num="14" data-marker=" ">}</span></code></pre>
+                        
+                    </div>
+                
+                    
+                    <div class="problem-card warning" data-severity="warning">
+                        <div class="problem-header">
+                            <span class="badge badge-warning">
+                                WARNING
+                            </span>
+                            
+                                <span class="line-info">
+                                    📍 Lines 16
+                                </span>
+                            
+                        </div>
+                        
+                        
+                        
+                            <div class="problem-summary">
+                                Deprecated Resource
+                            </div>
+                        
+                        
+                        
+                        
+                            <div class="problem-detail">
+                                <strong>Detail:</strong> Support for neutron-lbaas will be removed. Make sure to use Octavia
+                            </div>
+                        
+                        
+                        
+                        
+                            <strong>Problematic Code:</strong>
+                            <pre><code><span class="code-line" data-line-num="16" data-marker="➤">resource &quot;openstack_lb_pool_v2&quot; &quot;api_pool&quot; {</span>
+<span class="code-line" data-line-num="17" data-marker=" ">  count             = var.k8s_master_loadbalancer_enabled ? 1 : 0</span>
+<span class="code-line" data-line-num="18" data-marker=" ">  name              = &quot;api-pool&quot;</span>
+<span class="code-line" data-line-num="19" data-marker=" ">  protocol          = &quot;TCP&quot;</span>
+<span class="code-line" data-line-num="20" data-marker=" ">  lb_method         = &quot;ROUND_ROBIN&quot;</span>
+<span class="code-line" data-line-num="21" data-marker=" ">  listener_id       = openstack_lb_listener_v2.api_listener[0].id</span>
+<span class="code-line" data-line-num="22" data-marker=" ">  depends_on        = [ openstack_lb_listener_v2.api_listener ]</span>
+<span class="code-line" data-line-num="23" data-marker=" ">}</span></code></pre>
+                        
+                    </div>
+                
+                    
+                    <div class="problem-card warning" data-severity="warning">
+                        <div class="problem-header">
+                            <span class="badge badge-warning">
+                                WARNING
+                            </span>
+                            
+                                <span class="line-info">
+                                    📍 Lines 25
+                                </span>
+                            
+                        </div>
+                        
+                        
+                        
+                            <div class="problem-summary">
+                                Deprecated Resource
+                            </div>
+                        
+                        
+                        
+                        
+                            <div class="problem-detail">
+                                <strong>Detail:</strong> Support for neutron-lbaas will be removed. Make sure to use Octavia
+                            </div>
+                        
+                        
+                        
+                        
+                            <strong>Problematic Code:</strong>
+                            <pre><code><span class="code-line" data-line-num="25" data-marker="➤">resource &quot;openstack_lb_member_v2&quot; &quot;lb_member&quot; {</span>
+<span class="code-line" data-line-num="26" data-marker=" ">  count             = var.k8s_master_loadbalancer_enabled ? length(var.k8s_master_ips) : 0</span>
+<span class="code-line" data-line-num="27" data-marker=" ">  name              = var.k8s_master_ips[count.index].name</span>
+<span class="code-line" data-line-num="28" data-marker=" ">  pool_id           = openstack_lb_pool_v2.api_pool[0].id</span>
+<span class="code-line" data-line-num="29" data-marker=" ">  address           = var.k8s_master_ips[count.index].access_ip_v4</span>
+<span class="code-line" data-line-num="30" data-marker=" ">  protocol_port     = var.k8s_master_loadbalancer_server_port</span>
+<span class="code-line" data-line-num="31" data-marker=" ">  depends_on        = [ openstack_lb_pool_v2.api_pool ]</span>
+<span class="code-line" data-line-num="32" data-marker=" ">}</span></code></pre>
+                        
+                    </div>
+                
+                    
+                    <div class="problem-card warning" data-severity="warning">
+                        <div class="problem-header">
+                            <span class="badge badge-warning">
+                                WARNING
+                            </span>
+                            
+                                <span class="line-info">
+                                    📍 Lines 34
+                                </span>
+                            
+                        </div>
+                        
+                        
+                        
+                            <div class="problem-summary">
+                                Deprecated Resource
+                            </div>
+                        
+                        
+                        
+                        
+                            <div class="problem-detail">
+                                <strong>Detail:</strong> Support for neutron-lbaas will be removed. Make sure to use Octavia
+                            </div>
+                        
+                        
+                        
+                        
+                            <strong>Problematic Code:</strong>
+                            <pre><code><span class="code-line" data-line-num="34" data-marker="➤">resource &quot;openstack_lb_monitor_v2&quot; &quot;monitor&quot; {</span>
+<span class="code-line" data-line-num="35" data-marker=" ">  count       = var.k8s_master_loadbalancer_enabled ? 1 : 0</span>
+<span class="code-line" data-line-num="36" data-marker=" ">  name        = &quot;Api Monitor&quot;</span>
+<span class="code-line" data-line-num="37" data-marker=" ">  pool_id     = openstack_lb_pool_v2.api_pool[0].id</span>
+<span class="code-line" data-line-num="38" data-marker=" ">  type        = &quot;TCP&quot;</span>
+<span class="code-line" data-line-num="39" data-marker=" ">  delay       = 10</span>
+<span class="code-line" data-line-num="40" data-marker=" ">  timeout     = 5</span>
+<span class="code-line" data-line-num="41" data-marker=" ">  max_retries = 5</span>
+<span class="code-line" data-line-num="42" data-marker=" ">}</span></code></pre>
+                        
+                    </div>
+                
+            </div>
+        
+    </div>
+    
+    <script>
+        function filterResults() {
+            const selectedSeverity = document.getElementById('severity-select').value;
+            const cards = document.querySelectorAll('.problem-card');
+            
+            cards.forEach(card => {
+                const severity = card.getAttribute('data-severity');
+                
+                if (selectedSeverity === 'all' || severity === selectedSeverity) {
+                    card.style.display = '';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+            
+            // Hide file groups if no cards are visible
+            document.querySelectorAll('.file-group').forEach(group => {
+                const visibleCards = group.querySelectorAll('.problem-card:not([style*="display: none"])');
+                if (visibleCards.length === 0) {
+                    group.style.display = 'none';
+                } else {
+                    group.style.display = '';
+                }
+            });
+        }
+    </script>
+</body>
+</html>

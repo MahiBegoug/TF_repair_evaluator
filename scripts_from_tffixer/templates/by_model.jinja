@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/diff.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/python.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/bash.min.js"></script>
+    <title>LLM Fix Report - By Model</title>
+    <style>
+        html, body {
+            width: 100%;
+            font-family: sans-serif;
+        }
+
+        table, th, td {
+            border: 1px solid #ccc;
+            border-collapse: collapse;
+            table-layout: fixed;
+        }
+        
+        th {
+            background-color: #f0f0f0;
+            padding: 8px;
+        }
+
+        td {
+            padding: 8px;
+            vertical-align: top;
+        }
+
+        table {
+            width: 100%;
+            table-layout: fixed;
+        }
+
+        .td-fix {
+            width: 100%;
+            max-width: 100%;
+            overflow-x: auto;
+        }
+        
+        pre {
+            margin: 0;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        
+        .model-header {
+            background-color: #e0e0e0;
+            padding: 10px;
+            margin-top: 20px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>LLM Fix Report - By Model</h1>
+    {% for model_key, problems in groups %}
+        {% set model_name = model_key[0] %}
+        {% set provider = model_key[1] %}
+        
+        <div class="model-header">
+            <h2 id="{{ model_name }}">Model: {{ model_name }} ({{ provider }})</h2>
+        </div>
+        
+        {% for solution in problems.itertuples() %}
+            <h3><a href="#">{{ solution.project_name }}/{{ solution.filename }}</a> (Lines {{ solution.line_start }}-{{ solution.line_end }})</h3>
+            <ul>
+                <li>Severity: {{ solution.severity }}</li>
+                <li>Summary: {{ solution.summary }}</li>
+                <li>Iteration: {{ solution.iteration_id }}</li>
+            </ul>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th class="td-fix">Suggested Fix (Diff)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="td-fix">
+                            {% if solution.diff %}
+                                <pre><code class="language-diff">{{ solution.diff|e }}</code></pre>
+                            {% else %}
+                                <span class="no-answer">No diff generated</span>
+                            {% endif %}
+                            <br>
+                            <strong>Explanation:</strong>
+                            <blockquote>{{ solution.explanation|e }}</blockquote>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            <hr>
+        {% endfor %}
+    {% endfor %}
+    <script>
+        hljs.highlightAll();
+    </script>
+</body>
+</html>

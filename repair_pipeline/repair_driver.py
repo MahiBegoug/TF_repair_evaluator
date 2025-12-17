@@ -49,9 +49,15 @@ class RepairEvaluator:
 
         self.outcomes_csv = outcomes_csv
         if not os.path.exists(self.outcomes_csv):
-            pd.DataFrame([], columns=["oid", "iteration_id", "llm_name", "filename", "line_is_clean", 
-                                      "specific_error_fixed", "new_error_count", "new_errors_in_file", "new_errors_in_module"]) \
-                .to_csv(self.outcomes_csv, index=False)
+            pd.DataFrame([], columns=[
+                "oid", "iteration_id", "llm_name", "filename",
+                "line_is_clean", "line_specific_error_fixed", 
+                "module_total_errors", "file_errors", "module_errors",
+                "module_original_errors_remaining", "module_fix_introduced_errors"
+            ]).to_csv(self.outcomes_csv, index=False)
+        
+        # Cache for baseline errors (original errors before any fixes)
+        self.baseline_errors_cache = {}  # {filename: [error_oids]}
 
     def _extract_project_name(self, row):
         """Extract project name from row, either directly or from filename."""
@@ -118,8 +124,8 @@ class RepairEvaluator:
         
         return fixed_content, start_line, end_line
     
-    def _apply_and_validate(self, original_file, project, fixed_content, start_line, end_line, iteration_id):
-        """Apply fix, run terraform validate, and extract diagnostics."""
+    def _apply_and_validate(self, original_file, project, fixed_content, start_line, end_line, iteration_id, baseline_errors=None):
+        """Apply fix, run terraform validate, and extract diagnostics with error categorization."""
         module_dir = os.path.dirname(original_file)
         
         # SAFEGUARD: Check for .bak files (should be ignored by Terraform)
@@ -161,6 +167,28 @@ class RepairEvaluator:
             result=validation_result,
             project_root=project_root
         )
+        
+        # Categorize each error if baseline is provided
+        if baseline_errors is not None:
+            for error in extracted_rows:
+                # Create same signature: use block_identifiers (stable) instead of line numbers
+                block_id = error.get('block_identifiers', '')
+                summary = error.get('summary', '')
+                detail = error.get('detail', '')
+                
+                # Prefer block_identifiers, fallback to line
+                if block_id:
+                    sig = f"{error.get('filename')}|{block_id}|{summary}|{detail}"
+                else:
+                    sig = f"{error.get('filename')}|line_{error.get('line_start')}|{summary}|{detail}"
+                
+                error['is_original_error'] = sig in baseline_errors
+                error['is_new_error'] = sig not in baseline_errors
+        else:
+            # No baseline provided - mark as unknown
+            for error in extracted_rows:
+                error['is_original_error'] = None
+                error['is_new_error'] = None
 
         # Save diagnostics
         print(f"Found {len(extracted_rows)} diagnostics.")
@@ -168,8 +196,89 @@ class RepairEvaluator:
         
         return extracted_rows
     
-    def _calculate_error_metrics(self, extracted_rows, original_file):
-        """Calculate error counts at different scopes."""
+    def _get_baseline_errors(self, original_file, project):
+        """Get errors from problems.csv (much faster than validating original file)."""
+        
+        # If no problems dataset provided, fall back to validation
+        if self.problems is None:
+            print(f"[BASELINE] No problems.csv - validating original file...")
+            module_dir = os.path.dirname(original_file)
+            validation_result = TerraformValidator.validate(module_dir)
+            
+            project_root = os.path.join(self.clones_root, project)
+            extracted_rows = DiagnosticsExtractor.extract_rows(
+                project_name=project,
+                result=validation_result,
+                project_root=project_root
+            )
+            
+            # Create error signatures WITHOUT line numbers (they can change!)
+            error_signatures = set()
+            for error in extracted_rows:
+                # Use block_identifiers + summary + detail
+                # This is stable even if line numbers change
+                block_id = error.get('block_identifiers', '')
+                summary = error.get('summary', '')
+                detail = error.get('detail', '')
+                
+                # Fallback: if no block_identifiers, use line number (less reliable)
+                if block_id:
+                    sig = f"{error.get('filename')}|{block_id}|{summary}|{detail}"
+                else:
+                    # No block identifier - use line as fallback
+                    sig = f"{error.get('filename')}|line_{error.get('line_start')}|{summary}|{detail}"
+                
+                error_signatures.add(sig)
+            
+            print(f"[BASELINE] Found {len(error_signatures)} original errors via validation")
+            return error_signatures
+        
+        # Use problems.csv to get baseline (much faster!)
+        print(f"[BASELINE] Using problems.csv for baseline errors")
+        
+        # Get relative filename to match against problems.csv
+        try:
+            relative_filename = os.path.relpath(original_file, os.getcwd()).replace("\\", "/")
+        except (ValueError, OSError):
+            relative_filename = original_file.replace("\\", "/")
+        
+        # Filter problems for this file
+        file_problems = self.problems[
+            self.problems['filename'].str.contains(os.path.basename(original_file), na=False)
+        ]
+        
+        # Create error signatures from problems.csv WITHOUT line numbers
+        error_signatures = set()
+        for _, problem in file_problems.iterrows():
+            # problems.csv has: block_type + impacted_block_type (not block_identifiers!)
+            block_type = problem.get('block_type', '')
+            impacted_block_type = problem.get('impacted_block_type', '')
+            
+            # Combine to create block identifier
+            if block_type and impacted_block_type:
+                block_id = f"{block_type} {impacted_block_type}"
+            elif impacted_block_type:
+                block_id = impacted_block_type
+            else:
+                block_id = ''
+            
+            summary = problem.get('summary', '')
+            detail = problem.get('detail', '')
+            
+            # Prefer block_identifiers over line numbers
+            if block_id:
+                sig = f"{problem.get('filename')}|{block_id}|{summary}|{detail}"
+            else:
+                # Fallback to line if no block identifier
+                sig = f"{problem.get('filename')}|line_{problem.get('line_start')}|{summary}|{detail}"
+            
+            error_signatures.add(sig)
+        
+        print(f"[BASELINE] Found {len(error_signatures)} original errors from problems.csv")
+        return error_signatures
+    
+    def _calculate_error_metrics(self, extracted_rows, original_file, baseline_errors=None):
+        """Calculate error counts at different scopes with categorization."""
         original_file_normalized = os.path.normpath(original_file)
         
         errors_in_file = sum(
@@ -177,10 +286,16 @@ class RepairEvaluator:
             if os.path.normpath(os.path.join(self.clones_root, er.get("filename", "").replace("clones/", ""))) == original_file_normalized
         )
         
+        # Count original vs new errors
+        original_errors = sum(1 for er in extracted_rows if er.get('is_original_error', False))
+        new_errors = sum(1 for er in extracted_rows if er.get('is_new_error', False))
+        
         return {
             "total": len(extracted_rows),
             "in_file": errors_in_file,
-            "in_module": len(extracted_rows)
+            "in_module": len(extracted_rows),
+            "original": original_errors,  # Ghost errors from before fix
+            "new": new_errors  # Errors introduced by fix
         }
     
     def _evaluate_resolution_metrics(self, row, extracted_rows, start_line, end_line, fixed_file_content):
@@ -231,7 +346,7 @@ class RepairEvaluator:
         }
     
     def _create_outcome_row(self, row, original_file, resolution_metrics, error_counts):
-        """Create outcome row for CSV output."""
+        """Create outcome row for CSV output with enhanced tracking."""
         # Convert to relative path
         try:
             relative_filename = os.path.relpath(original_file, os.getcwd())
@@ -245,10 +360,12 @@ class RepairEvaluator:
             "llm_name": row.get("llm_name", ""),
             "filename": relative_filename,
             "line_is_clean": resolution_metrics["line_is_clean"],
-            "specific_error_fixed": resolution_metrics["specific_error_fixed"],
-            "new_error_count": error_counts["total"],
-            "new_errors_in_file": error_counts["in_file"],
-            "new_errors_in_module": error_counts["in_module"]
+            "line_specific_error_fixed": resolution_metrics["specific_error_fixed"],
+            "module_total_errors": error_counts["total"],
+            "file_errors": error_counts["in_file"],
+            "module_errors": error_counts["in_module"],
+            "module_original_errors_remaining": error_counts.get("original", 0),  # Ghost errors
+            "module_fix_introduced_errors": error_counts.get("new", 0)  # New errors from this fix
         }
     
     def evaluate_repairs(self, llm_fixes_csv: str):
@@ -263,6 +380,7 @@ class RepairEvaluator:
             
             # Get file paths
             original_file = self._get_original_file_path(row["filename"])
+            print(f"\n[PROCESSING] Processing fix for: {original_file}")
             
             # Get fix content and coordinates
             fixed_file_content, start_line, end_line = self._get_fix_content_and_coordinates(row)
@@ -270,6 +388,15 @@ class RepairEvaluator:
             if fixed_file_content is None or pd.isna(fixed_file_content):
                 print(f"Skipping row, no fixed content found for: {original_file} (Mode: {self.repair_mode})")
                 continue
+            
+            # BASELINE: Capture errors from original file (only once per file)
+            baseline_errors = None
+            if original_file not in self.baseline_errors_cache:
+                baseline_errors = self._get_baseline_errors(original_file, project)
+                self.baseline_errors_cache[original_file] = baseline_errors
+            else:
+                baseline_errors = self.baseline_errors_cache[original_file]
+                print(f"[BASELINE] Using cached baseline: {len(baseline_errors)} original errors")
 
             backup_path = FixApplier.apply_fix(
                 original_file,
@@ -278,13 +405,16 @@ class RepairEvaluator:
                 end_line=end_line
             )
 
-            # Apply fix, validate, and extract diagnostics
-            extracted_rows = self._apply_and_validate(original_file, project, fixed_file_content, 
-                                                      start_line, end_line, row.get("iteration_id"))
+            # Apply fix, validate, and extract diagnostics (with baseline for categorization)
+            extracted_rows = self._apply_and_validate(
+                original_file, project, fixed_file_content, 
+                start_line, end_line, row.get("iteration_id"),
+                baseline_errors=baseline_errors  # Pass baseline for categorization
+            )
 
-            # Calculate error counts
-            error_counts = self._calculate_error_metrics(extracted_rows, original_file)
-            print(f'[Metrics] Total errors: {error_counts["total"]}, File errors: {error_counts["in_file"]}, Module errors: {error_counts["in_module"]}')
+            # Calculate error counts with categorization
+            error_counts = self._calculate_error_metrics(extracted_rows, original_file, baseline_errors)
+            print(f'[Metrics] Total: {error_counts["total"]}, Original: {error_counts["original"]}, New: {error_counts["new"]}, File: {error_counts["in_file"]}')
 
             # Evaluate if error was resolved
             resolution_metrics = self._evaluate_resolution_metrics(
@@ -292,7 +422,9 @@ class RepairEvaluator:
             )
 
             # Create and save outcome row
-            outcome_row = self._create_outcome_row(row, original_file, resolution_metrics, error_counts)
+            outcome_row = self._create_outcome_row(
+                row, original_file, resolution_metrics, error_counts
+            )
             pd.DataFrame([outcome_row]).to_csv(self.outcomes_csv, mode='a', header=False, index=False)
 
             # Restore original file

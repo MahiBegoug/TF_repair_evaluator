@@ -22,7 +22,9 @@ class DiagnosticsWriter:
         "block_identifiers",
         "impacted_block_start_line",
         "impacted_block_end_line",
-        "impacted_block_content"
+        "impacted_block_content",
+        "is_original_error",  # Boolean: True if error existed before any fixes (ghost error)
+        "is_new_error"  # Boolean: True if error was introduced by a fix
     ]
 
     @staticmethod

@@ -4,6 +4,7 @@ import argparse
 import subprocess
 import sys
 
+
 def main():
     parser = argparse.ArgumentParser(description="Run repair pipeline on raw LLM responses")
     parser.add_argument("--config", default="repair_config.json", help="Path to configuration file")
@@ -21,7 +22,7 @@ def main():
     # Support both new nested structure and old flat structure (fallback)
     input_dir = responses_config.get("input_dir", config.get("input_dir", "llm_responses"))
     target_models = responses_config.get("models", config.get("models", []))
-    
+
     output_dir = config.get("output_dir", "llms_fixes_results")
     clones_dir = config.get("clones_dir", "../TFReproducer/clones")
     repair_mode = config.get("repair_mode", "auto")
@@ -36,7 +37,7 @@ def main():
     os.makedirs(output_dir, exist_ok=True)
 
     csv_files = glob.glob(os.path.join(input_dir, "*.csv"))
-    
+
     if not csv_files:
         print(f"No CSV files found in {input_dir}")
         return
@@ -45,7 +46,7 @@ def main():
 
     for csv_file in csv_files:
         filename = os.path.basename(csv_file)
-        
+
         # Filter by model name if specified
         if target_models:
             matched = False
@@ -57,12 +58,12 @@ def main():
                 continue
 
         print(f"\nProcessing: {filename}")
-        
+
         # Define output paths
         # Add "_repair_results" suffix to indicate the file contains repair attempt results
         outcomes_filename = filename.replace(".csv", "_repair_results.csv")
         outcomes_csv = os.path.join(output_dir, outcomes_filename)
-        
+
         # We also generate a detailed diagnostics file after validation
         diagnostics_filename = filename.replace(".csv", "_new_diagnostics_after_validation.csv")
         diagnostics_csv = os.path.join(output_dir, diagnostics_filename)
@@ -75,15 +76,16 @@ def main():
             "--clones-dir", clones_dir,
             "--repair-mode", repair_mode
         ]
-        
+
         if problems_dataset:
-             cmd.extend(["--problems-dataset", problems_dataset])
-        
+            cmd.extend(["--problems-dataset", problems_dataset])
+
         try:
             subprocess.run(cmd, check=True)
             print(f"Success! Results saved to {outcomes_csv}")
         except subprocess.CalledProcessError as e:
             print(f"Error processing {filename}: {e}")
+
 
 if __name__ == "__main__":
     main()
