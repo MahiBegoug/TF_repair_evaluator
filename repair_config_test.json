@@ -1,12 +1,12 @@
 {
-    "problems_dataset": "problems/problems.csv",
+    "problems_dataset": "problems/problems_kubespray_only.csv",
     "responses": {
         "input_dir": "llm_responses",
         "models": [
-            "gpt_oss_20b_snippet_only.csv"
+            "gpt_oss_20b_snippet_only_kubespray.csv"
         ]
     },
-    "output_dir": "llms_fixes_results",
+    "output_dir": "llms_fixes_results_test",
     "clones_dir": "../TFReproducer/clones",
     "repair_mode": "block"
 }

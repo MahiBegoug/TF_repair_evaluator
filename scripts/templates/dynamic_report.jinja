@@ -281,11 +281,14 @@
                                     <br><br>
                                     <strong>Type:</strong> {{ solution.fix_type }}<br>
                                     
-                                    <!-- Validation Status Badges -->
                                     <div class="validation-status">
                                         {% set line_is_clean = solution.line_is_clean|default(none) %}
+                                        {% set new_errors_list = solution.new_errors|default([]) %}
+                                        {% set same_line_errors = new_errors_list|selectattr('same_line', 'equalto', true)|list %}
+                                        {% set has_same_line_errors = same_line_errors|length > 0 %}
+                                        
                                         {% if line_is_clean is not none %}
-                                            {% if line_is_clean %}
+                                            {% if line_is_clean and not has_same_line_errors %}
                                                 <span class="badge badge-success">✓ Line Clean</span>
                                             {% else %}
                                                 <span class="badge badge-danger">✗ Line Has Errors</span>
@@ -301,26 +304,80 @@
                                             {% endif %}
                                         {% endif %}
                                         
-                                        {% set module_total = solution.module_total_errors|default(none) %}
-                                        {% if module_total is not none %}
-                                            <span class="badge badge-info">
-                                                Module Errors: {{ module_total }}
-                                            </span>
-                                        {% endif %}
-                                        
-                                        {% set file_errs = solution.file_errors|default(none) %}
-                                        {% if file_errs is not none %}
-                                            <span class="badge badge-info">
-                                                File Errors: {{ file_errs }}
-                                            </span>
-                                        {% endif %}
-                                        
+
                                         {% set new_err_count = solution.module_fix_introduced_errors|default(none) %}
                                         {% if new_err_count is not none %}
                                             {% if new_err_count > 0 %}
                                                 <span class="badge badge-danger">
                                                     +{{ new_err_count }} New Error{{ "s" if new_err_count > 1 else "" }}
                                                 </span>
+                                                
+                                                {# Show category breakdown (only if categorized) #}
+                                                {% set new_errors = solution.new_errors|default([]) %}
+                                                {% if new_errors|length > 0 %}
+                                                    {% set introduced_this = new_errors|selectattr('error_category', 'equalto', 'introduced_this_iteration')|list|length %}
+                                                    {% set truly_new = new_errors|selectattr('error_category', 'equalto', 'truly_new')|list|length %}
+                                                    {% set exists_other = new_errors|selectattr('error_category', 'equalto', 'exists_in_other_experiments')|list|length %}
+                                                    
+                                                    {# Show category badges if we have categorized errors #}
+                                                    {% if introduced_this > 0 or truly_new > 0 or exists_other > 0 %}
+                                                        <div style="margin-top: 6px;">
+                                                            {% if introduced_this > 0 %}
+                                                                <span class="badge badge-warning" title="This specific iteration introduced {{ introduced_this }} error(s)">
+                                                                    🟠 {{ introduced_this }} by THIS iter
+                                                                </span>
+                                                            {% endif %}
+                                                            {% if truly_new > 0 %}
+                                                                <span class="badge badge-danger" title="Truly new to dataset - never seen before">
+                                                                    🔴 {{ truly_new }} truly new
+                                                                </span>
+                                                            {% endif %}
+                                                            {% if exists_other > 0 %}
+                                                                <span class="badge badge-warning" title="Also exists in other experiments">
+                                                                    🟡 {{ exists_other }} cross-exp
+                                                                </span>
+                                                            {% endif %}
+                                                        </div>
+                                                    {% endif %}
+                                                {% endif %}
+                                                
+                                                {# Show compact error tickets - handle missing data #}
+                                                {% set new_errors = solution.new_errors|default([]) %}
+                                                {% if new_errors|length > 0 %}
+                                                    <div style="margin-top: 8px;">
+                                                        {% for err in new_errors[:3] %}
+                                                            <div style="margin: 4px 0; padding: 6px 8px; background-color: white; border: 1px solid #dc3545; border-left: 3px solid #dc3545; border-radius: 3px; font-size: 0.75em;">
+                                                                <div style="font-weight: 600; color: #dc3545; margin-bottom: 2px;">
+                                                                    Line {{ err.line_start }}
+                                                                    {% if err.error_category == 'introduced_this_iteration' %}
+                                                                        <span style="color: #ff8c00;">🟠</span>
+                                                                    {% elif err.error_category == 'truly_new' %}
+                                                                        <span style="color: #dc3545;">🔴</span>
+                                                                    {% elif err.error_category == 'exists_in_other_experiments' %}
+                                                                        <span style="color: #ffc107;">🟡</span>
+                                                                    {% endif %}
+                                                                </div>
+                                                                <div style="color: #555; line-height: 1.3;">
+                                                                    {{ err.summary|truncate(45, True) }}
+                                                                </div>
+                                                            </div>
+                                                        {% endfor %}
+                                                        {% if new_errors|length > 3 %}
+                                                            <div style="margin: 4px 0; padding: 4px 8px; background-color: #f8f9fa; border: 1px dashed #999; border-radius: 3px; font-size: 0.7em; color: #666; text-align: center;">
+                                                                +{{ new_errors|length - 3 }} more (see right →)
+                                                            </div>
+                                                        {% endif %}
+                                                    </div>
+                                                {% else %}
+                                                    {# Show message if count > 0 but details missing #}
+                                                    {% set new_err_count = solution.module_fix_introduced_errors|default(0) %}
+                                                    {% if new_err_count > 0 %}
+                                                        <div style="margin-top: 8px; padding: 6px; background-color: #fff3cd; border: 1px dashed #ffc107; border-radius: 3px; font-size: 0.7em; color: #856404; text-align: center;">
+                                                            ℹ️ Error details unavailable<br>
+                                                            <span style="font-size: 0.9em;">See full list on right →</span>
+                                                        </div>
+                                                    {% endif %}
+                                                {% endif %}
                                             {% else %}
                                                 <span class="badge badge-success">
                                                     No New Errors
@@ -347,22 +404,51 @@
                                     {% set new_errors = solution.new_errors|default([]) %}
                                     {% if new_errors|length > 0 %}
                                         <div style="margin-top: 15px; padding: 10px; background-color: #fff3cd; border-left: 4px solid #ffc107; border-radius: 4px;">
-                                            <strong style="color: #856404;">⚠ New Issues Introduced ({{ new_errors|length }}):</strong>
+                                            <strong style="color: #856404;">⚠ Issues Found After Fix ({{ new_errors|length }}):</strong>
                                             <ul style="margin: 8px 0; padding-left: 20px;">
                                                 {% for err in new_errors %}
                                                     <li style="margin: 5px 0;">
                                                         <span class="badge badge-{{ 'danger' if err.severity == 'error' else 'warning' }}">
                                                             {{ err.severity|upper }}
                                                         </span>
+                                                        
                                                         {% if err.same_line %}
                                                             <span class="badge badge-danger" title="This error appears on the same line as the original issue">
                                                                 📍 SAME LINE
                                                             </span>
                                                         {% endif %}
+                                                        
+                                                        {# Show error category badges #}
+                                                        {% if err.error_category == 'original' %}
+                                                            <span class="badge badge-secondary" title="This error existed in the baseline before any fixes">
+                                                                🔵 Original Error
+                                                            </span>
+                                                        {% elif err.error_category == 'introduced_this_iteration' %}
+                                                            <span class="badge badge-danger" title="THIS specific iteration introduced this error">
+                                                                🟠 Introduced by THIS Iteration
+                                                            </span>
+                                                        {% elif err.error_category == 'truly_new' %}
+                                                            <span class="badge badge-danger" title="Truly new error - never seen before anywhere">
+                                                                🔴 Truly New to Dataset
+                                                            </span>
+                                                        {% elif err.error_category == 'exists_in_other_experiments' %}
+                                                            {% set other_iters = err.exists_in_iterations|string %}
+                                                            <span class="badge badge-warning" title="Also appears in iterations: {{ other_iters }}">
+                                                                🟡 Also in Iterations: {{ other_iters }}
+                                                            </span>
+                                                        {% endif %}
+                                                        
                                                         <strong>Line {{ err.line_start }}{% if err.line_end != err.line_start %}-{{ err.line_end }}{% endif %}:</strong>
                                                         {{ err.summary }}
                                                         {% if err.detail %}
-                                                            <br><span style="font-size: 0.9em; color: #666;">{{ err.detail|truncate(150) }}</span>
+                                                            <br><span style="font-size: 0.9em; color: #666;">{{ err.detail|string|truncate(150) }}</span>
+                                                        {% endif %}
+                                                        
+                                                        {# Show tracking info if available #}
+                                                        {% if err.first_seen_in %}
+                                                            <br><span style="font-size: 0.85em; color: #888;">
+                                                                <em>First seen in: {{ err.first_seen_in }}</em>
+                                                            </span>
                                                         {% endif %}
                                                     </li>
                                                 {% endfor %}

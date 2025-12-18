@@ -156,18 +156,24 @@ def main():
     # Process new diagnostics if available
     if new_diagnostics is not None:
         print("Processing new diagnostics...")
-        # Group new diagnostics by oid + iteration_id
-        new_diag_grouped = new_diagnostics.groupby(['oid', 'iteration_id'])
+        # Group new diagnostics by original_problem_oid + iteration_id
+        # This links new errors back to the fix that caused them
+        new_diag_grouped = new_diagnostics.groupby(['original_problem_oid', 'iteration_id'])
         
         def get_new_errors(row, problems_df, new_diag_df):
             """Get list of new errors introduced by this fix"""
             key = (row['oid'], row['iteration_id'])
             if key not in new_diag_df.groups:
+                print(f"  [DEBUG] Key {key} not found in new_diag groups. Available: {list(new_diag_df.groups.keys())[:3]}")
                 return []
             
-            # Get original error line range
-            orig_line_start = row['line_start'] if 'line_start' in row else None
-            orig_line_end = row['line_end'] if 'line_end' in row else None
+            print(f"  [DEBUG] Processing key {key}, found {len(new_diag_df.get_group(key))} errors")
+            
+            # Get original error details for filtering
+            orig_line_start = row.get('line_start', None)
+            orig_line_end = row.get('line_end', None)
+            orig_summary = row.get('summary', '')
+            orig_severity = row.get('severity', '')
             
             # Get all new diagnostics for this fix
             new_errs = new_diag_df.get_group(key)
@@ -181,15 +187,71 @@ def main():
                     # Check if error line overlaps with original range
                     same_line = (orig_line_start <= err_line <= (orig_line_end if orig_line_end else orig_line_start))
                 
+                # Use new tracking columns if available
+                is_new_to_dataset = err.get('is_new_to_dataset', None)
+                introduced_in_this_iteration = err.get('introduced_in_this_iteration', None)
+                first_seen_in = err.get('first_seen_in', '')
+                exists_in_iterations = err.get('exists_in_iterations', '')
+                
+                # Determine error category
+                if err.get('is_original_error', False):
+                    error_category = 'original'
+                elif introduced_in_this_iteration:
+                    error_category = 'introduced_this_iteration'
+                elif is_new_to_dataset:
+                    error_category = 'truly_new'
+                elif exists_in_iterations:
+                    error_category = 'exists_in_other_experiments'
+                else:
+                    # Fallback for old data without new columns
+                    error_category = 'unknown'
+                
+                # SKIP ORIGINAL ERRORS - they're not "new" errors!
+                # Original errors existed in baseline and shouldn't be shown in "Issues Found After Fix"
+                if error_category == 'original':
+                    print(f"  [SKIP] Original error on line {err.get('line_start')}: {err.get('summary', '')[:50]}...")
+                    continue
+                
+                err_summary = err.get('summary', '')
+                err_severity = err.get('severity', '')
+                
+                # Debug logging
+                print(f"  [INCLUDE] {error_category.upper()} on line {err.get('line_start')}: {err_summary[:50]}...")
+                if error_category == 'introduced_this_iteration':
+                    print(f"    → This iteration introduced it (first_seen_in: {first_seen_in})")
+                elif error_category == 'exists_in_other_experiments':
+                    print(f"    → Also in iterations: {exists_in_iterations}")
+                
                 result.append({
-                    'severity': err.get('severity', 'unknown'),
-                    'summary': err.get('summary', 'No summary'),
+                    'severity': err_severity if err_severity else 'unknown',
+                    'summary': err_summary if err_summary else 'No summary',
                     'detail': err.get('detail', ''),
                     'line_start': err.get('line_start', '?'),
                     'line_end': err.get('line_end', '?'),
-                    'same_line': same_line
+                    'same_line': same_line,
+                    'error_category': error_category,
+                    'first_seen_in': first_seen_in,
+                    'exists_in_iterations': exists_in_iterations
                 })
-            return result
+            
+            # Deduplicate errors based on severity, summary, detail, and line
+            # Include 'detail' to avoid over-deduplication of similar errors with different specifics
+            seen = set()
+            unique_result = []
+            for err in result:
+                # Use first 100 chars of detail to avoid issues with very long details
+                # Handle NaN/float values from pandas
+                detail_val = err.get('detail', '')
+                if isinstance(detail_val, str):
+                    detail_key = detail_val[:100]
+                else:
+                    detail_key = ''
+                key = (err['severity'], err['summary'], detail_key, err['line_start'], err['line_end'])
+                if key not in seen:
+                    seen.add(key)
+                    unique_result.append(err)
+            
+            return unique_result
         
         df_all['new_errors'] = df_all.apply(
             lambda row: get_new_errors(row, problems, new_diag_grouped), 

@@ -8,6 +8,7 @@ class DiagnosticsWriter:
         "project_name",
         "working_directory",
         "oid",  # NEW COLUMN (HASH)
+        "original_problem_oid",  # OID of the original problem being fixed
         "iteration_id",  # Repair iteration identifier
         "severity",
         "summary",
@@ -23,8 +24,12 @@ class DiagnosticsWriter:
         "impacted_block_start_line",
         "impacted_block_end_line",
         "impacted_block_content",
-        "is_original_error",  # Boolean: True if error existed before any fixes (ghost error)
-        "is_new_error"  # Boolean: True if error was introduced by a fix
+        "is_original_error",  # Boolean: True if error existed in baseline before any fixes
+        "is_new_error",  # Boolean: True if error was introduced by a fix (DEPRECATED - use is_new_to_dataset)
+        "is_new_to_dataset",  # Boolean: True if error is truly new (not in baseline, not in any other iteration)
+        "introduced_in_this_iteration",  # Boolean: True if THIS specific iteration introduced this error
+        "exists_in_iterations",  # String: Comma-separated iteration_ids where this error appears
+        "first_seen_in"  # String: iteration_id or "baseline" where error first appeared
     ]
 
     @staticmethod
@@ -39,15 +44,20 @@ class DiagnosticsWriter:
         return full_hash
 
     @staticmethod
-    def write_rows(rows, csv_path, iteration_id=None):
+    def write_rows(rows, csv_path, iteration_id=None, original_problem_oid=None):
         if not rows:
             return
 
         enriched_rows = []
         for r in rows:
             oid = DiagnosticsWriter.compute_oid(r)
-            # Add iteration_id to each row
-            enriched_row = {"oid": oid, "iteration_id": iteration_id, **r}
+            # Add iteration_id and original_problem_oid to each row
+            enriched_row = {
+                "oid": oid, 
+                "original_problem_oid": original_problem_oid,
+                "iteration_id": iteration_id, 
+                **r
+            }
             enriched_rows.append(enriched_row)
 
         df = pd.DataFrame(enriched_rows, columns=DiagnosticsWriter.COLUMNS)

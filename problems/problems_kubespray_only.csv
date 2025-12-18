@@ -1,0 +1,1548 @@
+project_name,latest_commit,working_directory,oid,severity,summary,detail,filename,line_start,col_start,line_end,col_end,block_type,impacted_block_type,impacted_block_content,impacted_block_start_line,impacted_block_end_line,block_identifiers,metrics_nloc,metrics_complexity,metrics_entropy,metrics_tokens,metrics_depth,metrics_loc,metrics_template_expressions,metrics_references,metrics_attributes,provider_name,provider_version,resource_schema,block_documentation_identifiers,matched_type,file_content
+kubernetes-sigs__kubespray,b9e1e8577fade952f72281fc3b9fd16d7c0f994a,clones/kubernetes-sigs__kubespray/contrib/terraform/openstack/modules/compute,da91cc6bff0c0a60f1423a3137b338c4456f41c3,error,Invalid resource type,"The provider terraform-provider-openstack/openstack does not support resource type ""openstack_blockstorage_volume_v2"". Did you mean ""openstack_blockstorage_volume_v3""?",clones/kubernetes-sigs__kubespray/contrib/terraform/openstack/modules/compute/main.tf,1081,10,1081,44,resource,openstack_blockstorage_volume_v2 glusterfs_volume,"resource ""openstack_blockstorage_volume_v2"" ""glusterfs_volume"" {
+  name        = ""${var.cluster_name}-glusterfs_volume-${count.index + 1}""
+  count       = var.gfs_root_volume_size_in_gb == 0 ? var.number_of_gfs_nodes_no_floating_ip : 0
+  description = ""Non-ephemeral volume for GlusterFS""
+  size        = var.gfs_volume_size_in_gb
+}",1081,1086,resource openstack_blockstorage_volume_v2 glusterfs_volume,0,2,4.72,43,6,6,1,5,4,openstack,3.4.0,"{""attributes"": {""attachment"": {""type"": [""set"", [""object"", {""device"": ""string"", ""id"": ""string"", ""instance_id"": ""string""}]], ""description_kind"": ""plain"", ""computed"": true}, ""availability_zone"": {""type"": ""string"", ""description_kind"": ""plain"", ""optional"": true, ""computed"": true}, ""backup_id"": {""type"": ""string"", ""description_kind"": ""plain"", ""optional"": true}, ""consistency_group_id"": {""type"": ""string"", ""description_kind"": ""plain"", ""optional"": true}, ""description"": {""type"": ""string"", ""description_kind"": ""plain"", ""optional"": true}, ""enable_online_resize"": {""type"": ""bool"", ""description_kind"": ""plain"", ""optional"": true}, ""id"": {""type"": ""string"", ""description_kind"": ""plain"", ""optional"": true, ""computed"": true}, ""image_id"": {""type"": ""string"", ""description_kind"": ""plain"", ""optional"": true}, ""metadata"": {""type"": [""map"", ""string""], ""description_kind"": ""plain"", ""optional"": true, ""computed"": true}, ""name"": {""type"": ""string"", ""description_kind"": ""plain"", ""optional"": true}, ""region"": {""type"": ""string"", ""description_kind"": ""plain"", ""optional"": true, ""computed"": true}, ""size"": {""type"": ""number"", ""description_kind"": ""plain"", ""required"": true}, ""snapshot_id"": {""type"": ""string"", ""description_kind"": ""plain"", ""optional"": true}, ""source_replica"": {""type"": ""string"", ""description_kind"": ""plain"", ""optional"": true}, ""source_vol_id"": {""type"": ""string"", ""description_kind"": ""plain"", ""optional"": true}, ""volume_retype_policy"": {""type"": ""string"", ""description_kind"": ""plain"", ""optional"": true}, ""volume_type"": {""type"": ""string"", ""description_kind"": ""plain"", ""optional"": true, ""computed"": true}}, ""block_types"": {""scheduler_hints"": {""nesting_mode"": ""set"", ""block"": {""attributes"": {""additional_properties"": {""type"": [""map"", ""string""], ""description_kind"": ""plain"", ""optional"": true}, ""different_host"": {""type"": [""list"", ""string""], ""description_kind"": ""plain"", ""optional"": true}, ""local_to_instance"": {""type"": ""string"", ""description_kind"": ""plain"", ""optional"": true}, ""query"": {""type"": ""string"", ""description_kind"": ""plain"", ""optional"": true}, ""same_host"": {""type"": [""list"", ""string""], ""description_kind"": ""plain"", ""optional"": true}}, ""description_kind"": ""plain""}}, ""timeouts"": {""nesting_mode"": ""single"", ""block"": {""attributes"": {""create"": {""type"": ""string"", ""description_kind"": ""plain"", ""optional"": true}, ""delete"": {""type"": ""string"", ""description_kind"": ""plain"", ""optional"": true}}, ""description_kind"": ""plain""}}}, ""matched_block_name"": ""openstack_blockstorage_volume_v3"", ""matched_block_type"": ""resource""}",openstack_blockstorage_volume_v3,resource,"data ""openstack_images_image_v2"" ""vm_image"" {
+  count = var.image_uuid == """" ? 1 : 0
+  most_recent = true
+  name = var.image
+}
+
+data ""openstack_images_image_v2"" ""gfs_image"" {
+  count = var.image_gfs_uuid == """" ? var.image_uuid == """" ? 1 : 0 : 0
+  most_recent = true
+  name = var.image_gfs == """" ? var.image : var.image_gfs
+}
+
+data ""openstack_images_image_v2"" ""image_master"" {
+  count = var.image_master_uuid == """" ? var.image_uuid == """" ? 1 : 0 : 0
+  name = var.image_master == """" ? var.image : var.image_master
+}
+
+data ""cloudinit_config"" ""cloudinit"" {
+  part {
+    content_type =  ""text/cloud-config""
+    content = templatefile(""${path.module}/templates/cloudinit.yaml.tmpl"", {
+      extra_partitions = [],
+      netplan_critical_dhcp_interface = """"
+    })
+  }
+}
+
+data ""openstack_networking_network_v2"" ""k8s_network"" {
+  count = var.use_existing_network ? 1 : 0
+  name  = var.network_name
+}
+
+resource ""openstack_compute_keypair_v2"" ""k8s"" {
+  name       = ""kubernetes-${var.cluster_name}""
+  public_key = chomp(file(var.public_key_path))
+}
+
+resource ""openstack_networking_secgroup_v2"" ""k8s_master"" {
+  name                 = ""${var.cluster_name}-k8s-master""
+  description          = ""${var.cluster_name} - Kubernetes Master""
+  delete_default_rules = true
+}
+
+resource ""openstack_networking_secgroup_v2"" ""k8s_master_extra"" {
+  count                = ""%{if var.extra_sec_groups}1%{else}0%{endif}""
+  name                 = ""${var.cluster_name}-k8s-master-${var.extra_sec_groups_name}""
+  description          = ""${var.cluster_name} - Kubernetes Master nodes - rules not managed by terraform""
+  delete_default_rules = true
+}
+
+resource ""openstack_networking_secgroup_rule_v2"" ""k8s_master"" {
+  count             = length(var.master_allowed_remote_ips)
+  direction         = ""ingress""
+  ethertype         = ""IPv4""
+  protocol          = ""tcp""
+  port_range_min    = ""6443""
+  port_range_max    = ""6443""
+  remote_ip_prefix  = var.master_allowed_remote_ips[count.index]
+  security_group_id = openstack_networking_secgroup_v2.k8s_master.id
+}
+
+resource ""openstack_networking_secgroup_rule_v2"" ""k8s_master_ports"" {
+  count             = length(var.master_allowed_ports)
+  direction         = ""ingress""
+  ethertype         = ""IPv4""
+  protocol          = lookup(var.master_allowed_ports[count.index], ""protocol"", ""tcp"")
+  port_range_min    = lookup(var.master_allowed_ports[count.index], ""port_range_min"")
+  port_range_max    = lookup(var.master_allowed_ports[count.index], ""port_range_max"")
+  remote_ip_prefix  = lookup(var.master_allowed_ports[count.index], ""remote_ip_prefix"", ""0.0.0.0/0"")
+  security_group_id = openstack_networking_secgroup_v2.k8s_master.id
+}
+
+resource ""openstack_networking_secgroup_rule_v2"" ""k8s_master_ipv6_ingress"" {
+  count             = length(var.master_allowed_remote_ipv6_ips)
+  direction         = ""ingress""
+  ethertype         = ""IPv6""
+  protocol          = ""tcp""
+  port_range_min    = ""6443""
+  port_range_max    = ""6443""
+  remote_ip_prefix  = var.master_allowed_remote_ipv6_ips[count.index]
+  security_group_id = openstack_networking_secgroup_v2.k8s_master.id
+}
+
+resource ""openstack_networking_secgroup_rule_v2"" ""k8s_master_ports_ipv6_ingress"" {
+  count             = length(var.master_allowed_ports_ipv6)
+  direction         = ""ingress""
+  ethertype         = ""IPv6""
+  protocol          = lookup(var.master_allowed_ports_ipv6[count.index], ""protocol"", ""tcp"")
+  port_range_min    = lookup(var.master_allowed_ports_ipv6[count.index], ""port_range_min"")
+  port_range_max    = lookup(var.master_allowed_ports_ipv6[count.index], ""port_range_max"")
+  remote_ip_prefix  = lookup(var.master_allowed_ports_ipv6[count.index], ""remote_ip_prefix"", ""::/0"")
+  security_group_id = openstack_networking_secgroup_v2.k8s_master.id
+}
+
+resource ""openstack_networking_secgroup_rule_v2"" ""master_egress_ipv6"" {
+  count             = length(var.k8s_allowed_egress_ipv6_ips)
+  direction         = ""egress""
+  ethertype         = ""IPv6""
+  remote_ip_prefix  = var.k8s_allowed_egress_ipv6_ips[count.index]
+  security_group_id = openstack_networking_secgroup_v2.k8s_master.id
+}
+
+resource ""openstack_networking_secgroup_v2"" ""bastion"" {
+  name                 = ""${var.cluster_name}-bastion""
+  count                = var.number_of_bastions != """" ? 1 : 0
+  description          = ""${var.cluster_name} - Bastion Server""
+  delete_default_rules = true
+}
+
+resource ""openstack_networking_secgroup_rule_v2"" ""bastion"" {
+  count             = var.number_of_bastions != """" ? length(var.bastion_allowed_remote_ips) : 0
+  direction         = ""ingress""
+  ethertype         = ""IPv4""
+  protocol          = ""tcp""
+  port_range_min    = ""22""
+  port_range_max    = ""22""
+  remote_ip_prefix  = var.bastion_allowed_remote_ips[count.index]
+  security_group_id = openstack_networking_secgroup_v2.bastion[0].id
+}
+
+resource ""openstack_networking_secgroup_rule_v2"" ""k8s_bastion_ports"" {
+  count             = length(var.bastion_allowed_ports)
+  direction         = ""ingress""
+  ethertype         = ""IPv4""
+  protocol          = lookup(var.bastion_allowed_ports[count.index], ""protocol"", ""tcp"")
+  port_range_min    = lookup(var.bastion_allowed_ports[count.index], ""port_range_min"")
+  port_range_max    = lookup(var.bastion_allowed_ports[count.index], ""port_range_max"")
+  remote_ip_prefix  = lookup(var.bastion_allowed_ports[count.index], ""remote_ip_prefix"", ""0.0.0.0/0"")
+  security_group_id = openstack_networking_secgroup_v2.bastion[0].id
+}
+
+resource ""openstack_networking_secgroup_rule_v2"" ""bastion_ipv6_ingress"" {
+  count             = var.number_of_bastions != """" ? length(var.bastion_allowed_remote_ipv6_ips) : 0
+  direction         = ""ingress""
+  ethertype         = ""IPv6""
+  protocol          = ""tcp""
+  port_range_min    = ""22""
+  port_range_max    = ""22""
+  remote_ip_prefix  = var.bastion_allowed_remote_ipv6_ips[count.index]
+  security_group_id = openstack_networking_secgroup_v2.bastion[0].id
+}
+
+resource ""openstack_networking_secgroup_rule_v2"" ""k8s_bastion_ports_ipv6_ingress"" {
+  count             = length(var.bastion_allowed_ports_ipv6)
+  direction         = ""ingress""
+  ethertype         = ""IPv6""
+  protocol          = lookup(var.bastion_allowed_ports_ipv6[count.index], ""protocol"", ""tcp"")
+  port_range_min    = lookup(var.bastion_allowed_ports_ipv6[count.index], ""port_range_min"")
+  port_range_max    = lookup(var.bastion_allowed_ports_ipv6[count.index], ""port_range_max"")
+  remote_ip_prefix  = lookup(var.bastion_allowed_ports_ipv6[count.index], ""remote_ip_prefix"", ""::/0"")
+  security_group_id = openstack_networking_secgroup_v2.bastion[0].id
+}
+
+resource ""openstack_networking_secgroup_v2"" ""k8s"" {
+  name                 = ""${var.cluster_name}-k8s""
+  description          = ""${var.cluster_name} - Kubernetes""
+  delete_default_rules = true
+}
+
+resource ""openstack_networking_secgroup_rule_v2"" ""k8s"" {
+  direction         = ""ingress""
+  ethertype         = ""IPv4""
+  remote_group_id   = openstack_networking_secgroup_v2.k8s.id
+  security_group_id = openstack_networking_secgroup_v2.k8s.id
+}
+
+resource ""openstack_networking_secgroup_rule_v2"" ""k8s_ipv6"" {
+  direction         = ""ingress""
+  ethertype         = ""IPv6""
+  remote_group_id   = openstack_networking_secgroup_v2.k8s.id
+  security_group_id = openstack_networking_secgroup_v2.k8s.id
+}
+
+resource ""openstack_networking_secgroup_rule_v2"" ""k8s_allowed_remote_ips"" {
+  count             = length(var.k8s_allowed_remote_ips)
+  direction         = ""ingress""
+  ethertype         = ""IPv4""
+  protocol          = ""tcp""
+  port_range_min    = ""22""
+  port_range_max    = ""22""
+  remote_ip_prefix  = var.k8s_allowed_remote_ips[count.index]
+  security_group_id = openstack_networking_secgroup_v2.k8s.id
+}
+
+resource ""openstack_networking_secgroup_rule_v2"" ""k8s_allowed_remote_ips_ipv6"" {
+  count             = length(var.k8s_allowed_remote_ips_ipv6)
+  direction         = ""ingress""
+  ethertype         = ""IPv6""
+  protocol          = ""tcp""
+  port_range_min    = ""22""
+  port_range_max    = ""22""
+  remote_ip_prefix  = var.k8s_allowed_remote_ips_ipv6[count.index]
+  security_group_id = openstack_networking_secgroup_v2.k8s.id
+}
+
+resource ""openstack_networking_secgroup_rule_v2"" ""egress"" {
+  count             = length(var.k8s_allowed_egress_ips)
+  direction         = ""egress""
+  ethertype         = ""IPv4""
+  remote_ip_prefix  = var.k8s_allowed_egress_ips[count.index]
+  security_group_id = openstack_networking_secgroup_v2.k8s.id
+}
+
+resource ""openstack_networking_secgroup_rule_v2"" ""egress_ipv6"" {
+  count             = length(var.k8s_allowed_egress_ipv6_ips)
+  direction         = ""egress""
+  ethertype         = ""IPv6""
+  remote_ip_prefix  = var.k8s_allowed_egress_ipv6_ips[count.index]
+  security_group_id = openstack_networking_secgroup_v2.k8s.id
+}
+
+resource ""openstack_networking_secgroup_v2"" ""worker"" {
+  name                 = ""${var.cluster_name}-k8s-worker""
+  description          = ""${var.cluster_name} - Kubernetes worker nodes""
+  delete_default_rules = true
+}
+
+resource ""openstack_networking_secgroup_v2"" ""worker_extra"" {
+  count                = ""%{if var.extra_sec_groups}1%{else}0%{endif}""
+  name                 = ""${var.cluster_name}-k8s-worker-${var.extra_sec_groups_name}""
+  description          = ""${var.cluster_name} - Kubernetes worker nodes - rules not managed by terraform""
+  delete_default_rules = true
+}
+
+resource ""openstack_networking_secgroup_rule_v2"" ""worker"" {
+  count             = length(var.worker_allowed_ports)
+  direction         = ""ingress""
+  ethertype         = ""IPv4""
+  protocol          = lookup(var.worker_allowed_ports[count.index], ""protocol"", ""tcp"")
+  port_range_min    = lookup(var.worker_allowed_ports[count.index], ""port_range_min"")
+  port_range_max    = lookup(var.worker_allowed_ports[count.index], ""port_range_max"")
+  remote_ip_prefix  = lookup(var.worker_allowed_ports[count.index], ""remote_ip_prefix"", ""0.0.0.0/0"")
+  security_group_id = openstack_networking_secgroup_v2.worker.id
+}
+
+resource ""openstack_networking_secgroup_rule_v2"" ""worker_ipv6_ingress"" {
+  count             = length(var.worker_allowed_ports_ipv6)
+  direction         = ""ingress""
+  ethertype         = ""IPv6""
+  protocol          = lookup(var.worker_allowed_ports_ipv6[count.index], ""protocol"", ""tcp"")
+  port_range_min    = lookup(var.worker_allowed_ports_ipv6[count.index], ""port_range_min"")
+  port_range_max    = lookup(var.worker_allowed_ports_ipv6[count.index], ""port_range_max"")
+  remote_ip_prefix  = lookup(var.worker_allowed_ports_ipv6[count.index], ""remote_ip_prefix"", ""::/0"")
+  security_group_id = openstack_networking_secgroup_v2.worker.id
+}
+
+resource ""openstack_compute_servergroup_v2"" ""k8s_master"" {
+  count    = var.master_server_group_policy != """" ? 1 : 0
+  name     = ""k8s-master-srvgrp""
+  policies = [var.master_server_group_policy]
+}
+
+resource ""openstack_compute_servergroup_v2"" ""k8s_node"" {
+  count    = var.node_server_group_policy != """" ? 1 : 0
+  name     = ""k8s-node-srvgrp""
+  policies = [var.node_server_group_policy]
+}
+
+resource ""openstack_compute_servergroup_v2"" ""k8s_etcd"" {
+  count    = var.etcd_server_group_policy != """" ? 1 : 0
+  name     = ""k8s-etcd-srvgrp""
+  policies = [var.etcd_server_group_policy]
+}
+
+resource ""openstack_compute_servergroup_v2"" ""k8s_node_additional"" {
+  for_each = var.additional_server_groups
+  name     = ""k8s-${each.key}-srvgrp""
+  policies = [each.value.policy]
+}
+
+locals {
+# master groups
+  master_sec_groups = compact([
+    openstack_networking_secgroup_v2.k8s_master.id,
+    openstack_networking_secgroup_v2.k8s.id,
+    var.extra_sec_groups ?openstack_networking_secgroup_v2.k8s_master_extra[0].id : """",
+  ])
+# worker groups
+  worker_sec_groups = compact([
+    openstack_networking_secgroup_v2.k8s.id,
+    openstack_networking_secgroup_v2.worker.id,
+    var.extra_sec_groups ? openstack_networking_secgroup_v2.worker_extra[0].id : """",
+  ])
+# bastion groups
+  bastion_sec_groups = compact(concat([
+    openstack_networking_secgroup_v2.k8s.id,
+    openstack_networking_secgroup_v2.bastion[0].id,
+  ]))
+# etcd groups
+  etcd_sec_groups = compact([openstack_networking_secgroup_v2.k8s.id])
+# glusterfs groups
+  gfs_sec_groups = compact([openstack_networking_secgroup_v2.k8s.id])
+
+# Image uuid
+  image_to_use_node = var.image_uuid != """" ? var.image_uuid : data.openstack_images_image_v2.vm_image[0].id
+# Image_gfs uuid
+  image_to_use_gfs = var.image_gfs_uuid != """" ? var.image_gfs_uuid : var.image_uuid != """" ? var.image_uuid : data.openstack_images_image_v2.gfs_image[0].id
+# image_master uuidimage_gfs_uuid
+  image_to_use_master = var.image_master_uuid != """" ? var.image_master_uuid : var.image_uuid != """" ? var.image_uuid : data.openstack_images_image_v2.image_master[0].id
+
+  k8s_nodes_settings = {
+    for name, node in var.k8s_nodes :
+      name => {
+        ""use_local_disk"" = (node.root_volume_size_in_gb != null ? node.root_volume_size_in_gb : var.node_root_volume_size_in_gb) == 0,
+        ""image_id""       = node.image_id != null ? node.image_id : local.image_to_use_node,
+        ""volume_size""    = node.root_volume_size_in_gb != null ? node.root_volume_size_in_gb : var.node_root_volume_size_in_gb,
+        ""volume_type""    = node.volume_type != null ? node.volume_type : var.node_volume_type,
+        ""network_id""     = node.network_id != null ? node.network_id : (var.use_existing_network ? data.openstack_networking_network_v2.k8s_network[0].id : var.network_id)
+        ""server_group""   = node.server_group != null ? [openstack_compute_servergroup_v2.k8s_node_additional[node.server_group].id] : (var.node_server_group_policy != """"  ? [openstack_compute_servergroup_v2.k8s_node[0].id] : [])
+      }
+  }
+
+  k8s_masters_settings = {
+    for name, node in var.k8s_masters :
+      name => {
+        ""use_local_disk"" = (node.root_volume_size_in_gb != null ? node.root_volume_size_in_gb : var.master_root_volume_size_in_gb) == 0,
+        ""image_id""       = node.image_id != null ? node.image_id : local.image_to_use_master,
+        ""volume_size""    = node.root_volume_size_in_gb != null ? node.root_volume_size_in_gb : var.master_root_volume_size_in_gb,
+        ""volume_type""    = node.volume_type != null ? node.volume_type : var.master_volume_type,
+        ""network_id""     = node.network_id != null ? node.network_id : (var.use_existing_network ? data.openstack_networking_network_v2.k8s_network[0].id : var.network_id)
+      }
+  }
+}
+
+resource ""openstack_networking_port_v2"" ""bastion_port"" {
+  count                 = var.number_of_bastions
+  name                  = ""${var.cluster_name}-bastion-${count.index + 1}""
+  network_id            = var.use_existing_network ? data.openstack_networking_network_v2.k8s_network[0].id : var.network_id
+  admin_state_up        = ""true""
+  port_security_enabled = var.force_null_port_security ? null : var.port_security_enabled
+  security_group_ids    = var.port_security_enabled ? local.bastion_sec_groups : null
+  no_security_groups    = var.port_security_enabled ? null : false
+  dynamic ""fixed_ip"" {
+    for_each = var.private_subnet_id == """" ? [] : [true]
+    content {
+      subnet_id = var.private_subnet_id
+    }
+  }
+
+  depends_on = [
+    var.network_router_id
+  ]
+}
+
+resource ""openstack_compute_instance_v2"" ""bastion"" {
+  name       = ""${var.cluster_name}-bastion-${count.index + 1}""
+  count      = var.number_of_bastions
+  image_id   = var.bastion_root_volume_size_in_gb == 0 ? local.image_to_use_node : null
+  flavor_id  = var.flavor_bastion
+  key_pair   = openstack_compute_keypair_v2.k8s.name
+  user_data  = data.cloudinit_config.cloudinit.rendered
+
+  dynamic ""block_device"" {
+    for_each = var.bastion_root_volume_size_in_gb > 0 ? [local.image_to_use_node] : []
+    content {
+      uuid                  = local.image_to_use_node
+      source_type           = ""image""
+      volume_size           = var.bastion_root_volume_size_in_gb
+      boot_index            = 0
+      destination_type      = ""volume""
+      delete_on_termination = true
+    }
+  }
+
+  network {
+    port = element(openstack_networking_port_v2.bastion_port.*.id, count.index)
+  }
+
+  metadata = {
+    ssh_user         = var.ssh_user
+    kubespray_groups = ""bastion""
+    depends_on       = var.network_router_id
+    use_access_ip    = var.use_access_ip
+  }
+
+  provisioner ""local-exec"" {
+    command = ""sed -e s/USER/${var.ssh_user}/ -e s/BASTION_ADDRESS/${var.bastion_fips[0]}/ ${path.module}/ansible_bastion_template.txt > ${var.group_vars_path}/no_floating.yml""
+  }
+}
+
+resource ""openstack_networking_port_v2"" ""k8s_master_port"" {
+  count                 = var.number_of_k8s_masters
+  name                  = ""${var.cluster_name}-k8s-master-${count.index + 1}""
+  network_id            = var.use_existing_network ? data.openstack_networking_network_v2.k8s_network[0].id : var.network_id
+  admin_state_up        = ""true""
+  port_security_enabled = var.force_null_port_security ? null : var.port_security_enabled
+  security_group_ids    = var.port_security_enabled ? local.master_sec_groups : null
+  no_security_groups    = var.port_security_enabled ? null : false
+  dynamic ""fixed_ip"" {
+    for_each = var.private_subnet_id == """" ? [] : [true]
+    content {
+      subnet_id = var.private_subnet_id
+    }
+  }
+
+  lifecycle {
+    ignore_changes = [ allowed_address_pairs ]
+  }
+
+  depends_on = [
+    var.network_router_id
+  ]
+}
+
+resource ""openstack_compute_instance_v2"" ""k8s_master"" {
+  name              = ""${var.cluster_name}-k8s-master-${count.index + 1}""
+  count             = var.number_of_k8s_masters
+  availability_zone = element(var.az_list, count.index)
+  image_id          = var.master_root_volume_size_in_gb == 0 ? local.image_to_use_master : null
+  flavor_id         = var.flavor_k8s_master
+  key_pair          = openstack_compute_keypair_v2.k8s.name
+  user_data         = data.cloudinit_config.cloudinit.rendered
+
+
+  dynamic ""block_device"" {
+    for_each = var.master_root_volume_size_in_gb > 0 ? [local.image_to_use_master] : []
+    content {
+      uuid                  = local.image_to_use_master
+      source_type           = ""image""
+      volume_size           = var.master_root_volume_size_in_gb
+      volume_type           = var.master_volume_type
+      boot_index            = 0
+      destination_type      = ""volume""
+      delete_on_termination = true
+    }
+  }
+
+  network {
+    port = element(openstack_networking_port_v2.k8s_master_port.*.id, count.index)
+  }
+
+  dynamic ""scheduler_hints"" {
+    for_each = var.master_server_group_policy != """" ? [openstack_compute_servergroup_v2.k8s_master[0]] : []
+    content {
+      group = openstack_compute_servergroup_v2.k8s_master[0].id
+    }
+  }
+
+  metadata = {
+    ssh_user         = var.ssh_user
+    kubespray_groups = ""etcd,kube_control_plane,${var.supplementary_master_groups},k8s_cluster""
+    depends_on       = var.network_router_id
+    use_access_ip    = var.use_access_ip
+  }
+
+  provisioner ""local-exec"" {
+    command = ""sed -e s/USER/${var.ssh_user}/ -e s/BASTION_ADDRESS/${element(concat(var.bastion_fips, var.k8s_master_fips), 0)}/ ${path.module}/ansible_bastion_template.txt > ${var.group_vars_path}/no_floating.yml""
+  }
+}
+
+resource ""openstack_networking_port_v2"" ""k8s_masters_port"" {
+  for_each              = var.number_of_k8s_masters == 0 && var.number_of_k8s_masters_no_etcd == 0 && var.number_of_k8s_masters_no_floating_ip == 0 && var.number_of_k8s_masters_no_floating_ip_no_etcd == 0 ? var.k8s_masters : {}
+  name                  = ""${var.cluster_name}-k8s-${each.key}""
+  network_id            = local.k8s_masters_settings[each.key].network_id
+  admin_state_up        = ""true""
+  port_security_enabled = var.force_null_port_security ? null : var.port_security_enabled
+  security_group_ids    = var.port_security_enabled ? local.master_sec_groups : null
+  no_security_groups    = var.port_security_enabled ? null : false
+  dynamic ""fixed_ip"" {
+    for_each = var.private_subnet_id == """" ? [] : [true]
+    content {
+      subnet_id = var.private_subnet_id
+    }
+  }
+
+  lifecycle {
+    ignore_changes = [ allowed_address_pairs ]
+  }
+
+  depends_on = [
+    var.network_router_id
+  ]
+}
+
+resource ""openstack_compute_instance_v2"" ""k8s_masters"" {
+  for_each          = var.number_of_k8s_masters == 0 && var.number_of_k8s_masters_no_etcd == 0 && var.number_of_k8s_masters_no_floating_ip == 0 && var.number_of_k8s_masters_no_floating_ip_no_etcd == 0 ? var.k8s_masters : {}
+  name              = ""${var.cluster_name}-k8s-${each.key}""
+  availability_zone = each.value.az
+  image_id          = local.k8s_masters_settings[each.key].use_local_disk ? local.k8s_masters_settings[each.key].image_id : null
+  flavor_id         = each.value.flavor
+  key_pair          = openstack_compute_keypair_v2.k8s.name
+
+  dynamic ""block_device"" {
+    for_each = !local.k8s_masters_settings[each.key].use_local_disk ? [local.k8s_masters_settings[each.key].image_id] : []
+    content {
+      uuid                  = block_device.value
+      source_type           = ""image""
+      volume_size           = local.k8s_masters_settings[each.key].volume_size
+      volume_type           = local.k8s_masters_settings[each.key].volume_type
+      boot_index            = 0
+      destination_type      = ""volume""
+      delete_on_termination = true
+    }
+  }
+
+  network {
+    port = openstack_networking_port_v2.k8s_masters_port[each.key].id
+  }
+
+  dynamic ""scheduler_hints"" {
+    for_each = var.master_server_group_policy != """" ? [openstack_compute_servergroup_v2.k8s_master[0]] : []
+    content {
+      group = openstack_compute_servergroup_v2.k8s_master[0].id
+    }
+  }
+
+  metadata = {
+    ssh_user         = var.ssh_user
+    kubespray_groups = ""%{if each.value.etcd == true}etcd,%{endif}kube_control_plane,${var.supplementary_master_groups},k8s_cluster%{if each.value.floating_ip == false},no_floating%{endif}""
+    depends_on       = var.network_router_id
+    use_access_ip    = var.use_access_ip
+  }
+
+  provisioner ""local-exec"" {
+    command = ""%{if each.value.floating_ip}sed s/USER/${var.ssh_user}/ ${path.module}/ansible_bastion_template.txt | sed s/BASTION_ADDRESS/${element(concat(var.bastion_fips, [for key, value in var.k8s_masters_fips : value.address]), 0)}/ > ${var.group_vars_path}/no_floating.yml%{else}true%{endif}""
+  }
+}
+
+resource ""openstack_networking_port_v2"" ""k8s_master_no_etcd_port"" {
+  count                 = var.number_of_k8s_masters_no_etcd
+  name                  = ""${var.cluster_name}-k8s-master-ne-${count.index + 1}""
+  network_id            = var.use_existing_network ? data.openstack_networking_network_v2.k8s_network[0].id : var.network_id
+  admin_state_up        = ""true""
+  port_security_enabled = var.force_null_port_security ? null : var.port_security_enabled
+  security_group_ids    = var.port_security_enabled ? local.master_sec_groups : null
+  no_security_groups    = var.port_security_enabled ? null : false
+  dynamic ""fixed_ip"" {
+    for_each = var.private_subnet_id == """" ? [] : [true]
+    content {
+      subnet_id = var.private_subnet_id
+    }
+  }
+
+  lifecycle {
+    ignore_changes = [ allowed_address_pairs ]
+  }
+
+  depends_on = [
+    var.network_router_id
+  ]
+}
+
+resource ""openstack_compute_instance_v2"" ""k8s_master_no_etcd"" {
+  name              = ""${var.cluster_name}-k8s-master-ne-${count.index + 1}""
+  count             = var.number_of_k8s_masters_no_etcd
+  availability_zone = element(var.az_list, count.index)
+  image_id          = var.master_root_volume_size_in_gb == 0 ? local.image_to_use_master : null
+  flavor_id         = var.flavor_k8s_master
+  key_pair          = openstack_compute_keypair_v2.k8s.name
+  user_data         = data.cloudinit_config.cloudinit.rendered
+
+
+  dynamic ""block_device"" {
+    for_each = var.master_root_volume_size_in_gb > 0 ? [local.image_to_use_master] : []
+    content {
+      uuid                  = local.image_to_use_master
+      source_type           = ""image""
+      volume_size           = var.master_root_volume_size_in_gb
+      volume_type           = var.master_volume_type
+      boot_index            = 0
+      destination_type      = ""volume""
+      delete_on_termination = true
+    }
+  }
+
+  network {
+    port = element(openstack_networking_port_v2.k8s_master_no_etcd_port.*.id, count.index)
+  }
+
+  dynamic ""scheduler_hints"" {
+    for_each = var.master_server_group_policy != """" ? [openstack_compute_servergroup_v2.k8s_master[0]] : []
+    content {
+      group = openstack_compute_servergroup_v2.k8s_master[0].id
+    }
+  }
+
+  metadata = {
+    ssh_user         = var.ssh_user
+    kubespray_groups = ""kube_control_plane,${var.supplementary_master_groups},k8s_cluster""
+    depends_on       = var.network_router_id
+    use_access_ip    = var.use_access_ip
+  }
+
+  provisioner ""local-exec"" {
+    command = ""sed -e s/USER/${var.ssh_user}/ -e s/BASTION_ADDRESS/${element(concat(var.bastion_fips, var.k8s_master_fips), 0)}/ ${path.module}/ansible_bastion_template.txt > ${var.group_vars_path}/no_floating.yml""
+  }
+}
+
+resource ""openstack_networking_port_v2"" ""etcd_port"" {
+  count                 = var.number_of_etcd
+  name                  = ""${var.cluster_name}-etcd-${count.index + 1}""
+  network_id            = var.use_existing_network ? data.openstack_networking_network_v2.k8s_network[0].id : var.network_id
+  admin_state_up        = ""true""
+  port_security_enabled = var.force_null_port_security ? null : var.port_security_enabled
+  security_group_ids    = var.port_security_enabled ? local.etcd_sec_groups : null
+  no_security_groups    = var.port_security_enabled ? null : false
+  dynamic ""fixed_ip"" {
+    for_each = var.private_subnet_id == """" ? [] : [true]
+    content {
+      subnet_id = var.private_subnet_id
+    }
+  }
+
+  depends_on = [
+    var.network_router_id
+  ]
+}
+
+resource ""openstack_compute_instance_v2"" ""etcd"" {
+  name              = ""${var.cluster_name}-etcd-${count.index + 1}""
+  count             = var.number_of_etcd
+  availability_zone = element(var.az_list, count.index)
+  image_id          = var.etcd_root_volume_size_in_gb == 0 ? local.image_to_use_master : null
+  flavor_id         = var.flavor_etcd
+  key_pair          = openstack_compute_keypair_v2.k8s.name
+  user_data         = data.cloudinit_config.cloudinit.rendered
+
+  dynamic ""block_device"" {
+    for_each = var.etcd_root_volume_size_in_gb > 0 ? [local.image_to_use_master] : []
+    content {
+      uuid                  = local.image_to_use_master
+      source_type           = ""image""
+      volume_size           = var.etcd_root_volume_size_in_gb
+      boot_index            = 0
+      destination_type      = ""volume""
+      delete_on_termination = true
+    }
+  }
+
+  network {
+    port = element(openstack_networking_port_v2.etcd_port.*.id, count.index)
+  }
+
+  dynamic ""scheduler_hints"" {
+    for_each = var.etcd_server_group_policy != """" ? [openstack_compute_servergroup_v2.k8s_etcd[0]] : []
+    content {
+      group = openstack_compute_servergroup_v2.k8s_etcd[0].id
+    }
+  }
+
+  metadata = {
+    ssh_user         = var.ssh_user
+    kubespray_groups = ""etcd,no_floating""
+    depends_on       = var.network_router_id
+    use_access_ip    = var.use_access_ip
+  }
+}
+
+resource ""openstack_networking_port_v2"" ""k8s_master_no_floating_ip_port"" {
+  count                 = var.number_of_k8s_masters_no_floating_ip
+  name                  = ""${var.cluster_name}-k8s-master-nf-${count.index + 1}""
+  network_id            = var.use_existing_network ? data.openstack_networking_network_v2.k8s_network[0].id : var.network_id
+  admin_state_up        = ""true""
+  port_security_enabled = var.force_null_port_security ? null : var.port_security_enabled
+  security_group_ids    = var.port_security_enabled ? local.master_sec_groups : null
+  no_security_groups    = var.port_security_enabled ? null : false
+  dynamic ""fixed_ip"" {
+    for_each = var.private_subnet_id == """" ? [] : [true]
+    content {
+      subnet_id = var.private_subnet_id
+    }
+  }
+
+  lifecycle {
+    ignore_changes = [ allowed_address_pairs ]
+  }
+
+  depends_on = [
+    var.network_router_id
+  ]
+}
+
+resource ""openstack_compute_instance_v2"" ""k8s_master_no_floating_ip"" {
+  name              = ""${var.cluster_name}-k8s-master-nf-${count.index + 1}""
+  count             = var.number_of_k8s_masters_no_floating_ip
+  availability_zone = element(var.az_list, count.index)
+  image_id          = var.master_root_volume_size_in_gb == 0 ? local.image_to_use_master : null
+  flavor_id         = var.flavor_k8s_master
+  key_pair          = openstack_compute_keypair_v2.k8s.name
+
+  dynamic ""block_device"" {
+    for_each = var.master_root_volume_size_in_gb > 0 ? [local.image_to_use_master] : []
+    content {
+      uuid                  = local.image_to_use_master
+      source_type           = ""image""
+      volume_size           = var.master_root_volume_size_in_gb
+      volume_type           = var.master_volume_type
+      boot_index            = 0
+      destination_type      = ""volume""
+      delete_on_termination = true
+    }
+  }
+
+  network {
+    port = element(openstack_networking_port_v2.k8s_master_no_floating_ip_port.*.id, count.index)
+  }
+
+  dynamic ""scheduler_hints"" {
+    for_each = var.master_server_group_policy != """" ? [openstack_compute_servergroup_v2.k8s_master[0]] : []
+    content {
+      group = openstack_compute_servergroup_v2.k8s_master[0].id
+    }
+  }
+
+  metadata = {
+    ssh_user         = var.ssh_user
+    kubespray_groups = ""etcd,kube_control_plane,${var.supplementary_master_groups},k8s_cluster,no_floating""
+    depends_on       = var.network_router_id
+    use_access_ip    = var.use_access_ip
+  }
+}
+
+resource ""openstack_networking_port_v2"" ""k8s_master_no_floating_ip_no_etcd_port"" {
+  count                 = var.number_of_k8s_masters_no_floating_ip_no_etcd
+  name                  = ""${var.cluster_name}-k8s-master-ne-nf-${count.index + 1}""
+  network_id            = var.use_existing_network ? data.openstack_networking_network_v2.k8s_network[0].id : var.network_id
+  admin_state_up        = ""true""
+  port_security_enabled = var.force_null_port_security ? null : var.port_security_enabled
+  security_group_ids    = var.port_security_enabled ? local.master_sec_groups : null
+  no_security_groups    = var.port_security_enabled ? null : false
+  dynamic ""fixed_ip"" {
+    for_each = var.private_subnet_id == """" ? [] : [true]
+    content {
+      subnet_id = var.private_subnet_id
+    }
+  }
+
+  lifecycle {
+    ignore_changes = [ allowed_address_pairs ]
+  }
+
+  depends_on = [
+    var.network_router_id
+  ]
+}
+
+resource ""openstack_compute_instance_v2"" ""k8s_master_no_floating_ip_no_etcd"" {
+  name              = ""${var.cluster_name}-k8s-master-ne-nf-${count.index + 1}""
+  count             = var.number_of_k8s_masters_no_floating_ip_no_etcd
+  availability_zone = element(var.az_list, count.index)
+  image_id          = var.master_root_volume_size_in_gb == 0 ? local.image_to_use_master : null
+  flavor_id         = var.flavor_k8s_master
+  key_pair          = openstack_compute_keypair_v2.k8s.name
+  user_data         = data.cloudinit_config.cloudinit.rendered
+
+  dynamic ""block_device"" {
+    for_each = var.master_root_volume_size_in_gb > 0 ? [local.image_to_use_master] : []
+    content {
+      uuid                  = local.image_to_use_master
+      source_type           = ""image""
+      volume_size           = var.master_root_volume_size_in_gb
+      volume_type           = var.master_volume_type
+      boot_index            = 0
+      destination_type      = ""volume""
+      delete_on_termination = true
+    }
+  }
+
+  network {
+    port = element(openstack_networking_port_v2.k8s_master_no_floating_ip_no_etcd_port.*.id, count.index)
+  }
+
+  dynamic ""scheduler_hints"" {
+    for_each = var.master_server_group_policy != """" ? [openstack_compute_servergroup_v2.k8s_master[0]] : []
+    content {
+      group = openstack_compute_servergroup_v2.k8s_master[0].id
+    }
+  }
+
+  metadata = {
+    ssh_user         = var.ssh_user
+    kubespray_groups = ""kube_control_plane,${var.supplementary_master_groups},k8s_cluster,no_floating""
+    depends_on       = var.network_router_id
+    use_access_ip    = var.use_access_ip
+  }
+}
+
+resource ""openstack_networking_port_v2"" ""k8s_node_port"" {
+  count                 = var.number_of_k8s_nodes
+  name                  = ""${var.cluster_name}-k8s-node-${count.index + 1}""
+  network_id            = var.use_existing_network ? data.openstack_networking_network_v2.k8s_network[0].id : var.network_id
+  admin_state_up        = ""true""
+  port_security_enabled = var.force_null_port_security ? null : var.port_security_enabled
+  security_group_ids    = var.port_security_enabled ? local.worker_sec_groups : null
+  no_security_groups    = var.port_security_enabled ? null : false
+  dynamic ""fixed_ip"" {
+    for_each = var.private_subnet_id == """" ? [] : [true]
+    content {
+      subnet_id = var.private_subnet_id
+    }
+  }
+
+  lifecycle {
+    ignore_changes = [ allowed_address_pairs ]
+  }
+
+  depends_on = [
+    var.network_router_id
+  ]
+}
+
+resource ""openstack_compute_instance_v2"" ""k8s_node"" {
+  name              = ""${var.cluster_name}-k8s-node-${count.index + 1}""
+  count             = var.number_of_k8s_nodes
+  availability_zone = element(var.az_list_node, count.index)
+  image_id          = var.node_root_volume_size_in_gb == 0 ? local.image_to_use_node : null
+  flavor_id         = var.flavor_k8s_node
+  key_pair          = openstack_compute_keypair_v2.k8s.name
+  user_data         = data.cloudinit_config.cloudinit.rendered
+
+  dynamic ""block_device"" {
+    for_each = var.node_root_volume_size_in_gb > 0 ? [local.image_to_use_node] : []
+    content {
+      uuid                  = local.image_to_use_node
+      source_type           = ""image""
+      volume_size           = var.node_root_volume_size_in_gb
+      volume_type           = var.node_volume_type
+      boot_index            = 0
+      destination_type      = ""volume""
+      delete_on_termination = true
+    }
+  }
+
+  network {
+    port = element(openstack_networking_port_v2.k8s_node_port.*.id, count.index)
+  }
+
+
+  dynamic ""scheduler_hints"" {
+    for_each = var.node_server_group_policy != """" ? [openstack_compute_servergroup_v2.k8s_node[0]] : []
+    content {
+      group = openstack_compute_servergroup_v2.k8s_node[0].id
+    }
+  }
+
+  metadata = {
+    ssh_user         = var.ssh_user
+    kubespray_groups = ""kube_node,k8s_cluster,${var.supplementary_node_groups}""
+    depends_on       = var.network_router_id
+    use_access_ip    = var.use_access_ip
+  }
+
+  provisioner ""local-exec"" {
+    command = ""sed -e s/USER/${var.ssh_user}/ -e s/BASTION_ADDRESS/${element(concat(var.bastion_fips, var.k8s_node_fips), 0)}/ ${path.module}/ansible_bastion_template.txt > ${var.group_vars_path}/no_floating.yml""
+  }
+}
+
+resource ""openstack_networking_port_v2"" ""k8s_node_no_floating_ip_port"" {
+  count                 = var.number_of_k8s_nodes_no_floating_ip
+  name                  = ""${var.cluster_name}-k8s-node-nf-${count.index + 1}""
+  network_id            = var.use_existing_network ? data.openstack_networking_network_v2.k8s_network[0].id : var.network_id
+  admin_state_up        = ""true""
+  port_security_enabled = var.force_null_port_security ? null : var.port_security_enabled
+  security_group_ids    = var.port_security_enabled ? local.worker_sec_groups : null
+  no_security_groups    = var.port_security_enabled ? null : false
+  dynamic ""fixed_ip"" {
+    for_each = var.private_subnet_id == """" ? [] : [true]
+    content {
+      subnet_id = var.private_subnet_id
+    }
+  }
+
+  lifecycle {
+    ignore_changes = [ allowed_address_pairs ]
+  }
+
+  depends_on = [
+    var.network_router_id
+  ]
+}
+
+resource ""openstack_compute_instance_v2"" ""k8s_node_no_floating_ip"" {
+  name              = ""${var.cluster_name}-k8s-node-nf-${count.index + 1}""
+  count             = var.number_of_k8s_nodes_no_floating_ip
+  availability_zone = element(var.az_list_node, count.index)
+  image_id          = var.node_root_volume_size_in_gb == 0 ? local.image_to_use_node : null
+  flavor_id         = var.flavor_k8s_node
+  key_pair          = openstack_compute_keypair_v2.k8s.name
+  user_data         = data.cloudinit_config.cloudinit.rendered
+
+  dynamic ""block_device"" {
+    for_each = var.node_root_volume_size_in_gb > 0 ? [local.image_to_use_node] : []
+    content {
+      uuid                  = local.image_to_use_node
+      source_type           = ""image""
+      volume_size           = var.node_root_volume_size_in_gb
+      volume_type           = var.node_volume_type
+      boot_index            = 0
+      destination_type      = ""volume""
+      delete_on_termination = true
+    }
+  }
+
+  network {
+    port = element(openstack_networking_port_v2.k8s_node_no_floating_ip_port.*.id, count.index)
+  }
+
+  dynamic ""scheduler_hints"" {
+    for_each = var.node_server_group_policy != """" ? [openstack_compute_servergroup_v2.k8s_node[0].id] : []
+    content {
+      group = scheduler_hints.value
+    }
+  }
+
+  metadata = {
+    ssh_user         = var.ssh_user
+    kubespray_groups = ""kube_node,k8s_cluster,no_floating,${var.supplementary_node_groups}""
+    depends_on       = var.network_router_id
+    use_access_ip    = var.use_access_ip
+  }
+}
+
+resource ""openstack_networking_port_v2"" ""k8s_nodes_port"" {
+  for_each              = var.number_of_k8s_nodes == 0 && var.number_of_k8s_nodes_no_floating_ip == 0 ? var.k8s_nodes : {}
+  name                  = ""${var.cluster_name}-k8s-node-${each.key}""
+  network_id            = local.k8s_nodes_settings[each.key].network_id
+  admin_state_up        = ""true""
+  port_security_enabled = var.force_null_port_security ? null : var.port_security_enabled
+  security_group_ids    = var.port_security_enabled ? local.worker_sec_groups : null
+  no_security_groups    = var.port_security_enabled ? null : false
+  dynamic ""fixed_ip"" {
+    for_each = var.private_subnet_id == """" ? [] : [true]
+    content {
+      subnet_id = var.private_subnet_id
+    }
+  }
+
+  lifecycle {
+    ignore_changes = [ allowed_address_pairs ]
+  }
+
+  depends_on = [
+    var.network_router_id
+  ]
+}
+
+resource ""openstack_compute_instance_v2"" ""k8s_nodes"" {
+  for_each          = var.number_of_k8s_nodes == 0 && var.number_of_k8s_nodes_no_floating_ip == 0 ? var.k8s_nodes : {}
+  name              = ""${var.cluster_name}-k8s-node-${each.key}""
+  availability_zone = each.value.az
+  image_id          = local.k8s_nodes_settings[each.key].use_local_disk ? local.k8s_nodes_settings[each.key].image_id : null
+  flavor_id         = each.value.flavor
+  key_pair          = openstack_compute_keypair_v2.k8s.name
+  user_data         = each.value.cloudinit != null ? templatefile(""${path.module}/templates/cloudinit.yaml.tmpl"", {
+    extra_partitions = each.value.cloudinit.extra_partitions,
+    netplan_critical_dhcp_interface = each.value.cloudinit.netplan_critical_dhcp_interface,
+  }) : data.cloudinit_config.cloudinit.rendered
+
+  dynamic ""block_device"" {
+    for_each = !local.k8s_nodes_settings[each.key].use_local_disk ? [local.k8s_nodes_settings[each.key].image_id] : []
+    content {
+      uuid                  = block_device.value
+      source_type           = ""image""
+      volume_size           = local.k8s_nodes_settings[each.key].volume_size
+      volume_type           = local.k8s_nodes_settings[each.key].volume_type
+      boot_index            = 0
+      destination_type      = ""volume""
+      delete_on_termination = true
+    }
+  }
+
+  network {
+    port = openstack_networking_port_v2.k8s_nodes_port[each.key].id
+  }
+
+  dynamic ""scheduler_hints"" {
+    for_each = local.k8s_nodes_settings[each.key].server_group
+    content {
+      group = scheduler_hints.value
+    }
+  }
+
+  metadata = {
+    ssh_user         = var.ssh_user
+    kubespray_groups = ""kube_node,k8s_cluster,%{if !each.value.floating_ip}no_floating,%{endif}${var.supplementary_node_groups}${each.value.extra_groups != null ? "",${each.value.extra_groups}"" : """"}""
+    depends_on       = var.network_router_id
+    use_access_ip    = var.use_access_ip
+  }
+
+  provisioner ""local-exec"" {
+    command = ""%{if each.value.floating_ip}sed -e s/USER/${var.ssh_user}/ -e s/BASTION_ADDRESS/${element(concat(var.bastion_fips, [for key, value in var.k8s_nodes_fips : value.address]), 0)}/ ${path.module}/ansible_bastion_template.txt > ${var.group_vars_path}/no_floating.yml%{else}true%{endif}""
+  }
+}
+
+resource ""openstack_networking_port_v2"" ""glusterfs_node_no_floating_ip_port"" {
+  count                 = var.number_of_gfs_nodes_no_floating_ip
+  name                  = ""${var.cluster_name}-gfs-node-nf-${count.index + 1}""
+  network_id            = var.use_existing_network ? data.openstack_networking_network_v2.k8s_network[0].id : var.network_id
+  admin_state_up        = ""true""
+  port_security_enabled = var.force_null_port_security ? null : var.port_security_enabled
+  security_group_ids    = var.port_security_enabled ? local.gfs_sec_groups : null
+  no_security_groups    = var.port_security_enabled ? null : false
+  dynamic ""fixed_ip"" {
+    for_each = var.private_subnet_id == """" ? [] : [true]
+    content {
+      subnet_id = var.private_subnet_id
+    }
+  }
+
+  depends_on = [
+    var.network_router_id
+  ]
+}
+
+resource ""openstack_compute_instance_v2"" ""glusterfs_node_no_floating_ip"" {
+  name              = ""${var.cluster_name}-gfs-node-nf-${count.index + 1}""
+  count             = var.number_of_gfs_nodes_no_floating_ip
+  availability_zone = element(var.az_list, count.index)
+  image_name        = var.gfs_root_volume_size_in_gb == 0 ? local.image_to_use_gfs : null
+  flavor_id         = var.flavor_gfs_node
+  key_pair          = openstack_compute_keypair_v2.k8s.name
+
+  dynamic ""block_device"" {
+    for_each = var.gfs_root_volume_size_in_gb > 0 ? [local.image_to_use_gfs] : []
+    content {
+      uuid                  = local.image_to_use_gfs
+      source_type           = ""image""
+      volume_size           = var.gfs_root_volume_size_in_gb
+      boot_index            = 0
+      destination_type      = ""volume""
+      delete_on_termination = true
+    }
+  }
+
+  network {
+    port = element(openstack_networking_port_v2.glusterfs_node_no_floating_ip_port.*.id, count.index)
+  }
+
+  dynamic ""scheduler_hints"" {
+    for_each = var.node_server_group_policy != """" ? [openstack_compute_servergroup_v2.k8s_node[0]] : []
+    content {
+      group = openstack_compute_servergroup_v2.k8s_node[0].id
+    }
+  }
+
+  metadata = {
+    ssh_user         = var.ssh_user_gfs
+    kubespray_groups = ""gfs-cluster,network-storage,no_floating""
+    depends_on       = var.network_router_id
+    use_access_ip    = var.use_access_ip
+  }
+}
+
+resource ""openstack_networking_floatingip_associate_v2"" ""bastion"" {
+  count                 = var.number_of_bastions
+  floating_ip           = var.bastion_fips[count.index]
+  port_id               = element(openstack_networking_port_v2.bastion_port.*.id, count.index)
+}
+
+
+resource ""openstack_networking_floatingip_associate_v2"" ""k8s_master"" {
+  count                 = var.number_of_k8s_masters
+  floating_ip           = var.k8s_master_fips[count.index]
+  port_id               = element(openstack_networking_port_v2.k8s_master_port.*.id, count.index)
+}
+
+resource ""openstack_networking_floatingip_associate_v2"" ""k8s_masters"" {
+  for_each              = var.number_of_k8s_masters == 0 && var.number_of_k8s_masters_no_etcd == 0 && var.number_of_k8s_masters_no_floating_ip == 0 && var.number_of_k8s_masters_no_floating_ip_no_etcd == 0 ? { for key, value in var.k8s_masters : key => value if value.floating_ip } : {}
+  floating_ip           = var.k8s_masters_fips[each.key].address
+  port_id               = openstack_networking_port_v2.k8s_masters_port[each.key].id
+}
+
+resource ""openstack_networking_floatingip_associate_v2"" ""k8s_master_no_etcd"" {
+  count                 = var.master_root_volume_size_in_gb == 0 ? var.number_of_k8s_masters_no_etcd : 0
+  floating_ip           = var.k8s_master_no_etcd_fips[count.index]
+  port_id               = element(openstack_networking_port_v2.k8s_master_no_etcd_port.*.id, count.index)
+}
+
+resource ""openstack_networking_floatingip_associate_v2"" ""k8s_node"" {
+  count                 = var.node_root_volume_size_in_gb == 0 ? var.number_of_k8s_nodes : 0
+  floating_ip           = var.k8s_node_fips[count.index]
+  port_id               = element(openstack_networking_port_v2.k8s_node_port.*.id, count.index)
+}
+
+resource ""openstack_networking_floatingip_associate_v2"" ""k8s_nodes"" {
+  for_each              = var.number_of_k8s_nodes == 0 && var.number_of_k8s_nodes_no_floating_ip == 0 ? { for key, value in var.k8s_nodes : key => value if value.floating_ip } : {}
+  floating_ip           = var.k8s_nodes_fips[each.key].address
+  port_id               = openstack_networking_port_v2.k8s_nodes_port[each.key].id
+}
+
+resource ""openstack_blockstorage_volume_v2"" ""glusterfs_volume"" {
+  name        = ""${var.cluster_name}-glusterfs_volume-${count.index + 1}""
+  count       = var.gfs_root_volume_size_in_gb == 0 ? var.number_of_gfs_nodes_no_floating_ip : 0
+  description = ""Non-ephemeral volume for GlusterFS""
+  size        = var.gfs_volume_size_in_gb
+}
+
+resource ""openstack_compute_volume_attach_v2"" ""glusterfs_volume"" {
+  count       = var.gfs_root_volume_size_in_gb == 0 ? var.number_of_gfs_nodes_no_floating_ip : 0
+  instance_id = element(openstack_compute_instance_v2.glusterfs_node_no_floating_ip.*.id, count.index)
+  volume_id   = element(openstack_blockstorage_volume_v2.glusterfs_volume.*.id, count.index)
+}
+"
+kubernetes-sigs__kubespray,b9e1e8577fade952f72281fc3b9fd16d7c0f994a,clones/kubernetes-sigs__kubespray/contrib/terraform/aws/modules/vpc,d872ba25bd473a5475b3fc7e19f36ac94ffb325a,error,Unsupported argument,"An argument named ""vpc"" is not expected here.",clones/kubernetes-sigs__kubespray/contrib/terraform/aws/modules/vpc/main.tf,15,3,15,6,resource,aws_eip cluster-nat-eip,"resource ""aws_eip"" ""cluster-nat-eip"" {
+  count = length(var.aws_cidr_subnets_public)
+  vpc   = true
+}",13,16,resource aws_eip cluster-nat-eip,0,1,4.45,16,4,4,0,1,2,aws,6.26.0,"{""attributes"": {""address"": {""type"": ""string"", ""description_kind"": ""plain"", ""optional"": true}, ""allocation_id"": {""type"": ""string"", ""description_kind"": ""plain"", ""computed"": true}, ""arn"": {""type"": ""string"", ""description_kind"": ""plain"", ""computed"": true}, ""associate_with_private_ip"": {""type"": ""string"", ""description_kind"": ""plain"", ""optional"": true}, ""association_id"": {""type"": ""string"", ""description_kind"": ""plain"", ""computed"": true}, ""carrier_ip"": {""type"": ""string"", ""description_kind"": ""plain"", ""computed"": true}, ""customer_owned_ip"": {""type"": ""string"", ""description_kind"": ""plain"", ""computed"": true}, ""customer_owned_ipv4_pool"": {""type"": ""string"", ""description_kind"": ""plain"", ""optional"": true}, ""domain"": {""type"": ""string"", ""description_kind"": ""plain"", ""optional"": true, ""computed"": true}, ""id"": {""type"": ""string"", ""description_kind"": ""plain"", ""optional"": true, ""computed"": true}, ""instance"": {""type"": ""string"", ""description_kind"": ""plain"", ""optional"": true, ""computed"": true}, ""ipam_pool_id"": {""type"": ""string"", ""description_kind"": ""plain"", ""optional"": true, ""computed"": true}, ""network_border_group"": {""type"": ""string"", ""description_kind"": ""plain"", ""optional"": true, ""computed"": true}, ""network_interface"": {""type"": ""string"", ""description_kind"": ""plain"", ""optional"": true, ""computed"": true}, ""private_dns"": {""type"": ""string"", ""description_kind"": ""plain"", ""computed"": true}, ""private_ip"": {""type"": ""string"", ""description_kind"": ""plain"", ""computed"": true}, ""ptr_record"": {""type"": ""string"", ""description_kind"": ""plain"", ""computed"": true}, ""public_dns"": {""type"": ""string"", ""description_kind"": ""plain"", ""computed"": true}, ""public_ip"": {""type"": ""string"", ""description_kind"": ""plain"", ""computed"": true}, ""public_ipv4_pool"": {""type"": ""string"", ""description_kind"": ""plain"", ""optional"": true, ""computed"": true}, ""region"": {""type"": ""string"", ""description"": ""Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference)."", ""description_kind"": ""plain"", ""optional"": true, ""computed"": true}, ""tags"": {""type"": [""map"", ""string""], ""description_kind"": ""plain"", ""optional"": true}, ""tags_all"": {""type"": [""map"", ""string""], ""description_kind"": ""plain"", ""optional"": true, ""computed"": true}}, ""block_types"": {""timeouts"": {""nesting_mode"": ""single"", ""block"": {""attributes"": {""delete"": {""type"": ""string"", ""description_kind"": ""plain"", ""optional"": true}, ""read"": {""type"": ""string"", ""description_kind"": ""plain"", ""optional"": true}, ""update"": {""type"": ""string"", ""description_kind"": ""plain"", ""optional"": true}}, ""description_kind"": ""plain""}}}, ""matched_block_name"": ""aws_eip"", ""matched_block_type"": ""resource""}",aws_eip,resource,"resource ""aws_vpc"" ""cluster-vpc"" {
+  cidr_block = var.aws_vpc_cidr_block
+
+  #DNS Related Entries
+  enable_dns_support   = true
+  enable_dns_hostnames = true
+
+  tags = merge(var.default_tags, tomap({
+    Name = ""kubernetes-${var.aws_cluster_name}-vpc""
+  }))
+}
+
+resource ""aws_eip"" ""cluster-nat-eip"" {
+  count = length(var.aws_cidr_subnets_public)
+  vpc   = true
+}
+
+resource ""aws_internet_gateway"" ""cluster-vpc-internetgw"" {
+  vpc_id = aws_vpc.cluster-vpc.id
+
+  tags = merge(var.default_tags, tomap({
+    Name = ""kubernetes-${var.aws_cluster_name}-internetgw""
+  }))
+}
+
+resource ""aws_subnet"" ""cluster-vpc-subnets-public"" {
+  vpc_id            = aws_vpc.cluster-vpc.id
+  count             = length(var.aws_cidr_subnets_public)
+  availability_zone = element(var.aws_avail_zones, count.index % length(var.aws_avail_zones))
+  cidr_block        = element(var.aws_cidr_subnets_public, count.index)
+
+  tags = merge(var.default_tags, tomap({
+    Name = ""kubernetes-${var.aws_cluster_name}-${element(var.aws_avail_zones, count.index)}-public""
+    ""kubernetes.io/cluster/${var.aws_cluster_name}"" = ""shared""
+    ""kubernetes.io/role/elb"" = ""1""
+  }))
+}
+
+resource ""aws_nat_gateway"" ""cluster-nat-gateway"" {
+  count         = length(var.aws_cidr_subnets_public)
+  allocation_id = element(aws_eip.cluster-nat-eip.*.id, count.index)
+  subnet_id     = element(aws_subnet.cluster-vpc-subnets-public.*.id, count.index)
+}
+
+resource ""aws_subnet"" ""cluster-vpc-subnets-private"" {
+  vpc_id            = aws_vpc.cluster-vpc.id
+  count             = length(var.aws_cidr_subnets_private)
+  availability_zone = element(var.aws_avail_zones, count.index % length(var.aws_avail_zones))
+  cidr_block        = element(var.aws_cidr_subnets_private, count.index)
+
+  tags = merge(var.default_tags, tomap({
+    Name = ""kubernetes-${var.aws_cluster_name}-${element(var.aws_avail_zones, count.index)}-private""
+    ""kubernetes.io/cluster/${var.aws_cluster_name}"" = ""shared""
+    ""kubernetes.io/role/internal-elb"" = ""1""
+  }))
+}
+
+#Routing in VPC
+
+#TODO: Do we need two routing tables for each subnet for redundancy or is one enough?
+
+resource ""aws_route_table"" ""kubernetes-public"" {
+  vpc_id = aws_vpc.cluster-vpc.id
+
+  route {
+    cidr_block = ""0.0.0.0/0""
+    gateway_id = aws_internet_gateway.cluster-vpc-internetgw.id
+  }
+
+  tags = merge(var.default_tags, tomap({
+    Name = ""kubernetes-${var.aws_cluster_name}-routetable-public""
+  }))
+}
+
+resource ""aws_route_table"" ""kubernetes-private"" {
+  count  = length(var.aws_cidr_subnets_private)
+  vpc_id = aws_vpc.cluster-vpc.id
+
+  route {
+    cidr_block     = ""0.0.0.0/0""
+    nat_gateway_id = element(aws_nat_gateway.cluster-nat-gateway.*.id, count.index)
+  }
+
+  tags = merge(var.default_tags, tomap({
+    Name = ""kubernetes-${var.aws_cluster_name}-routetable-private-${count.index}""
+  }))
+}
+
+resource ""aws_route_table_association"" ""kubernetes-public"" {
+  count          = length(var.aws_cidr_subnets_public)
+  subnet_id      = element(aws_subnet.cluster-vpc-subnets-public.*.id, count.index)
+  route_table_id = aws_route_table.kubernetes-public.id
+}
+
+resource ""aws_route_table_association"" ""kubernetes-private"" {
+  count          = length(var.aws_cidr_subnets_private)
+  subnet_id      = element(aws_subnet.cluster-vpc-subnets-private.*.id, count.index)
+  route_table_id = element(aws_route_table.kubernetes-private.*.id, count.index)
+}
+
+#Kubernetes Security Groups
+
+resource ""aws_security_group"" ""kubernetes"" {
+  name   = ""kubernetes-${var.aws_cluster_name}-securitygroup""
+  vpc_id = aws_vpc.cluster-vpc.id
+
+  tags = merge(var.default_tags, tomap({
+    Name = ""kubernetes-${var.aws_cluster_name}-securitygroup""
+  }))
+}
+
+resource ""aws_security_group_rule"" ""allow-all-ingress"" {
+  type              = ""ingress""
+  from_port         = 0
+  to_port           = 65535
+  protocol          = ""-1""
+  cidr_blocks       = [var.aws_vpc_cidr_block]
+  security_group_id = aws_security_group.kubernetes.id
+}
+
+resource ""aws_security_group_rule"" ""allow-all-egress"" {
+  type              = ""egress""
+  from_port         = 0
+  to_port           = 65535
+  protocol          = ""-1""
+  cidr_blocks       = [""0.0.0.0/0""]
+  security_group_id = aws_security_group.kubernetes.id
+}
+
+resource ""aws_security_group_rule"" ""allow-ssh-connections"" {
+  type              = ""ingress""
+  from_port         = 22
+  to_port           = 22
+  protocol          = ""TCP""
+  cidr_blocks       = [""0.0.0.0/0""]
+  security_group_id = aws_security_group.kubernetes.id
+}
+"
+kubernetes-sigs__kubespray,b9e1e8577fade952f72281fc3b9fd16d7c0f994a,clones/kubernetes-sigs__kubespray/contrib/terraform/openstack,31d36dc40b670d31af58316aa5f06980ac38d2db,warning,Deprecated Resource,Support for neutron-lbaas will be removed. Make sure to use Octavia,clones/kubernetes-sigs__kubespray/contrib/terraform/openstack/modules/loadbalancer/main.tf,25,47,25,48,resource,openstack_lb_member_v2 lb_member,"resource ""openstack_lb_member_v2"" ""lb_member"" {
+  count             = var.k8s_master_loadbalancer_enabled ? length(var.k8s_master_ips) : 0
+  name              = var.k8s_master_ips[count.index].name
+  pool_id           = openstack_lb_pool_v2.api_pool[0].id
+  address           = var.k8s_master_ips[count.index].access_ip_v4
+  protocol_port     = var.k8s_master_loadbalancer_server_port
+  depends_on        = [ openstack_lb_pool_v2.api_pool ]
+}",25,32,resource openstack_lb_member_v2 lb_member,0,2,4.56,65,8,8,0,12,6,openstack,1.54.1,"{""attributes"": {""address"": {""type"": ""string"", ""description_kind"": ""plain"", ""required"": true}, ""admin_state_up"": {""type"": ""bool"", ""description_kind"": ""plain"", ""optional"": true}, ""backup"": {""type"": ""bool"", ""description_kind"": ""plain"", ""optional"": true}, ""id"": {""type"": ""string"", ""description_kind"": ""plain"", ""optional"": true, ""computed"": true}, ""monitor_address"": {""type"": ""string"", ""description_kind"": ""plain"", ""optional"": true}, ""monitor_port"": {""type"": ""number"", ""description_kind"": ""plain"", ""optional"": true}, ""name"": {""type"": ""string"", ""description_kind"": ""plain"", ""optional"": true}, ""pool_id"": {""type"": ""string"", ""description_kind"": ""plain"", ""required"": true}, ""protocol_port"": {""type"": ""number"", ""description_kind"": ""plain"", ""required"": true}, ""region"": {""type"": ""string"", ""description_kind"": ""plain"", ""optional"": true, ""computed"": true}, ""subnet_id"": {""type"": ""string"", ""description_kind"": ""plain"", ""optional"": true}, ""tenant_id"": {""type"": ""string"", ""description_kind"": ""plain"", ""optional"": true, ""computed"": true}, ""weight"": {""type"": ""number"", ""description_kind"": ""plain"", ""optional"": true, ""computed"": true}}, ""block_types"": {""timeouts"": {""nesting_mode"": ""single"", ""block"": {""attributes"": {""create"": {""type"": ""string"", ""description_kind"": ""plain"", ""optional"": true}, ""delete"": {""type"": ""string"", ""description_kind"": ""plain"", ""optional"": true}, ""update"": {""type"": ""string"", ""description_kind"": ""plain"", ""optional"": true}}, ""description_kind"": ""plain""}}}, ""matched_block_name"": ""openstack_lb_member_v2"", ""matched_block_type"": ""resource""}",openstack_lb_member_v2,resource,"resource ""openstack_lb_loadbalancer_v2"" ""k8s_lb"" {
+  count             = var.k8s_master_loadbalancer_enabled ? 1 : 0
+  name              = ""${var.cluster_name}-api-loadbalancer""
+  vip_subnet_id     = var.subnet_id
+}
+
+resource ""openstack_lb_listener_v2"" ""api_listener""{
+  count             = var.k8s_master_loadbalancer_enabled ? 1 : 0
+  name              = ""api-listener""
+  protocol          = ""TCP""
+  protocol_port     = var.k8s_master_loadbalancer_listener_port
+  loadbalancer_id   = openstack_lb_loadbalancer_v2.k8s_lb[0].id
+  depends_on        = [ openstack_lb_loadbalancer_v2.k8s_lb ]
+}
+
+resource ""openstack_lb_pool_v2"" ""api_pool"" {
+  count             = var.k8s_master_loadbalancer_enabled ? 1 : 0
+  name              = ""api-pool""
+  protocol          = ""TCP""
+  lb_method         = ""ROUND_ROBIN""
+  listener_id       = openstack_lb_listener_v2.api_listener[0].id
+  depends_on        = [ openstack_lb_listener_v2.api_listener ]
+}
+
+resource ""openstack_lb_member_v2"" ""lb_member"" {
+  count             = var.k8s_master_loadbalancer_enabled ? length(var.k8s_master_ips) : 0
+  name              = var.k8s_master_ips[count.index].name
+  pool_id           = openstack_lb_pool_v2.api_pool[0].id
+  address           = var.k8s_master_ips[count.index].access_ip_v4
+  protocol_port     = var.k8s_master_loadbalancer_server_port
+  depends_on        = [ openstack_lb_pool_v2.api_pool ]
+}
+
+resource ""openstack_lb_monitor_v2"" ""monitor"" {
+  count       = var.k8s_master_loadbalancer_enabled ? 1 : 0
+  name        = ""Api Monitor""
+  pool_id     = openstack_lb_pool_v2.api_pool[0].id
+  type        = ""TCP""
+  delay       = 10
+  timeout     = 5
+  max_retries = 5
+}
+
+resource ""openstack_networking_floatingip_v2"" ""floatip_1"" {
+  count = var.k8s_master_loadbalancer_enabled && var.k8s_master_loadbalancer_public_ip == """" ? 1 : 0
+  pool = var.floatingip_pool
+}
+
+resource ""openstack_networking_floatingip_associate_v2"" ""public_ip"" {
+  count             = var.k8s_master_loadbalancer_enabled ? 1 : 0
+  floating_ip       = var.k8s_master_loadbalancer_public_ip != """" ? var.k8s_master_loadbalancer_public_ip : openstack_networking_floatingip_v2.floatip_1[0].address
+  port_id           = openstack_lb_loadbalancer_v2.k8s_lb[0].vip_port_id
+  depends_on        = [ openstack_lb_loadbalancer_v2.k8s_lb ]
+}
+"
+kubernetes-sigs__kubespray,b9e1e8577fade952f72281fc3b9fd16d7c0f994a,clones/kubernetes-sigs__kubespray/contrib/terraform/openstack,5891daa5ade32d72fd65e30ecabed6b7dd80bdde,warning,Deprecated Resource,Support for neutron-lbaas will be removed. Make sure to use Octavia,clones/kubernetes-sigs__kubespray/contrib/terraform/openstack/modules/loadbalancer/main.tf,7,51,7,52,resource,openstack_lb_listener_v2 api_listener,"resource ""openstack_lb_listener_v2"" ""api_listener""{
+  count             = var.k8s_master_loadbalancer_enabled ? 1 : 0
+  name              = ""api-listener""
+  protocol          = ""TCP""
+  protocol_port     = var.k8s_master_loadbalancer_listener_port
+  loadbalancer_id   = openstack_lb_loadbalancer_v2.k8s_lb[0].id
+  depends_on        = [ openstack_lb_loadbalancer_v2.k8s_lb ]
+}",7,14,resource openstack_lb_listener_v2 api_listener,0,2,4.5,42,8,8,0,5,6,openstack,1.54.1,"{""attributes"": {""admin_state_up"": {""type"": ""bool"", ""description_kind"": ""plain"", ""optional"": true}, ""allowed_cidrs"": {""type"": [""list"", ""string""], ""description_kind"": ""plain"", ""optional"": true}, ""connection_limit"": {""type"": ""number"", ""description_kind"": ""plain"", ""optional"": true, ""computed"": true}, ""default_pool_id"": {""type"": ""string"", ""description_kind"": ""plain"", ""optional"": true, ""computed"": true}, ""default_tls_container_ref"": {""type"": ""string"", ""description_kind"": ""plain"", ""optional"": true}, ""description"": {""type"": ""string"", ""description_kind"": ""plain"", ""optional"": true}, ""id"": {""type"": ""string"", ""description_kind"": ""plain"", ""optional"": true, ""computed"": true}, ""insert_headers"": {""type"": [""map"", ""string""], ""description_kind"": ""plain"", ""optional"": true}, ""loadbalancer_id"": {""type"": ""string"", ""description_kind"": ""plain"", ""required"": true}, ""name"": {""type"": ""string"", ""description_kind"": ""plain"", ""optional"": true, ""computed"": true}, ""protocol"": {""type"": ""string"", ""description_kind"": ""plain"", ""required"": true}, ""protocol_port"": {""type"": ""number"", ""description_kind"": ""plain"", ""required"": true}, ""region"": {""type"": ""string"", ""description_kind"": ""plain"", ""optional"": true, ""computed"": true}, ""sni_container_refs"": {""type"": [""list"", ""string""], ""description_kind"": ""plain"", ""optional"": true}, ""tags"": {""type"": [""set"", ""string""], ""description_kind"": ""plain"", ""optional"": true}, ""tenant_id"": {""type"": ""string"", ""description_kind"": ""plain"", ""optional"": true, ""computed"": true}, ""timeout_client_data"": {""type"": ""number"", ""description_kind"": ""plain"", ""optional"": true, ""computed"": true}, ""timeout_member_connect"": {""type"": ""number"", ""description_kind"": ""plain"", ""optional"": true, ""computed"": true}, ""timeout_member_data"": {""type"": ""number"", ""description_kind"": ""plain"", ""optional"": true, ""computed"": true}, ""timeout_tcp_inspect"": {""type"": ""number"", ""description_kind"": ""plain"", ""optional"": true, ""computed"": true}}, ""block_types"": {""timeouts"": {""nesting_mode"": ""single"", ""block"": {""attributes"": {""create"": {""type"": ""string"", ""description_kind"": ""plain"", ""optional"": true}, ""delete"": {""type"": ""string"", ""description_kind"": ""plain"", ""optional"": true}, ""update"": {""type"": ""string"", ""description_kind"": ""plain"", ""optional"": true}}, ""description_kind"": ""plain""}}}, ""matched_block_name"": ""openstack_lb_listener_v2"", ""matched_block_type"": ""resource""}",openstack_lb_listener_v2,resource,"resource ""openstack_lb_loadbalancer_v2"" ""k8s_lb"" {
+  count             = var.k8s_master_loadbalancer_enabled ? 1 : 0
+  name              = ""${var.cluster_name}-api-loadbalancer""
+  vip_subnet_id     = var.subnet_id
+}
+
+resource ""openstack_lb_listener_v2"" ""api_listener""{
+  count             = var.k8s_master_loadbalancer_enabled ? 1 : 0
+  name              = ""api-listener""
+  protocol          = ""TCP""
+  protocol_port     = var.k8s_master_loadbalancer_listener_port
+  loadbalancer_id   = openstack_lb_loadbalancer_v2.k8s_lb[0].id
+  depends_on        = [ openstack_lb_loadbalancer_v2.k8s_lb ]
+}
+
+resource ""openstack_lb_pool_v2"" ""api_pool"" {
+  count             = var.k8s_master_loadbalancer_enabled ? 1 : 0
+  name              = ""api-pool""
+  protocol          = ""TCP""
+  lb_method         = ""ROUND_ROBIN""
+  listener_id       = openstack_lb_listener_v2.api_listener[0].id
+  depends_on        = [ openstack_lb_listener_v2.api_listener ]
+}
+
+resource ""openstack_lb_member_v2"" ""lb_member"" {
+  count             = var.k8s_master_loadbalancer_enabled ? length(var.k8s_master_ips) : 0
+  name              = var.k8s_master_ips[count.index].name
+  pool_id           = openstack_lb_pool_v2.api_pool[0].id
+  address           = var.k8s_master_ips[count.index].access_ip_v4
+  protocol_port     = var.k8s_master_loadbalancer_server_port
+  depends_on        = [ openstack_lb_pool_v2.api_pool ]
+}
+
+resource ""openstack_lb_monitor_v2"" ""monitor"" {
+  count       = var.k8s_master_loadbalancer_enabled ? 1 : 0
+  name        = ""Api Monitor""
+  pool_id     = openstack_lb_pool_v2.api_pool[0].id
+  type        = ""TCP""
+  delay       = 10
+  timeout     = 5
+  max_retries = 5
+}
+
+resource ""openstack_networking_floatingip_v2"" ""floatip_1"" {
+  count = var.k8s_master_loadbalancer_enabled && var.k8s_master_loadbalancer_public_ip == """" ? 1 : 0
+  pool = var.floatingip_pool
+}
+
+resource ""openstack_networking_floatingip_associate_v2"" ""public_ip"" {
+  count             = var.k8s_master_loadbalancer_enabled ? 1 : 0
+  floating_ip       = var.k8s_master_loadbalancer_public_ip != """" ? var.k8s_master_loadbalancer_public_ip : openstack_networking_floatingip_v2.floatip_1[0].address
+  port_id           = openstack_lb_loadbalancer_v2.k8s_lb[0].vip_port_id
+  depends_on        = [ openstack_lb_loadbalancer_v2.k8s_lb ]
+}
+"
+kubernetes-sigs__kubespray,b9e1e8577fade952f72281fc3b9fd16d7c0f994a,clones/kubernetes-sigs__kubespray/contrib/terraform/openstack,99efbfe17f44507a45cc7238b25b3b11ccf56550,warning,Deprecated Resource,Support for neutron-lbaas will be removed. Make sure to use Octavia,clones/kubernetes-sigs__kubespray/contrib/terraform/openstack/modules/loadbalancer/main.tf,34,46,34,47,resource,openstack_lb_monitor_v2 monitor,"resource ""openstack_lb_monitor_v2"" ""monitor"" {
+  count       = var.k8s_master_loadbalancer_enabled ? 1 : 0
+  name        = ""Api Monitor""
+  pool_id     = openstack_lb_pool_v2.api_pool[0].id
+  type        = ""TCP""
+  delay       = 10
+  timeout     = 5
+  max_retries = 5
+}",34,42,resource openstack_lb_monitor_v2 monitor,0,2,4.74,39,9,9,0,3,7,openstack,1.54.1,"{""attributes"": {""admin_state_up"": {""type"": ""bool"", ""description_kind"": ""plain"", ""optional"": true}, ""delay"": {""type"": ""number"", ""description_kind"": ""plain"", ""required"": true}, ""expected_codes"": {""type"": ""string"", ""description_kind"": ""plain"", ""optional"": true, ""computed"": true}, ""http_method"": {""type"": ""string"", ""description_kind"": ""plain"", ""optional"": true, ""computed"": true}, ""id"": {""type"": ""string"", ""description_kind"": ""plain"", ""optional"": true, ""computed"": true}, ""max_retries"": {""type"": ""number"", ""description_kind"": ""plain"", ""required"": true}, ""max_retries_down"": {""type"": ""number"", ""description_kind"": ""plain"", ""optional"": true, ""computed"": true}, ""name"": {""type"": ""string"", ""description_kind"": ""plain"", ""optional"": true}, ""pool_id"": {""type"": ""string"", ""description_kind"": ""plain"", ""required"": true}, ""region"": {""type"": ""string"", ""description_kind"": ""plain"", ""optional"": true, ""computed"": true}, ""tenant_id"": {""type"": ""string"", ""description_kind"": ""plain"", ""optional"": true, ""computed"": true}, ""timeout"": {""type"": ""number"", ""description_kind"": ""plain"", ""required"": true}, ""type"": {""type"": ""string"", ""description_kind"": ""plain"", ""required"": true}, ""url_path"": {""type"": ""string"", ""description_kind"": ""plain"", ""optional"": true, ""computed"": true}}, ""block_types"": {""timeouts"": {""nesting_mode"": ""single"", ""block"": {""attributes"": {""create"": {""type"": ""string"", ""description_kind"": ""plain"", ""optional"": true}, ""delete"": {""type"": ""string"", ""description_kind"": ""plain"", ""optional"": true}, ""update"": {""type"": ""string"", ""description_kind"": ""plain"", ""optional"": true}}, ""description_kind"": ""plain""}}}, ""matched_block_name"": ""openstack_lb_monitor_v2"", ""matched_block_type"": ""resource""}",openstack_lb_monitor_v2,resource,"resource ""openstack_lb_loadbalancer_v2"" ""k8s_lb"" {
+  count             = var.k8s_master_loadbalancer_enabled ? 1 : 0
+  name              = ""${var.cluster_name}-api-loadbalancer""
+  vip_subnet_id     = var.subnet_id
+}
+
+resource ""openstack_lb_listener_v2"" ""api_listener""{
+  count             = var.k8s_master_loadbalancer_enabled ? 1 : 0
+  name              = ""api-listener""
+  protocol          = ""TCP""
+  protocol_port     = var.k8s_master_loadbalancer_listener_port
+  loadbalancer_id   = openstack_lb_loadbalancer_v2.k8s_lb[0].id
+  depends_on        = [ openstack_lb_loadbalancer_v2.k8s_lb ]
+}
+
+resource ""openstack_lb_pool_v2"" ""api_pool"" {
+  count             = var.k8s_master_loadbalancer_enabled ? 1 : 0
+  name              = ""api-pool""
+  protocol          = ""TCP""
+  lb_method         = ""ROUND_ROBIN""
+  listener_id       = openstack_lb_listener_v2.api_listener[0].id
+  depends_on        = [ openstack_lb_listener_v2.api_listener ]
+}
+
+resource ""openstack_lb_member_v2"" ""lb_member"" {
+  count             = var.k8s_master_loadbalancer_enabled ? length(var.k8s_master_ips) : 0
+  name              = var.k8s_master_ips[count.index].name
+  pool_id           = openstack_lb_pool_v2.api_pool[0].id
+  address           = var.k8s_master_ips[count.index].access_ip_v4
+  protocol_port     = var.k8s_master_loadbalancer_server_port
+  depends_on        = [ openstack_lb_pool_v2.api_pool ]
+}
+
+resource ""openstack_lb_monitor_v2"" ""monitor"" {
+  count       = var.k8s_master_loadbalancer_enabled ? 1 : 0
+  name        = ""Api Monitor""
+  pool_id     = openstack_lb_pool_v2.api_pool[0].id
+  type        = ""TCP""
+  delay       = 10
+  timeout     = 5
+  max_retries = 5
+}
+
+resource ""openstack_networking_floatingip_v2"" ""floatip_1"" {
+  count = var.k8s_master_loadbalancer_enabled && var.k8s_master_loadbalancer_public_ip == """" ? 1 : 0
+  pool = var.floatingip_pool
+}
+
+resource ""openstack_networking_floatingip_associate_v2"" ""public_ip"" {
+  count             = var.k8s_master_loadbalancer_enabled ? 1 : 0
+  floating_ip       = var.k8s_master_loadbalancer_public_ip != """" ? var.k8s_master_loadbalancer_public_ip : openstack_networking_floatingip_v2.floatip_1[0].address
+  port_id           = openstack_lb_loadbalancer_v2.k8s_lb[0].vip_port_id
+  depends_on        = [ openstack_lb_loadbalancer_v2.k8s_lb ]
+}
+"
+kubernetes-sigs__kubespray,b9e1e8577fade952f72281fc3b9fd16d7c0f994a,clones/kubernetes-sigs__kubespray/contrib/terraform/openstack,059f93fd850b7810aa9a34fe2326e741129e587c,warning,Deprecated Resource,Support for neutron-lbaas will be removed. Make sure to use Octavia,clones/kubernetes-sigs__kubespray/contrib/terraform/openstack/modules/loadbalancer/main.tf,16,44,16,45,resource,openstack_lb_pool_v2 api_pool,"resource ""openstack_lb_pool_v2"" ""api_pool"" {
+  count             = var.k8s_master_loadbalancer_enabled ? 1 : 0
+  name              = ""api-pool""
+  protocol          = ""TCP""
+  lb_method         = ""ROUND_ROBIN""
+  listener_id       = openstack_lb_listener_v2.api_listener[0].id
+  depends_on        = [ openstack_lb_listener_v2.api_listener ]
+}",16,23,resource openstack_lb_pool_v2 api_pool,0,2,4.73,40,8,8,0,4,6,openstack,1.54.1,"{""attributes"": {""admin_state_up"": {""type"": ""bool"", ""description_kind"": ""plain"", ""optional"": true}, ""description"": {""type"": ""string"", ""description_kind"": ""plain"", ""optional"": true}, ""id"": {""type"": ""string"", ""description_kind"": ""plain"", ""optional"": true, ""computed"": true}, ""lb_method"": {""type"": ""string"", ""description_kind"": ""plain"", ""required"": true}, ""listener_id"": {""type"": ""string"", ""description_kind"": ""plain"", ""optional"": true}, ""loadbalancer_id"": {""type"": ""string"", ""description_kind"": ""plain"", ""optional"": true}, ""name"": {""type"": ""string"", ""description_kind"": ""plain"", ""optional"": true}, ""protocol"": {""type"": ""string"", ""description_kind"": ""plain"", ""required"": true}, ""region"": {""type"": ""string"", ""description_kind"": ""plain"", ""optional"": true, ""computed"": true}, ""tenant_id"": {""type"": ""string"", ""description_kind"": ""plain"", ""optional"": true, ""computed"": true}}, ""block_types"": {""persistence"": {""nesting_mode"": ""list"", ""block"": {""attributes"": {""cookie_name"": {""type"": ""string"", ""description_kind"": ""plain"", ""optional"": true}, ""type"": {""type"": ""string"", ""description_kind"": ""plain"", ""required"": true}}, ""description_kind"": ""plain""}, ""max_items"": 1}, ""timeouts"": {""nesting_mode"": ""single"", ""block"": {""attributes"": {""create"": {""type"": ""string"", ""description_kind"": ""plain"", ""optional"": true}, ""delete"": {""type"": ""string"", ""description_kind"": ""plain"", ""optional"": true}, ""update"": {""type"": ""string"", ""description_kind"": ""plain"", ""optional"": true}}, ""description_kind"": ""plain""}}}, ""matched_block_name"": ""openstack_lb_pool_v2"", ""matched_block_type"": ""resource""}",openstack_lb_pool_v2,resource,"resource ""openstack_lb_loadbalancer_v2"" ""k8s_lb"" {
+  count             = var.k8s_master_loadbalancer_enabled ? 1 : 0
+  name              = ""${var.cluster_name}-api-loadbalancer""
+  vip_subnet_id     = var.subnet_id
+}
+
+resource ""openstack_lb_listener_v2"" ""api_listener""{
+  count             = var.k8s_master_loadbalancer_enabled ? 1 : 0
+  name              = ""api-listener""
+  protocol          = ""TCP""
+  protocol_port     = var.k8s_master_loadbalancer_listener_port
+  loadbalancer_id   = openstack_lb_loadbalancer_v2.k8s_lb[0].id
+  depends_on        = [ openstack_lb_loadbalancer_v2.k8s_lb ]
+}
+
+resource ""openstack_lb_pool_v2"" ""api_pool"" {
+  count             = var.k8s_master_loadbalancer_enabled ? 1 : 0
+  name              = ""api-pool""
+  protocol          = ""TCP""
+  lb_method         = ""ROUND_ROBIN""
+  listener_id       = openstack_lb_listener_v2.api_listener[0].id
+  depends_on        = [ openstack_lb_listener_v2.api_listener ]
+}
+
+resource ""openstack_lb_member_v2"" ""lb_member"" {
+  count             = var.k8s_master_loadbalancer_enabled ? length(var.k8s_master_ips) : 0
+  name              = var.k8s_master_ips[count.index].name
+  pool_id           = openstack_lb_pool_v2.api_pool[0].id
+  address           = var.k8s_master_ips[count.index].access_ip_v4
+  protocol_port     = var.k8s_master_loadbalancer_server_port
+  depends_on        = [ openstack_lb_pool_v2.api_pool ]
+}
+
+resource ""openstack_lb_monitor_v2"" ""monitor"" {
+  count       = var.k8s_master_loadbalancer_enabled ? 1 : 0
+  name        = ""Api Monitor""
+  pool_id     = openstack_lb_pool_v2.api_pool[0].id
+  type        = ""TCP""
+  delay       = 10
+  timeout     = 5
+  max_retries = 5
+}
+
+resource ""openstack_networking_floatingip_v2"" ""floatip_1"" {
+  count = var.k8s_master_loadbalancer_enabled && var.k8s_master_loadbalancer_public_ip == """" ? 1 : 0
+  pool = var.floatingip_pool
+}
+
+resource ""openstack_networking_floatingip_associate_v2"" ""public_ip"" {
+  count             = var.k8s_master_loadbalancer_enabled ? 1 : 0
+  floating_ip       = var.k8s_master_loadbalancer_public_ip != """" ? var.k8s_master_loadbalancer_public_ip : openstack_networking_floatingip_v2.floatip_1[0].address
+  port_id           = openstack_lb_loadbalancer_v2.k8s_lb[0].vip_port_id
+  depends_on        = [ openstack_lb_loadbalancer_v2.k8s_lb ]
+}
+"
+kubernetes-sigs__kubespray,b9e1e8577fade952f72281fc3b9fd16d7c0f994a,clones/kubernetes-sigs__kubespray/contrib/terraform/openstack,eca38bac2787aa24e661c188bcd5a405ab6938f0,warning,Deprecated Resource,Support for neutron-lbaas will be removed. Make sure to use Octavia,clones/kubernetes-sigs__kubespray/contrib/terraform/openstack/modules/loadbalancer/main.tf,1,50,1,51,resource,openstack_lb_loadbalancer_v2 k8s_lb,"resource ""openstack_lb_loadbalancer_v2"" ""k8s_lb"" {
+  count             = var.k8s_master_loadbalancer_enabled ? 1 : 0
+  name              = ""${var.cluster_name}-api-loadbalancer""
+  vip_subnet_id     = var.subnet_id
+}",1,5,resource openstack_lb_loadbalancer_v2 k8s_lb,0,2,4.53,29,5,5,1,3,3,openstack,1.54.1,"{""attributes"": {""admin_state_up"": {""type"": ""bool"", ""description_kind"": ""plain"", ""optional"": true}, ""availability_zone"": {""type"": ""string"", ""description_kind"": ""plain"", ""optional"": true}, ""description"": {""type"": ""string"", ""description_kind"": ""plain"", ""optional"": true}, ""flavor_id"": {""type"": ""string"", ""description_kind"": ""plain"", ""optional"": true, ""computed"": true}, ""id"": {""type"": ""string"", ""description_kind"": ""plain"", ""optional"": true, ""computed"": true}, ""loadbalancer_provider"": {""type"": ""string"", ""description_kind"": ""plain"", ""optional"": true, ""computed"": true}, ""name"": {""type"": ""string"", ""description_kind"": ""plain"", ""optional"": true}, ""region"": {""type"": ""string"", ""description_kind"": ""plain"", ""optional"": true, ""computed"": true}, ""security_group_ids"": {""type"": [""set"", ""string""], ""description_kind"": ""plain"", ""optional"": true, ""computed"": true}, ""tags"": {""type"": [""set"", ""string""], ""description_kind"": ""plain"", ""optional"": true}, ""tenant_id"": {""type"": ""string"", ""description_kind"": ""plain"", ""optional"": true, ""computed"": true}, ""vip_address"": {""type"": ""string"", ""description_kind"": ""plain"", ""optional"": true, ""computed"": true}, ""vip_network_id"": {""type"": ""string"", ""description_kind"": ""plain"", ""optional"": true, ""computed"": true}, ""vip_port_id"": {""type"": ""string"", ""description_kind"": ""plain"", ""optional"": true, ""computed"": true}, ""vip_subnet_id"": {""type"": ""string"", ""description_kind"": ""plain"", ""optional"": true, ""computed"": true}}, ""block_types"": {""timeouts"": {""nesting_mode"": ""single"", ""block"": {""attributes"": {""create"": {""type"": ""string"", ""description_kind"": ""plain"", ""optional"": true}, ""delete"": {""type"": ""string"", ""description_kind"": ""plain"", ""optional"": true}, ""update"": {""type"": ""string"", ""description_kind"": ""plain"", ""optional"": true}}, ""description_kind"": ""plain""}}}, ""matched_block_name"": ""openstack_lb_loadbalancer_v2"", ""matched_block_type"": ""resource""}",openstack_lb_loadbalancer_v2,resource,"resource ""openstack_lb_loadbalancer_v2"" ""k8s_lb"" {
+  count             = var.k8s_master_loadbalancer_enabled ? 1 : 0
+  name              = ""${var.cluster_name}-api-loadbalancer""
+  vip_subnet_id     = var.subnet_id
+}
+
+resource ""openstack_lb_listener_v2"" ""api_listener""{
+  count             = var.k8s_master_loadbalancer_enabled ? 1 : 0
+  name              = ""api-listener""
+  protocol          = ""TCP""
+  protocol_port     = var.k8s_master_loadbalancer_listener_port
+  loadbalancer_id   = openstack_lb_loadbalancer_v2.k8s_lb[0].id
+  depends_on        = [ openstack_lb_loadbalancer_v2.k8s_lb ]
+}
+
+resource ""openstack_lb_pool_v2"" ""api_pool"" {
+  count             = var.k8s_master_loadbalancer_enabled ? 1 : 0
+  name              = ""api-pool""
+  protocol          = ""TCP""
+  lb_method         = ""ROUND_ROBIN""
+  listener_id       = openstack_lb_listener_v2.api_listener[0].id
+  depends_on        = [ openstack_lb_listener_v2.api_listener ]
+}
+
+resource ""openstack_lb_member_v2"" ""lb_member"" {
+  count             = var.k8s_master_loadbalancer_enabled ? length(var.k8s_master_ips) : 0
+  name              = var.k8s_master_ips[count.index].name
+  pool_id           = openstack_lb_pool_v2.api_pool[0].id
+  address           = var.k8s_master_ips[count.index].access_ip_v4
+  protocol_port     = var.k8s_master_loadbalancer_server_port
+  depends_on        = [ openstack_lb_pool_v2.api_pool ]
+}
+
+resource ""openstack_lb_monitor_v2"" ""monitor"" {
+  count       = var.k8s_master_loadbalancer_enabled ? 1 : 0
+  name        = ""Api Monitor""
+  pool_id     = openstack_lb_pool_v2.api_pool[0].id
+  type        = ""TCP""
+  delay       = 10
+  timeout     = 5
+  max_retries = 5
+}
+
+resource ""openstack_networking_floatingip_v2"" ""floatip_1"" {
+  count = var.k8s_master_loadbalancer_enabled && var.k8s_master_loadbalancer_public_ip == """" ? 1 : 0
+  pool = var.floatingip_pool
+}
+
+resource ""openstack_networking_floatingip_associate_v2"" ""public_ip"" {
+  count             = var.k8s_master_loadbalancer_enabled ? 1 : 0
+  floating_ip       = var.k8s_master_loadbalancer_public_ip != """" ? var.k8s_master_loadbalancer_public_ip : openstack_networking_floatingip_v2.floatip_1[0].address
+  port_id           = openstack_lb_loadbalancer_v2.k8s_lb[0].vip_port_id
+  depends_on        = [ openstack_lb_loadbalancer_v2.k8s_lb ]
+}
+"
