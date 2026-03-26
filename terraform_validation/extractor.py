@@ -45,7 +45,7 @@ def _find_hcl_block(file_lines, target_line_1indexed):
     Walks from target_line upward to find the nearest enclosing block header.
     """
     BLOCK_HEADER = re.compile(
-        r'^\s*(resource|data|variable|output|locals|module|provider|terraform)\s*(.*?)\s*\{?\s*$'
+        r'^\s*\b(resource|data|variable|output|locals|module|provider|terraform)\b\s*(.*?)\s*\{?\s*$'
     )
     
     idx = target_line_1indexed - 1
@@ -260,30 +260,29 @@ class DiagnosticsExtractor:
                 TOP_LEVEL_BLOCK_TYPES = {"resource", "data", "variable", "output", "locals", "module", "provider", "terraform"}
                 details = None
                 
-                # Tier 1: Try StaticAnalyzer (tree-sitter)
-                if analyzer:
-                    try:
-                        temp_details = analyzer.get_block_details_by_location(
-                            row["absolute_filename"], 
-                            int(line_start),
-                            include_metrics=True
-                        )
-                        if temp_details:
-                            # Verify if it's a top-level block. If not, we fall back to finding the wrapper.
-                            if temp_details.get("block_type") in TOP_LEVEL_BLOCK_TYPES:
-                                details = temp_details
-                                # Add metrics to the row
-                                metrics = details.get("metrics", {})
-                                row["metrics_nloc"] = metrics.get("nloc", 0)
-                                row["metrics_depth"] = metrics.get("depth", 0)
-                                row["metrics_attributes"] = metrics.get("attribute_count", 0)
-                                row["metrics_references"] = metrics.get("reference_count", 0)
-                            else:
-                                print(f"[BLOCK] StaticAnalyzer returned nested block '{temp_details.get('block_type')}'. Falling back to top-level finder.")
-                    except Exception as e:
-                        print(f"[DEBUG] StaticAnalyzer metrics fetch failed: {e}")
+                # Tier 1: Try StandaloneBlockFinder (Parity with TFReproducer's list_blocks approach)
+                try:
+                    from quality_metrics.block_finder import StandaloneBlockFinder
+                    finder = StandaloneBlockFinder(row["absolute_filename"])
+                    block = finder.find_with_upward_scan(int(line_start))
+                    if block:
+                        details = {
+                            "block_type": block.get("block_type"),
+                            "identifiers": block.get("identifiers") or block.get("address", ""),
+                            "start_line": block.get("start_line"),
+                            "end_line": block.get("end_line"),
+                            "metrics": block.get("metrics", {})
+                        }
+                        # Add metrics to the row
+                        metrics = details.get("metrics", {})
+                        row["metrics_nloc"] = metrics.get("nloc", 0)
+                        row["metrics_depth"] = metrics.get("depth", 0)
+                        row["metrics_attributes"] = metrics.get("attribute_count", 0)
+                        row["metrics_references"] = metrics.get("reference_count", 0)
+                except Exception as e:
+                    print(f"[DEBUG] StandaloneBlockFinder failed: {e}")
 
-                # Tier 2: Fallback (or if Tier 1 was nested) for top-level discovery
+                # Tier 2: Fallback (Pure-Python Regex)
                 if not details:
                     try:
                         file_lines = row["file_content"].splitlines()
