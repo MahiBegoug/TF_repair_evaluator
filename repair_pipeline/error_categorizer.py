@@ -30,7 +30,8 @@ class ErrorCategorizer:
         # Structure: {filename|iteration: {error_signature: {'first_iteration': str, 'iterations': [str]}}}
         self.experiment_errors_cache = {}
     
-    def categorize_errors(self, extracted_rows, original_file, iteration_id, baseline_errors=None, original_problem_oid=None):
+    def categorize_errors(self, extracted_rows, original_file, iteration_id,
+                          baseline_errors=None, original_problem_oid=None, project=None):
         """
         Categorize errors as baseline, cross-experiment, or truly new.
         
@@ -40,13 +41,14 @@ class ErrorCategorizer:
             iteration_id: Current iteration identifier
             baseline_errors: Set of baseline error signatures (optional, will be computed if None)
             original_problem_oid: Filter cross-experiment checks by specific problem OID (optional)
+            project: Project name for tighter baseline scoping (optional)
             
         Returns:
             list: Same extracted_rows with categorization fields added
         """
         # Get baseline errors if not provided
         if baseline_errors is None:
-            baseline_errors = self.get_baseline_errors(original_file, project=None)
+            baseline_errors = self.get_baseline_errors(original_file, project=project)
         
         # Load existing experiment errors for cross-experiment tracking
         existing_experiment_errors = self.get_existing_experiment_errors(
@@ -82,7 +84,12 @@ class ErrorCategorizer:
                 error['is_original_error'] = False
                 error['is_new_error'] = True  # Deprecated - was "not in baseline"
                 error['is_new_to_dataset'] = False  # Not new - exists in other experiments
-                error['introduced_in_this_iteration'] = False  # Already exists elsewhere
+                
+                # CRITICAL INDEPENDENCE FIX: Every iteration is an independent event!
+                # If it's not in the baseline, THIS iteration introduced it, regardless 
+                # of whether Iteration 1 also made the same mistake.
+                error['introduced_in_this_iteration'] = True  
+                
                 error['first_seen_in'] = existing_experiment_errors[sig]['first_iteration']
                 error['exists_in_iterations'] = ','.join(existing_experiment_errors[sig]['iterations'])
                 
@@ -97,65 +104,117 @@ class ErrorCategorizer:
         
         return extracted_rows
     
-    def get_baseline_errors(self, original_file, project):
+    def get_baseline_errors(self, original_file, project=None):
         """
         Get errors from problems.csv (baseline before any fixes).
-        
+
+        Signature format matches the live ``terraform validate`` output:
+          ``filename | block_identifiers | summary | detail``
+
+        Both the baseline (built here) and the post-fix errors (built in
+        ``categorize_errors``) use exactly this format, so comparisons are valid.
+
+        The filter is tightened when a ``project`` name is supplied:
+          * primary: project_name + full filename  → unambiguous
+          * fallback: basename only                → when project unknown
+
         Args:
-            original_file: Path to the file
-            project: Project name (optional)
-            
+            original_file: Absolute or relative path to the file being evaluated.
+            project:       Project name (optional, improves precision).
+
         Returns:
-            set: Error signatures from baseline
+            set: Error signatures from baseline.
         """
+        cache_key = f"{original_file}|{project}"
+
         # Check cache first
-        if original_file in self.baseline_errors_cache:
-            print(f"[BASELINE] Using cached baseline: {len(self.baseline_errors_cache[original_file])} original errors")
-            return self.baseline_errors_cache[original_file]
-        
+        if cache_key in self.baseline_errors_cache:
+            print(f"[BASELINE] Using cached baseline: "
+                  f"{len(self.baseline_errors_cache[cache_key])} original errors")
+            return self.baseline_errors_cache[cache_key]
+
         # If no problems dataset, return empty
         if self.problems is None:
-            print(f"[BASELINE] No problems.csv provided - cannot determine baseline errors")
-            self.baseline_errors_cache[original_file] = set()
+            print("[BASELINE] No problems.csv provided - cannot determine baseline errors")
+            self.baseline_errors_cache[cache_key] = set()
             return set()
-        
-        # Use problems.csv to get baseline (much faster!)
-        print(f"[BASELINE] Using problems.csv for baseline errors")
-        
-        # Filter problems for this file
-        file_problems = self.problems[
-            self.problems['filename'].str.contains(os.path.basename(original_file), na=False)
-        ]
-        
-        # Create error signatures from problems.csv WITHOUT line numbers
+
+        print("[BASELINE] Using problems.csv for baseline errors")
+
+        # ------------------------------------------------------------------ #
+        # Step 1 – filter problems to only those relevant to this file        #
+        #                                                                     #
+        # Lookup strategy (most precise → least precise):                    #
+        #   T1: project_name  +  full filename suffix match  (unambiguous)   #
+        #   T2: basename only                                (last resort)    #
+        # ------------------------------------------------------------------ #
+        basename = os.path.basename(original_file)
+        # Normalize absolute path to forward-slash format for suffix comparison
+        norm_original = original_file.replace("\\", "/")
+        has_project_col = 'project_name' in self.problems.columns
+
+        def _full_path_match(prob_filename):
+            """True if the problems.csv relative path is a suffix of original_file."""
+            rel = str(prob_filename).replace("\\", "/").lstrip("/")
+            return norm_original.endswith(rel)
+
+        if project and has_project_col:
+            # T1: same project + exact full-path suffix
+            project_mask = self.problems['project_name'].astype(str) == str(project)
+            file_problems = self.problems[
+                project_mask &
+                self.problems['filename'].apply(_full_path_match)
+            ]
+            if file_problems.empty:
+                # T2: relax to basename only (same project)
+                print(f"[BASELINE] Full-path match empty for project='{project}'. "
+                      f"Falling back to basename='{basename}'.")
+                file_problems = self.problems[
+                    project_mask &
+                    self.problems['filename'].str.contains(basename, na=False, regex=False)
+                ]
+            if file_problems.empty:
+                # T3: drop project constraint entirely
+                print(f"[BASELINE] Still empty — dropping project constraint.")
+                file_problems = self.problems[
+                    self.problems['filename'].str.contains(basename, na=False, regex=False)
+                ]
+        else:
+            # No project hint: try full-path first, then basename
+            file_problems = self.problems[
+                self.problems['filename'].apply(_full_path_match)
+            ]
+            if file_problems.empty:
+                file_problems = self.problems[
+                    self.problems['filename'].str.contains(basename, na=False, regex=False)
+                ]
+
+
+        # ------------------------------------------------------------------ #
+        # Step 2 – build signatures  (must match categorize_errors format)   #
+        #                                                                     #
+        # CRITICAL: use the `block_identifiers` column directly.             #
+        # `block_type`/`impacted_block_type` (e.g. "resource resource") are  #
+        # NOT the same as `block_identifiers` (e.g. "aws_s3_bucket my_name") #
+        # which matches what terraform validate actually emits.               #
+        # ------------------------------------------------------------------ #
         error_signatures = set()
         for _, problem in file_problems.iterrows():
-            # problems.csv has: block_type + impacted_block_type (not block_identifiers!)
-            block_type = problem.get('block_type', '')
-            impacted_block_type = problem.get('impacted_block_type', '')
-            
-            # Combine to create block identifier
-            if block_type and impacted_block_type:
-                block_id = f"{block_type} {impacted_block_type}"
-            elif impacted_block_type:
-                block_id = impacted_block_type
-            else:
-                block_id = ''
-            
-            summary = problem.get('summary', '')
-            detail = problem.get('detail', '')
-            
-            # Prefer block_identifiers over line numbers
+            block_id = str(problem.get('block_identifiers', '') or '').strip()
+            summary  = str(problem.get('summary', '') or '').strip()
+            detail   = str(problem.get('detail', '') or '').strip()
+            filename = str(problem.get('filename', '') or '').strip()
+
             if block_id:
-                sig = f"{problem.get('filename')}|{block_id}|{summary}|{detail}"
+                sig = f"{filename}|{block_id}|{summary}|{detail}"
             else:
-                # Fallback to line if no block identifier
-                sig = f"{problem.get('filename')}|line_{problem.get('line_start')}|{summary}|{detail}"
-            
+                # Fallback: use line number when block_identifiers is empty
+                sig = f"{filename}|line_{problem.get('line_start')}|{summary}|{detail}"
+
             error_signatures.add(sig)
-        
+
         print(f"[BASELINE] Found {len(error_signatures)} original errors from problems.csv")
-        self.baseline_errors_cache[original_file] = error_signatures
+        self.baseline_errors_cache[cache_key] = error_signatures
         return error_signatures
     
     def get_existing_experiment_errors(self, filename, current_iteration_id, original_problem_oid=None):

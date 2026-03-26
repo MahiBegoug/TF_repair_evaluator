@@ -1,9 +1,9 @@
 {
-    "problems_dataset": "problems/problems.csv",
+    "problems_dataset": "problems/CodeLlama_34b_subset_600_baseline_problems.csv",
     "responses": {
         "input_dir": "llm_responses",
         "models": [
-            "gpt_oss_20b_snippet_only.csv"
+            "CodeLlama_34b_subset_80_fixes.csv"
         ]
     },
     "output_dir": "llms_fixes_results",

@@ -2,202 +2,203 @@
 """
 Helper service for matching errors between original and post-fix diagnostics.
 Provides clean separation of concerns for error evaluation logic.
+
+Key design principle (Issue 4 fix):
+  Evaluation is row-by-row, one OID at a time. A single block can contain multiple
+  errors on DIFFERENT lines with IDENTICAL (block_identifiers, summary, detail) —
+  e.g. consecutive `ingress {}` or `set {}` sub-blocks. A fuzzy line-window (tolerance)
+  incorrectly flags sibling errors as "unfixed". The correct strategy is:
+
+      exact line_start  +  summary  +  block_type   (triple match)
+
+  Only if all three match do we declare the original error is still present.
+  block_type is required because `resource` and `data` blocks can share the same
+  block_identifiers (user's TODO resolved here).
 """
 
 
 class ErrorMatchingService:
     """
     Service for determining if errors have been resolved after applying fixes.
-    Supports both line-based and error-type-based matching strategies.
+    Uses exact line + summary + block_type matching to handle consecutive
+    identical-looking sub-blocks within the same parent block.
     """
-    
+
     def __init__(self, line_tolerance=3):
         """
         Args:
-            line_tolerance: Number of lines +/- to consider as "same location"
+            line_tolerance: Kept for _is_renamed_block_match and position-fallback
+                            only. NOT used in the primary matching paths.
         """
         self.line_tolerance = line_tolerance
-    
-    def check_line_is_clean(self, original_line, extracted_errors):
+
+    # ------------------------------------------------------------------ #
+    # Public API                                                           #
+    # ------------------------------------------------------------------ #
+
+    def check_line_is_clean(self, original_line, original_summary, extracted_errors):
         """
-        Check if the original error line is error-free after the fix.
-        
+        Check if the specific error at ``original_line`` is gone after the fix.
+
+        Uses EXACT line match + summary match so that sibling errors on nearby
+        lines (consecutive ingress/set blocks with the same type) are NOT
+        mistakenly treated as evidence that this fix failed.
+
         Args:
-            original_line: Line number of the original error
-            extracted_errors: List of error dictionaries from post-fix validation
-            
+            original_line:    Exact line_start from problems.csv for this OID.
+            original_summary: The error summary string for this OID.
+            extracted_errors: List of error dicts from post-fix terraform validate.
+
         Returns:
-            bool: True if no errors found at the original line location
+            bool | None: True  = line is clean (error gone)
+                         False = same error still present at the same line
+                         None  = original_line unknown, cannot evaluate
         """
-        if original_line == -1:
+        if original_line == -1 or original_line is None:
             return None
-        
+
+        try:
+            original_line = int(original_line)
+        except (ValueError, TypeError):
+            return None
+
         for error in extracted_errors:
             try:
                 error_line = int(error.get("line_start", -1))
-                if error_line != -1:
-                    if abs(error_line - original_line) <= self.line_tolerance:
-                        return False  # Found error at this line
             except (ValueError, TypeError):
                 continue
-        
-        return True  # No errors found at original line
-    
-    def check_specific_error_fixed(self, 
-                                    original_error_info,
-                                    extracted_errors,
-                                    fix_context):
+
+            if error_line == -1:
+                continue
+
+            # Exact line match is required to disambiguate consecutive sub-blocks
+            if error_line == original_line:
+                # Also require same summary so an unrelated error on the same
+                # line does not count as "unfixed"
+                if error.get("summary", "").strip() == str(original_summary).strip():
+                    return False  # Same error, same line → still broken
+
+        return True   # No matching error found at the original line
+
+    def check_specific_error_fixed(self,
+                                   original_error_info,
+                                   original_count,
+                                   extracted_errors,
+                                   fix_context):
         """
-        Check if the specific error type has been resolved.
-        
+        Check if the specific error instance has been resolved.
+
+        Matching strategy (most precise → fallback):
+          1. Block-Bounded Delta Counting: compares the exact count of this error 
+             in the block before and after the fix. Fix succeeds if count drops.
+          2. Position-only fallback (when no block_identifiers available)
+
         Args:
-            original_error_info: Dict with keys:
-                - summary: Error summary string
-                - block_identifiers: Block identifier string
-                - line_start: Original line number
-                - impacted_block_start_line: Start of impacted block
-                - impacted_block_end_line: End of impacted block
-            extracted_errors: List of error dicts from post-fix validation
-            fix_context: Dict with keys:
-                - start_line: Start line of the fix
-                - end_line: End line of the fix
-                - fixed_file_content: The fixed content (for line counting)
-                
+            original_error_info: Dict with keys: summary, block_identifiers, block_type, etc.
+            original_count: The number of times this exact error appeared in this block originally.
+            extracted_errors: List of error dicts from post-fix validation.
+            fix_context: Dict with start_line, end_line, fixed_file_content.
+
         Returns:
-            bool: True if the specific error type no longer appears
+            bool: True if the specific error is gone, False if still present.
         """
-        original_summary = original_error_info.get("summary", "")
-        original_identifiers = str(original_error_info.get("block_identifiers", "")).strip()
-        original_line = original_error_info.get("line_start", -1)
+        # 1. Primary Strategy: Delta Counting
+        delta_result = self._check_block_delta_count(original_error_info, original_count, extracted_errors)
+        if delta_result is not None:
+            return delta_result
+
+        # 2. Fallbacks (used only if block_identifiers are missing from the parsed diagnostic)
+        for error in extracted_errors:
+            if self._matches_by_position(error, original_error_info, fix_context):
+                return False   # Positional fallback matched, error still there
+
+        return True   # Error is gone
+
+    # ------------------------------------------------------------------ #
+    # Private helpers                                                      #
+    # ------------------------------------------------------------------ #
+
+    def _check_block_delta_count(self, original_error_info, original_count, extracted_errors):
+        """
+        Evaluates fix success by comparing the density of a specific error inside its block.
+        Mathematically handles line shifts and identical sibling errors without relying
+        on exact line tracking across iterations.
+        """
+        target_id = str(original_error_info.get("block_identifiers", "")).strip()
+        target_type = str(original_error_info.get("block_type", "")).strip()
+        target_summary = str(original_error_info.get("summary", "")).strip()
+
+        # Delta counting requires valid block identifiers
+        if not target_id:
+            return None
+
+        # Deduplicate identical errors emitted multiple times by terraform due to module calls.
+        # Errors from the same module invocation will have the EXACT same line_start in the post-fix file,
+        # whereas true architectural sibling errors will have different line_starts (even if shifted).
+        unique_instances = set()
         
         for error in extracted_errors:
-            # Try identifier-based matching first (strongest signal)
-            if self._matches_by_identifier(error, original_error_info):
-                return False  # Specific error still exists
-            
-            # Fallback to position-based matching
-            if self._matches_by_position(error, original_error_info, fix_context):
-                return False  # Specific error still exists
+            err_id = str(error.get("block_identifiers", "")).strip()
+            err_type = str(error.get("block_type", "")).strip()
+            err_summary = str(error.get("summary", "")).strip()
+
+            if err_id == target_id and err_type == target_type and err_summary == target_summary:
+                line_start = error.get("line_start", -1)
+                unique_instances.add(line_start)
+                
+        new_count = len(unique_instances)
         
-        return True  # Specific error type is gone
-    
-    def _matches_by_identifier(self, error, original_error_info):
-        """
-        Check if error matches original by block identifier and summary.
-        
-        Returns:
-            bool: True if this is the same error
-        """
-        current_identifiers = str(error.get("block_identifiers", "")).strip()
-        original_identifiers = str(original_error_info.get("block_identifiers", "")).strip()
-        
-        # Both must have identifiers for this check to be valid
-        if not (original_identifiers and current_identifiers):
-            return False
-        
-        # Different blocks = not a match
-        if original_identifiers != current_identifiers:
-            # Check if it's a renamed block with same position
-            return self._is_renamed_block_match(error, original_error_info)
-        
-        # Same block - check if same error type
-        if error.get("summary") != original_error_info.get("summary"):
-            return False
-        
-        # Same block, same error type - verify position
-        return self._position_matches(
-            error.get("line_start", -1),
-            original_error_info.get("line_start", -1)
-        )
-    
-    def _is_renamed_block_match(self, error, original_error_info):
-        """
-        Check if error is on a renamed block at the same position.
-        Example: kubernetes_namespace renamed to kubernetes_namespace_v1
-        
-        Returns:
-            bool: True if same error on renamed block
-        """
-        current_identifiers = str(error.get("block_identifiers", "")).strip()
-        original_identifiers = str(original_error_info.get("block_identifiers", "")).strip()
-        
-        # Both must exist but be different
-        if not (current_identifiers and original_identifiers):
-            return False
-        if current_identifiers == original_identifiers:
-            return False
-        
-        # Check if error is in same position as original block
+        # Ensure mathematical safety
         try:
-            error_line = int(error.get("line_start", -1))
-            original_block_start = int(original_error_info.get("impacted_block_start_line", -1))
-            original_block_end = int(original_error_info.get("impacted_block_end_line", -1))
+            safe_original_count = int(original_count)
+        except (ValueError, TypeError):
+            safe_original_count = 1
             
-            if error_line == -1 or original_block_start == -1:
-                return False
-            
-            # Check if error is within original block range (with buffer)
-            if original_block_start - self.line_tolerance <= error_line <= original_block_end + self.line_tolerance:
-                # Same position, check if same error type
-                return error.get("summary") == original_error_info.get("summary")
-        except (ValueError, TypeError, KeyError):
-            pass
-        
-        return False
-    
+        return new_count < safe_original_count
+
     def _matches_by_position(self, error, original_error_info, fix_context):
         """
-        Fallback: Check if error matches by position when identifiers unavailable.
-        Only used when current error has no identifier (parser failure).
-        
+        Last-resort fallback: used only when the post-fix error has NO
+        block_identifiers (terraform parser produced a partial diagnostic).
+
+        Checks if the error lands inside the replaced block region and has the
+        same summary. Without identifiers we cannot be more precise.
+
         Returns:
-            bool: True if this appears to be the same error
+            bool: True if this appears to be the same error.
         """
+        # Only activate this path when identifiers are missing
         current_identifiers = str(error.get("block_identifiers", "")).strip()
-        
-        # Only use position fallback if current error has no identifier
         if current_identifiers:
             return False
-        
-        # Check if error is in the vicinity of the fix
+
         try:
             error_line = int(error.get("line_start", -1))
             if error_line == -1:
                 return False
-            
-            # Calculate the area affected by the fix
-            fixed_content = fix_context.get("fixed_file_content")
+
             start_line = fix_context.get("start_line", 1)
-            
-            if fixed_content:
-                new_lines_count = len(fixed_content.splitlines())
-            else:
-                new_lines_count = 0
-            
-            buffer = 2
-            check_start = start_line - buffer
-            check_end = start_line + new_lines_count + buffer
-            
-            # Error in the affected area?
+            fixed_content = fix_context.get("fixed_file_content")
+            new_line_count = len(fixed_content.splitlines()) if fixed_content else 0
+
+            check_start = start_line
+            check_end = start_line + new_line_count
+
             if check_start <= error_line <= check_end:
-                # Same error type?
-                return error.get("summary") == original_error_info.get("summary")
+                return (error.get("summary", "").strip() ==
+                        str(original_error_info.get("summary", "")).strip())
         except (ValueError, TypeError):
             pass
-        
+
         return False
-    
+
     def _position_matches(self, error_line, original_line, tolerance=None):
         """
-        Check if two line numbers are close enough to be considered the same position.
-        
-        Returns:
-            bool: True if positions match within tolerance
+        Utility: fuzzy line comparison (kept for external callers if any).
+        NOT used in the primary matching paths.
         """
         if tolerance is None:
             tolerance = self.line_tolerance
-        
         if error_line == -1 or original_line == -1:
             return False
-        
         return abs(error_line - original_line) <= tolerance

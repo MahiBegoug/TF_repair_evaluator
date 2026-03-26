@@ -20,6 +20,23 @@ class FileCoordinateResolver:
         """
         self.clones_root = clones_root
         self.problems = problems_dataset
+        # Build a composite index keyed by (project_name, oid, filename) for O(1) lookup.
+        # Falls back gracefully to an oid-only index when the extra columns are absent.
+        self._coord_index = {}      # (project_name, oid, filename) -> (start, end)
+        self._coord_index_oid = {}  # oid -> (start, end)  – fallback
+        if problems_dataset is not None:
+            required_cols = {"oid", "impacted_block_start_line", "impacted_block_end_line"}
+            has_composite = required_cols | {"project_name", "filename"} <= set(problems_dataset.columns)
+            for _, row in problems_dataset.iterrows():
+                oid_key = str(row["oid"])
+                coords = (int(row["impacted_block_start_line"]), int(row["impacted_block_end_line"]))
+                # Full composite key
+                if has_composite:
+                    composite_key = (str(row["project_name"]), oid_key, str(row["filename"]))
+                    self._coord_index[composite_key] = coords
+                # OID-only fallback (first match wins)
+                if oid_key not in self._coord_index_oid:
+                    self._coord_index_oid[oid_key] = coords
     
     def extract_project_name(self, row):
         """
@@ -57,29 +74,41 @@ class FileCoordinateResolver:
         
         return os.path.normpath(os.path.join(self.clones_root, relative_path))
     
-    def get_block_coordinates_from_problems(self, oid):
+    def get_block_coordinates_from_problems(self, oid, project_name=None, filename=None):
         """
-        Get block coordinates from problems dataset by OID.
-        
+        Get block coordinates from problems dataset.
+
+        Lookup strategy (most precise → least precise):
+          1. Composite key  (project_name, oid, filename) – fastest & unambiguous.
+          2. OID-only fallback – used when project_name / filename are not available.
+
         Args:
-            oid: Object ID to look up
-            
+            oid:          Object ID to look up.
+            project_name: (optional) Project name for composite lookup.
+            filename:     (optional) Relative filename for composite lookup.
+
         Returns:
-            tuple: (start_line, end_line) or (None, None) if not found
+            tuple: (start_line, end_line) or (None, None) if not found.
         """
         if self.problems is None or not oid:
             return None, None
-        
+
         target_oid = str(oid)
-        p_match = self.problems[self.problems["oid"].astype(str) == target_oid]
-        
-        if not p_match.empty:
-            start = int(p_match.iloc[0]["impacted_block_start_line"])
-            end = int(p_match.iloc[0]["impacted_block_end_line"])
-            return start, end
-        else:
-            print(f"Warning: No match found in problems dataset for OID: {target_oid}")
-            return None, None
+
+        # --- 1. Composite lookup (project_name + oid + filename) ---
+        if project_name and filename:
+            composite_key = (str(project_name), target_oid, str(filename))
+            if composite_key in self._coord_index:
+                return self._coord_index[composite_key]
+            print(f"Warning: No composite match for project='{project_name}', "
+                  f"oid='{target_oid}', filename='{filename}'. Falling back to OID-only.")
+
+        # --- 2. OID-only fallback ---
+        if target_oid in self._coord_index_oid:
+            return self._coord_index_oid[target_oid]
+
+        print(f"Warning: No match found in problems dataset for OID: {target_oid}")
+        return None, None
     
     def get_fix_content_and_coordinates(self, row, repair_mode="auto"):
         """
@@ -107,9 +136,16 @@ class FileCoordinateResolver:
             if pd.isna(fixed_content):
                 fixed_content = row.get("fixed_code")  # fallback
             
-            # Get coordinates from problems dataset or fallback to row
+            # Get coordinates from problems dataset or fallback to row.
+            # Pass project_name + filename alongside OID for the most precise lookup.
             if "oid" in row and pd.notna(row["oid"]):
-                start_line, end_line = self.get_block_coordinates_from_problems(row["oid"])
+                project_name = row.get("project_name") if "project_name" in row else None
+                filename = row.get("filename") if "filename" in row else None
+                start_line, end_line = self.get_block_coordinates_from_problems(
+                    row["oid"],
+                    project_name=project_name if project_name and pd.notna(project_name) else None,
+                    filename=filename if filename and pd.notna(filename) else None,
+                )
             
             # Fallback to row's own coordinates
             if start_line is None:

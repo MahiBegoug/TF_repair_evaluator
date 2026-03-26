@@ -21,6 +21,38 @@ class MetricsCalculator:
         self.clones_root = clones_root
         self.error_matcher = error_matcher
         self.problems = problems_dataset
+        # Build an OID -> problem-row dict for O(1) lookup in evaluate_resolution_metrics.
+        # Previously this was an O(n) DataFrame scan on every fix evaluated.
+        self._problems_by_oid = {}
+        self._original_error_counts = {}
+        
+        # Track physical locations to deduplicate module-call echoes identically to the post-fix evaluator
+        seen_physical_locations = {}
+        
+        if problems_dataset is not None and not problems_dataset.empty:
+            for _, row in problems_dataset.iterrows():
+                oid_key = str(row["oid"])
+                if oid_key not in self._problems_by_oid:
+                    self._problems_by_oid[oid_key] = row
+                
+                # Build block-scoped error count index
+                count_key = (
+                    str(row.get("filename", "")).strip(),
+                    str(row.get("block_type", "")).strip(),
+                    str(row.get("block_identifiers", "")).strip(),
+                    str(row.get("summary", "")).strip()
+                )
+                
+                line_start = row.get("line_start", -1)
+                
+                if count_key not in seen_physical_locations:
+                    seen_physical_locations[count_key] = set()
+                    
+                # Only count the error if it's on a new physical line in the original file
+                if line_start not in seen_physical_locations[count_key]:
+                    seen_physical_locations[count_key].add(line_start)
+                    self._original_error_counts[count_key] = self._original_error_counts.get(count_key, 0) + 1
+
     
     def calculate_error_metrics(self, extracted_rows, original_file, baseline_errors=None):
         """
@@ -41,20 +73,20 @@ class MetricsCalculator:
             if os.path.normpath(os.path.join(self.clones_root, er.get("filename", "").replace("clones/", ""))) == original_file_normalized
         )
         
-        # Count original vs new errors
+        # Count error categories
+        # NOTE: is_new_error is removed (Issue 5) - it conflated truly-new errors with
+        # errors that existed in prior iterations. Use introduced_in_this_iteration instead.
         original_errors = sum(1 for er in extracted_rows if er.get('is_original_error', False))
-        new_errors = sum(1 for er in extracted_rows if er.get('is_new_error', False))
         new_to_dataset = sum(1 for er in extracted_rows if er.get('is_new_to_dataset', False))
         introduced_this_iteration = sum(1 for er in extracted_rows if er.get('introduced_in_this_iteration', False))
-        
+
         return {
             "total": len(extracted_rows),
             "in_file": errors_in_file,
             "in_module": len(extracted_rows),
-            "original": original_errors,  # Ghost errors from before fix
-            "new": new_errors,  # Errors introduced by fix (DEPRECATED - includes both new and existing)
-            "new_to_dataset": new_to_dataset,  # Truly new errors never seen before
-            "introduced_this_iteration": introduced_this_iteration  # Errors introduced by THIS iteration
+            "original": original_errors,           # Errors that existed before any fix
+            "new_to_dataset": new_to_dataset,       # Errors never seen before in any run
+            "introduced_this_iteration": introduced_this_iteration  # Errors introduced by THIS fix
         }
     
     def evaluate_resolution_metrics(self, row, extracted_rows, start_line, end_line, fixed_file_content):
@@ -74,40 +106,56 @@ class MetricsCalculator:
         line_is_clean = None
         specific_error_fixed = None
         
-        if self.problems is not None and "oid" in row:
+        if self._problems_by_oid and "oid" in row:
             target_oid = str(row["oid"])
-            p_match = self.problems[self.problems["oid"].astype(str) == target_oid]
+            p_row = self._problems_by_oid.get(target_oid)
 
-            if not p_match.empty:
+            if p_row is not None:
                 # Prepare original error information
                 try:
-                    original_line = int(p_match.iloc[0].get("line_start", -1))
+                    original_line = int(p_row.get("line_start", -1))
                 except (ValueError, TypeError):
                     original_line = -1
                 
                 original_error_info = {
-                    "summary": p_match.iloc[0].get("summary", ""),
-                    "block_identifiers": str(p_match.iloc[0].get("block_identifiers", "")).strip(),
+                    "summary": p_row.get("summary", ""),
+                    "block_identifiers": str(p_row.get("block_identifiers", "")).strip(),
+                    # block_type distinguishes resource vs data blocks with same identifiers
+                    "block_type": str(p_row.get("block_type", "")).strip(),
                     "line_start": original_line,
-                    "impacted_block_start_line": p_match.iloc[0].get("impacted_block_start_line", -1),
-                    "impacted_block_end_line": p_match.iloc[0].get("impacted_block_end_line", -1)
+                    "impacted_block_start_line": p_row.get("impacted_block_start_line", -1),
+                    "impacted_block_end_line": p_row.get("impacted_block_end_line", -1)
                 }
-                
+
                 fix_context = {
                     "start_line": start_line,
                     "end_line": end_line,
                     "fixed_file_content": fixed_file_content
                 }
-                
+
                 # Use ErrorMatchingService for evaluation
                 if self.error_matcher:
+                    # Pass original_summary so check_line_is_clean can do
+                    # exact line + summary match (avoids false unfixed on sibling errors)
+                    original_summary = p_row.get("summary", "")
                     line_is_clean = self.error_matcher.check_line_is_clean(
-                        original_line, 
+                        original_line,
+                        original_summary,
                         extracted_rows
                     )
                     
+                    # Get the original density of this error in the block
+                    count_key = (
+                        str(p_row.get("filename", "")).strip(),
+                        str(p_row.get("block_type", "")).strip(),
+                        str(p_row.get("block_identifiers", "")).strip(),
+                        original_summary.strip()
+                    )
+                    original_count = self._original_error_counts.get(count_key, 1)
+
                     specific_error_fixed = self.error_matcher.check_specific_error_fixed(
                         original_error_info,
+                        original_count,
                         extracted_rows,
                         fix_context
                     )

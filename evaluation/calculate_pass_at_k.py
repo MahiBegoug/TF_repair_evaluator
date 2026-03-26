@@ -38,13 +38,18 @@ def main():
     valid_oids = set(problems_df['oid'])
     fixes_df = fixes_df[fixes_df['oid'].isin(valid_oids)]
 
-    # Calculate n and c per problem (oid)
-    # We assume the input fixes CSV corresponds to a single model
-    # Using 'line_is_clean' as the primary success metric (True if line has no errors after fix)
-    # Alternative: 'specific_error_fixed' tracks if the exact error type was resolved
+    # Using 'specific_error_fixed' as the primary success metric (Warning Removal).
     group_cols = ['oid']
-    stats = fixes_df.groupby(group_cols)['line_is_clean'].agg(['count', 'sum']).reset_index()
+    stats = fixes_df.groupby(group_cols)['specific_error_fixed'].agg(['count', 'sum']).reset_index()
     stats.rename(columns={'count': 'n', 'sum': 'c'}, inplace=True)
+    
+    # Strict Pass (Regression-Free Repair): specific warning removed AND no new errors introduced
+    if 'introduced_this_iteration' in fixes_df.columns:
+        fixes_df['strict_success'] = fixes_df['specific_error_fixed'] & (fixes_df['introduced_this_iteration'] == 0)
+        strict_stats = fixes_df.groupby(group_cols)['strict_success'].agg(['count', 'sum']).reset_index()
+        strict_stats.rename(columns={'count': 'n', 'sum': 'c'}, inplace=True)
+    else:
+        strict_stats = None
 
     results = []
 
@@ -53,10 +58,21 @@ def main():
 
     row = {"LLM": model_name}
     for k in args.k_values:
-        # Calculate pass@k for each problem
-        scores = stats.apply(lambda row: pass_at_k(row['n'], row['c'], k), axis=1)
-        avg_score = scores.mean()
-        row[f"pass@{k}"] = avg_score
+        # Calculate standard pass@k for each problem
+        scores = stats.apply(lambda r: pass_at_k(r['n'], r['c'], k), axis=1)
+        row[f"pass@{k}"] = scores.mean()
+        
+        # Calculate strict_pass@k (Regression-Free)
+        if strict_stats is not None:
+            strict_scores = strict_stats.apply(lambda r: pass_at_k(r['n'], r['c'], k), axis=1)
+            row[f"strict_pass@{k}"] = strict_scores.mean()
+            
+    # Calculate Error Introduction Rate (Regression Rate)
+    # What percentage of ALL attempted fixes produced by this model introduced new errors?
+    if 'introduced_this_iteration' in fixes_df.columns:
+        fixes_df['has_regression'] = fixes_df['introduced_this_iteration'] > 0
+        row["Regression_Rate"] = fixes_df['has_regression'].mean()
+        
     results.append(row)
 
     # Format output
