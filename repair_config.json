@@ -7,6 +7,6 @@
         ]
     },
     "output_dir": "llms_fixes_results",
-    "clones_dir": "../TF_validation_reproducer/clones",
+    "clones_dir": "../TFReproducer/clones",
     "repair_mode": "block"
 }
