@@ -3,28 +3,55 @@ import hashlib
 import re
 
 
+def count_hcl_loc(content: str) -> int:
+    """Counts non-blank, non-comment lines of HCL code."""
+    lines = content.splitlines()
+    loc = 0
+    in_block_comment = False
+    
+    for line in lines:
+        line = line.strip()
+        if not line:
+            continue
+            
+        if in_block_comment:
+            if "*/" in line:
+                in_block_comment = False
+                rest = line.split("*/", 1)[1].strip()
+                if rest and not rest.startswith("#") and not rest.startswith("//"):
+                    loc += 1
+            continue
+            
+        if line.startswith("/*"):
+            if "*/" in line:
+                rest = line.split("*/", 1)[1].strip()
+                if rest and not rest.startswith("#") and not rest.startswith("//"):
+                    loc += 1
+            else:
+                in_block_comment = True
+            continue
+            
+        if line.startswith("#") or line.startswith("//"):
+            continue
+            
+        loc += 1
+        
+    return loc
+
+
 def _find_hcl_block(file_lines, target_line_1indexed):
     """
-    Pure-Python HCL block finder.
-    
-    Walks from target_line upward to find the nearest enclosing block header
-    (a line matching `type "label" "label" {`), then walks forward to find
-    the matching closing brace using bracket counting.
-    
-    Returns a dict with:
-        block_type, block_identifiers, start_line, end_line, content
-    or None if no block found.
+    Pure-Python HCL block finder (Fallback tier).
+    Walks from target_line upward to find the nearest enclosing block header.
     """
-    # HCL block header pattern: word optional-labels? {
     BLOCK_HEADER = re.compile(
         r'^\s*(resource|data|variable|output|locals|module|provider|terraform)\s*(.*?)\s*\{?\s*$'
     )
     
-    idx = target_line_1indexed - 1  # 0-indexed
+    idx = target_line_1indexed - 1
     if idx < 0 or idx >= len(file_lines):
         return None
 
-    # Walk upward from target line to find the enclosing block header
     block_start_idx = None
     block_type = ""
     block_identifiers = ""
@@ -35,7 +62,6 @@ def _find_hcl_block(file_lines, target_line_1indexed):
         if m:
             block_type = m.group(1).strip()
             raw_labels = m.group(2).strip()
-            # Extract quoted labels (e.g. "aws_s3_bucket" "my_bucket")
             labels = re.findall(r'"([^"]+)"', raw_labels)
             block_identifiers = " ".join(labels)
             block_start_idx = i
@@ -44,7 +70,7 @@ def _find_hcl_block(file_lines, target_line_1indexed):
     if block_start_idx is None:
         return None
 
-    # Walk forward from block_start_idx to find the matching closing brace
+    # Matching brace logic
     depth = 0
     block_end_idx = None
     for i in range(block_start_idx, len(file_lines)):
@@ -53,34 +79,27 @@ def _find_hcl_block(file_lines, target_line_1indexed):
             block_end_idx = i
             break
     
-    # Fallback: if depth never closes, just capture to end
     if block_end_idx is None:
         block_end_idx = len(file_lines) - 1
 
-    content = "\n".join(file_lines[block_start_idx:block_end_idx + 1])
-
     return {
         "block_type": block_type,
-        "block_identifiers": f"{block_type} {block_identifiers}".strip(),
-        "start_line": block_start_idx + 1,   # 1-indexed
-        "end_line": block_end_idx + 1,        # 1-indexed
-        "content": content
+        "identifiers": block_identifiers,
+        "start_line": block_start_idx + 1,
+        "end_line": block_end_idx + 1
     }
 
 
 class DiagnosticsExtractor:
     """
     Extracts diagnostics rows from terraform validate output.
-    
-    Implements the same OID computation strategy as TFReproducer's DiagnosticsExtractor,
-    ensuring that post-fix diagnostics can be matched against problems.csv by OID.
+    Alinged with TFReproducer's validation logic for OID and block parity.
     """
 
     @staticmethod
     def load_tf_files(module_path):
         cache = {}
         for root, dirs, files in os.walk(module_path):
-            # Skip .terraform provider/module cache directories
             dirs[:] = [d for d in dirs if d != ".terraform"]
             for fn in files:
                 if fn.endswith(".tf"):
@@ -96,39 +115,105 @@ class DiagnosticsExtractor:
 
     @staticmethod
     def normalize(diags):
-        """Ensure diagnostics is always a list of dicts."""
-        if diags is None:
-            return []
-        if isinstance(diags, dict):
-            return [diags]
-        if isinstance(diags, list):
-            return [d for d in diags if isinstance(d, dict)]
+        if diags is None: return []
+        if isinstance(diags, dict): return [diags]
+        if isinstance(diags, list): return [d for d in diags if isinstance(d, dict)]
         return []
 
     @staticmethod
-    def compute_oid(r: dict) -> str:
-        """
-        Location-based OID matching TFReproducer's compute_oid exactly.
-        Groups all diagnostics at the same physical file location (filename, start line, end line).
-        This is the key lookup used by MetricsCalculator to match against problems.csv.
-        """
-        base = f"{r['filename']}|{r['line_start']}|{r['line_end']}"
-        return hashlib.sha1(base.encode("utf-8")).hexdigest()[:12]
+    def _resolve_file_info(diag, module_path, project_root, tf_cache):
+        """Replicates TFReproducer's _resolve_file_info logic."""
+        drange = diag.get("range", {}) or {}
+        start = drange.get("start", {}) or {}
+        end = drange.get("end", {}) or {}
+        filename_raw = drange.get("filename", "")
+
+        info = {
+            "filename": "",
+            "absolute_filename": "",
+            "line_start": start.get("line", ""),
+            "col_start": start.get("column", ""),
+            "line_end": end.get("line", ""),
+            "col_end": end.get("column", ""),
+            "file_content": "",
+            "file_loc": ""
+        }
+
+        if filename_raw:
+            if os.path.isabs(filename_raw):
+                system_path = filename_raw
+            else:
+                system_path = os.path.join(module_path, filename_raw)
+            
+            abs_fp = os.path.abspath(system_path).replace("\\", "/")
+            info["absolute_filename"] = abs_fp
+            
+            try:
+                # Use CWD relative path to match clones/project/path format
+                rel_path = os.path.relpath(system_path, os.getcwd()).replace("\\", "/")
+                info["filename"] = rel_path
+            except ValueError:
+                info["filename"] = abs_fp
+
+            content = tf_cache.get(abs_fp, "[FILE NOT FOUND]")
+            if content == "[FILE NOT FOUND]" and os.path.exists(abs_fp):
+                try:
+                    with open(abs_fp, "r", encoding="utf-8") as f:
+                        content = f.read()
+                except: pass
+            
+            info["file_content"] = content
+            info["file_loc"] = count_hcl_loc(content) if content != "[FILE NOT FOUND]" else 0
+        else:
+            # Fallback
+            if tf_cache:
+                abs_fp = sorted(tf_cache.keys())[0]
+                info["absolute_filename"] = abs_fp
+                try:
+                    info["filename"] = os.path.relpath(abs_fp, os.getcwd()).replace("\\", "/")
+                except: info["filename"] = abs_fp
+            
+            combined = "\n".join(tf_cache.values())
+            info["file_content"] = combined
+            info["file_loc"] = count_hcl_loc(combined)
+            info["line_start"] = -1
+            info["line_end"] = -1
+
+        return info
 
     @staticmethod
-    def extract_rows(project_name, result, project_root):
-        module_path = result["path"]
-        rows = []
+    def _add_block_content(row, block, tf_cache):
+        """Replicates TFReproducer's _add_block_content logic (Line Slicing)."""
+        start_line = block.get("start_line")
+        end_line = block.get("end_line")
+        abs_fn = row.get("absolute_filename")
+        
+        if not (start_line and end_line and abs_fn):
+            return
 
         try:
-            working_dir = os.path.relpath(module_path, project_root).replace("\\", "/")
-        except:
-            working_dir = ""
+            if abs_fn in tf_cache:
+                file_lines = tf_cache[abs_fn].splitlines()
+            elif os.path.exists(abs_fn):
+                with open(abs_fn, "r", encoding="utf-8") as f:
+                    file_lines = f.read().splitlines()
+            else:
+                return
 
+            block_lines = file_lines[int(start_line) - 1:int(end_line)]
+            row["impacted_block_content"] = "\n".join(block_lines)
+        except Exception:
+            row["impacted_block_content"] = ""
+
+    @staticmethod
+    def extract_rows(project_name, result, project_root, latest_commit="") -> list:
+        module_path = result["path"]
+        rows = []
+        
         tf_cache = DiagnosticsExtractor.load_tf_files(module_path)
         diagnostics = DiagnosticsExtractor.normalize(result.get("diagnostics"))
 
-        # Initialize StaticAnalyzer for block enrichment (from tf_dependency_analyzer in requirements.txt)
+        # Initialize StaticAnalyzer (optional tier)
         try:
             from tf_dependency_analyzer.static.static_analyzer import StaticAnalyzer
             analyzer = StaticAnalyzer(module_path)
@@ -136,106 +221,85 @@ class DiagnosticsExtractor:
             analyzer = None
 
         for diag in diagnostics:
-
-            drange = diag.get("range", {}) or {}
-            start = drange.get("start", {}) or {}
-            end = drange.get("end", {}) or {}
-            filename_raw = drange.get("filename", "")
-
-            line_start = start.get("line", "")
-            line_end = end.get("line", "")
-
+            # 1. Initialize full row structure
             row = {
                 "project_name": project_name,
-                "working_directory": working_dir,
+                "latest_commit": latest_commit,
+                "working_directory": os.path.relpath(module_path, os.getcwd()).replace("\\", "/"),
                 "severity": diag.get("severity", ""),
                 "summary": diag.get("summary", ""),
                 "detail": diag.get("detail", ""),
                 "address": diag.get("address", ""),
-                "filename": "",
-                "line_start": line_start,
-                "col_start": start.get("column", ""),
-                "line_end": line_end,
-                "col_end": end.get("column", ""),
-                "file_content": "",
-                # Enriched Block Details
-                "block_type": "",
-                "block_identifiers": "",
-                "impacted_block_start_line": "",
-                "impacted_block_end_line": "",
-                "impacted_block_content": ""
+                "filename": "", "line_start": "", "col_start": "", "line_end": "", "col_end": "",
+                "block_type": "", "block_type_full": "", "impacted_block_type": "", "impacted_block_content": "", "block_identifiers": "",
+                "impacted_block_start_line": "", "impacted_block_end_line": "",
+                "file_content": "", "file_loc": ""
             }
 
-            # Case 1: Specific file
-            if filename_raw:
-                # Handle both absolute and relative filenames from terraform
-                if os.path.isabs(filename_raw):
-                    system_path = filename_raw
-                else:
-                    system_path = os.path.join(module_path, filename_raw)
+            # 2. Resolve file info
+            file_info = DiagnosticsExtractor._resolve_file_info(diag, module_path, project_root, tf_cache)
+            row.update(file_info)
 
-                # Use the same clones/project/... format as problems.csv
-                repo_clone_root = f"clones/{project_name}"
-                relative_path = f"{working_dir}/{filename_raw}".lstrip("/")
-                row["filename"] = f"{repo_clone_root}/{relative_path}".replace("\\", "/")
+            # Skip .terraform/modules/
+            if ".terraform/modules/" in row["filename"] or ".terraform\\modules\\" in row["filename"]:
+                continue
 
-                # Skip diagnostics from third-party .terraform/modules/ cache
-                if ".terraform/modules/" in row["filename"] or ".terraform\\modules\\" in row["filename"]:
-                    continue
+            # 3. Two-tier block enrichment
+            line_start = row.get("line_start")
+            if line_start and str(line_start) != "-1":
+                details = None
+                if analyzer:
+                    try:
+                        details = analyzer.get_block_details_by_location(row["absolute_filename"], int(line_start))
+                    except: pass
 
-                abs_fp = os.path.abspath(system_path).replace("\\", "/")
-                row["file_content"] = tf_cache.get(abs_fp, tf_cache.get(system_path, "[FILE NOT FOUND]"))
+                if not details:
+                    # Fallback tier
+                    try:
+                        file_lines = row["file_content"].splitlines()
+                        details = _find_hcl_block(file_lines, int(line_start))
+                    except: pass
 
-                # Two-tier block enrichment:
-                # 1st: StaticAnalyzer (tree-sitter, most accurate)
-                # 2nd: Pure-Python bracket matching (fallback if StaticAnalyzer unavailable)
-                if line_start:
-                    details = None
-                    if analyzer:
-                        try:
-                            details = analyzer.get_block_details_by_location(system_path, int(line_start))
-                        except Exception as e:
-                            print(f"[BLOCK] StaticAnalyzer failed at {filename_raw}:{line_start}: {e}")
+                if details:
+                    b_type = details.get("block_type", "")
+                    idents = details.get("identifiers", "")
+                    if isinstance(idents, list):
+                        idents = " ".join(str(i) for i in idents)
+                    
+                    row["block_type"] = b_type
+                    row["impacted_block_type"] = b_type
+                    row["block_identifiers"] = idents
+                    row["impacted_block_start_line"] = details.get("start_line")
+                    row["impacted_block_end_line"] = details.get("end_line")
+                    
+                    # USE LINE SLICING LOGIC
+                    DiagnosticsExtractor._add_block_content(row, details, tf_cache)
 
-                    if details:
-                        # StaticAnalyzer returns: block_type, identifiers (str), start_line, end_line, content
-                        b_type = details.get("block_type", "")
-                        identifiers = details.get("identifiers", "")
-                        if isinstance(identifiers, list):
-                            identifiers = " ".join(str(i) for i in identifiers)
-                        row["block_type"] = b_type
-                        row["block_identifiers"] = f"{b_type} {identifiers}".strip()
-                        row["impacted_block_start_line"] = details.get("start_line", "")
-                        row["impacted_block_end_line"] = details.get("end_line", "")
-                        row["impacted_block_content"] = details.get("content", "")
-                    else:
-                        # Fallback: pure-Python HCL bracket matching
-                        file_content_str = row.get("file_content", "")
-                        if file_content_str and file_content_str != "[FILE NOT FOUND]":
-                            try:
-                                file_lines = file_content_str.splitlines()
-                                fb = _find_hcl_block(file_lines, int(line_start))
-                                if fb:
-                                    row["block_type"] = fb["block_type"]
-                                    row["block_identifiers"] = fb["block_identifiers"]
-                                    row["impacted_block_start_line"] = fb["start_line"]
-                                    row["impacted_block_end_line"] = fb["end_line"]
-                                    row["impacted_block_content"] = fb["content"]
-                                else:
-                                    print(f"[BLOCK] No enclosing block found at {filename_raw}:{line_start}")
-                            except Exception as e:
-                                print(f"[BLOCK] Fallback block extraction failed at {filename_raw}:{line_start}: {e}")
-
-            # Case 2: No file → include all TF files
+            # 4. Finalize block_type_full
+            b_type = row.get("block_type", "").strip()
+            idents = row.get("block_identifiers", "").strip()
+            if idents:
+                first_ident = idents.split()[0]
+                row["block_type_full"] = f"{b_type} {first_ident}".strip()
             else:
-                content = []
-                for fp, c in tf_cache.items():
-                    content.append(c)
-                row["file_content"] = "\n".join(content)
+                row["block_type_full"] = b_type
 
-            # Compute OID using exact same formula as TFReproducer (for problems.csv matching)
+            # 5. Compute OIDs
             row["oid"] = DiagnosticsExtractor.compute_oid(row)
+            row["specific_oid"] = DiagnosticsExtractor.compute_specific_oid(row)
 
             rows.append(row)
 
         return rows
+
+    @staticmethod
+    def compute_oid(r: dict) -> str:
+        base = f"{r['filename']}|{r['line_start']}|{r['line_end']}"
+        return hashlib.sha1(base.encode("utf-8")).hexdigest()[:12]
+
+    @staticmethod
+    def compute_specific_oid(r: dict) -> str:
+        def _normalize(text: str) -> str:
+            return re.sub(r"\s+", " ", str(text).lower().strip())
+        base = f"{r['filename']}|{r['line_start']}|{r['line_end']}|{_normalize(r['summary'])}|{_normalize(r['detail'])}"
+        return hashlib.sha1(base.encode("utf-8")).hexdigest()[:12]
