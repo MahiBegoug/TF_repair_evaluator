@@ -46,6 +46,33 @@ class FixApplier:
         with open(backup_path, "r", encoding="utf-8") as f:
             lines = f.readlines()
 
+        # ---------- CLEAN LLM CONTENT ----------
+        # LLM might return code wrapped in <fixed_block_content><![CDATA[...]]>
+        import re
+        
+        # 1. Remove XML tags and CDATA markers
+        cleaned_content = llm_fixed_content
+        
+        # Try to extract content from CDATA if present
+        cdata_match = re.search(r'<!\[CDATA\[(.*?)\]\]>', cleaned_content, re.DOTALL)
+        if cdata_match:
+            cleaned_content = cdata_match.group(1)
+        else:
+            # Fallback: remove tags like <fixed_block_content> and </fixed_block_content>
+            tags_to_strip = [
+                r'<fixed_block_content.*?>', r'</fixed_block_content>',
+                r'<analysis.*?>', r'</analysis>',
+                r'```hcl', r'```'
+            ]
+            for tag in tags_to_strip:
+                cleaned_content = re.sub(tag, '', cleaned_content, flags=re.IGNORECASE | re.DOTALL)
+        
+        cleaned_content = cleaned_content.strip()
+        
+        # Ensure it ends with exactly one newline if not empty
+        if cleaned_content and not cleaned_content.endswith('\n'):
+            cleaned_content += '\n'
+
         # ---------- APPLY FIX ----------
         if start_line is not None and end_line is not None:
             # Block replacement
@@ -57,14 +84,10 @@ class FixApplier:
             if idx_start < 0: idx_start = 0
             if idx_end > len(lines): idx_end = len(lines)
 
-            # Ensure llm_fixed_content ends with newline
-            if not llm_fixed_content.endswith('\n'):
-                llm_fixed_content += '\n'
-
-            new_content = "".join(lines[:idx_start]) + llm_fixed_content + "".join(lines[idx_end:])
+            new_content = "".join(lines[:idx_start]) + cleaned_content + "".join(lines[idx_end:])
         else:
             # Full file replacement
-            new_content = llm_fixed_content
+            new_content = cleaned_content
 
         # ---------- WRITE FIXED CONTENT TO ORIGINAL LOCATION ----------
         with open(original_file, "w", encoding="utf-8") as f:
