@@ -247,14 +247,23 @@ class DiagnosticsExtractor:
             # 3. Two-tier block enrichment
             line_start = row.get("line_start")
             if line_start and str(line_start) != "-1":
+                TOP_LEVEL_BLOCK_TYPES = {"resource", "data", "variable", "output", "locals", "module", "provider", "terraform"}
                 details = None
+                
+                # Tier 1: Try StaticAnalyzer (tree-sitter)
                 if analyzer:
                     try:
-                        details = analyzer.get_block_details_by_location(row["absolute_filename"], int(line_start))
+                        temp_details = analyzer.get_block_details_by_location(row["absolute_filename"], int(line_start))
+                        if temp_details:
+                            # Verify if it's a top-level block. If not, we fall back to finding the wrapper.
+                            if temp_details.get("block_type") in TOP_LEVEL_BLOCK_TYPES:
+                                details = temp_details
+                            else:
+                                print(f"[BLOCK] StaticAnalyzer returned nested block '{temp_details.get('block_type')}'. Falling back to top-level finder.")
                     except: pass
 
+                # Tier 2: Fallback (or if Tier 1 was nested) for top-level discovery
                 if not details:
-                    # Fallback tier
                     try:
                         file_lines = row["file_content"].splitlines()
                         details = _find_hcl_block(file_lines, int(line_start))
