@@ -184,7 +184,7 @@ class RepairEvaluator:
             # Calculate error counts with categorization
             error_counts = self._calculate_error_metrics(extracted_rows, original_file, baseline_errors)
             print(f'[Metrics] Total: {error_counts["total"]}, Original: {error_counts["original"]}, '
-                  f'New (any): {error_counts["new"]}, Truly New: {error_counts["new_to_dataset"]}, '
+                  f'New to Dataset: {error_counts["new_to_dataset"]}, '
                   f'Introduced This Iteration: {error_counts["introduced_this_iteration"]}, File: {error_counts["in_file"]}')
 
             # Evaluate if error was resolved
