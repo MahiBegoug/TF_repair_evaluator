@@ -59,8 +59,7 @@ class RepairEvaluator:
                 "is_fixed", "line_is_clean", "line_specific_error_fixed", 
                 "module_total_errors", "file_errors", "module_errors",
                 "module_original_errors_remaining", "module_fix_introduced_errors",
-                "block_total_errors", "block_original_errors_remaining", "block_fix_introduced_errors",
-                "metrics_nloc", "metrics_depth", "metrics_attributes", "metrics_references"
+                "block_total_errors", "block_original_errors_remaining", "block_fix_introduced_errors"
             ]).to_csv(self.outcomes_csv, index=False)
 
     

@@ -259,9 +259,5 @@ class MetricsCalculator:
             "module_fix_introduced_errors": error_counts.get("introduced_this_iteration", 0),
             "block_total_errors": error_counts.get("block_total", 0),
             "block_original_errors_remaining": error_counts.get("block_original", 0),
-            "block_fix_introduced_errors": error_counts.get("block_introduced", 0),
-            "metrics_nloc": error_counts.get("metrics_nloc", 0),
-            "metrics_depth": error_counts.get("metrics_depth", 0),
-            "metrics_attributes": error_counts.get("metrics_attributes", 0),
-            "metrics_references": error_counts.get("metrics_references", 0)
+            "block_fix_introduced_errors": error_counts.get("block_introduced", 0)
         }
