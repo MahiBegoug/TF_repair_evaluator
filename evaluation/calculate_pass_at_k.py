@@ -38,6 +38,12 @@ def main():
     valid_oids = set(problems_df['oid'])
     fixes_df = fixes_df[fixes_df['oid'].isin(valid_oids)]
 
+    # Map column names - repair_driver uses prefixed names
+    if 'line_specific_error_fixed' in fixes_df.columns and 'specific_error_fixed' not in fixes_df.columns:
+        fixes_df['specific_error_fixed'] = fixes_df['line_specific_error_fixed']
+    if 'module_fix_introduced_errors' in fixes_df.columns and 'introduced_this_iteration' not in fixes_df.columns:
+        fixes_df['introduced_this_iteration'] = fixes_df['module_fix_introduced_errors']
+
     # Using 'specific_error_fixed' as the primary success metric (Warning Removal).
     group_cols = ['oid']
     stats = fixes_df.groupby(group_cols)['specific_error_fixed'].agg(['count', 'sum']).reset_index()
