@@ -132,13 +132,22 @@ class DiagnosticsExtractor:
 
                             b_type = get_val(details, "block_type")
                             identifiers = get_val(details, "identifiers")
+                            
+                            # identifiers may be a list (e.g. ['aws_s3_bucket', 'my_bucket'])
+                            if isinstance(identifiers, list):
+                                identifiers = " ".join(str(i) for i in identifiers)
+                                
                             row["block_type"] = b_type
                             row["block_identifiers"] = f"{b_type} {identifiers}".strip()
                             row["impacted_block_start_line"] = get_val(details, "start_line")
                             row["impacted_block_end_line"] = get_val(details, "end_line")
                             row["impacted_block_content"] = get_val(details, "content")
+                        else:
+                            print(f"[BLOCK] No block details found at {filename_raw}:{line_start}")
                     except Exception as e:
-                        pass  # Block enrichment is best-effort
+                        print(f"[BLOCK] Failed to get block details at {filename_raw}:{line_start}: {e}")
+                elif not analyzer:
+                    print(f"[BLOCK] StaticAnalyzer unavailable - block_identifiers will be empty")
 
             # Case 2: No file → include all TF files
             else:
