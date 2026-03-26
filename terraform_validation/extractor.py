@@ -148,12 +148,21 @@ class DiagnosticsExtractor:
             abs_fp = os.path.abspath(system_path).replace("\\", "/")
             info["absolute_filename"] = abs_fp
             
-            try:
-                # Use CWD relative path to match clones/project/path format
-                rel_path = os.path.relpath(system_path, os.getcwd()).replace("\\", "/")
-                info["filename"] = rel_path
-            except ValueError:
-                info["filename"] = abs_fp
+            # Normalize filename to matches baseline OID format (clones/project/path)
+            # This handles cases where clones_dir is ../ or absolute.
+            if "/clones/" in abs_fp:
+                rel_path = "clones/" + abs_fp.split("/clones/")[1]
+            elif "\\clones\\" in abs_fp.lower():
+                # Handle Windows-style and mixed paths
+                parts = re.split(r'[\\/]clones[\\/]', abs_fp, flags=re.IGNORECASE)
+                rel_path = "clones/" + parts[-1].replace("\\", "/")
+            else:
+                try:
+                    rel_path = os.path.relpath(system_path, os.getcwd()).replace("\\", "/")
+                except (ValueError, OSError):
+                    rel_path = abs_fp
+            
+            info["filename"] = rel_path
 
             content = tf_cache.get(abs_fp, "[FILE NOT FOUND]")
             if content == "[FILE NOT FOUND]" and os.path.exists(abs_fp):
@@ -233,7 +242,8 @@ class DiagnosticsExtractor:
                 "filename": "", "line_start": "", "col_start": "", "line_end": "", "col_end": "",
                 "block_type": "", "block_type_full": "", "impacted_block_type": "", "impacted_block_content": "", "block_identifiers": "",
                 "impacted_block_start_line": "", "impacted_block_end_line": "",
-                "file_content": "", "file_loc": ""
+                "file_content": "", "file_loc": "",
+                "metrics_nloc": 0, "metrics_depth": 0, "metrics_attributes": 0, "metrics_references": 0
             }
 
             # 2. Resolve file info
@@ -253,14 +263,25 @@ class DiagnosticsExtractor:
                 # Tier 1: Try StaticAnalyzer (tree-sitter)
                 if analyzer:
                     try:
-                        temp_details = analyzer.get_block_details_by_location(row["absolute_filename"], int(line_start))
+                        temp_details = analyzer.get_block_details_by_location(
+                            row["absolute_filename"], 
+                            int(line_start),
+                            include_metrics=True
+                        )
                         if temp_details:
                             # Verify if it's a top-level block. If not, we fall back to finding the wrapper.
                             if temp_details.get("block_type") in TOP_LEVEL_BLOCK_TYPES:
                                 details = temp_details
+                                # Add metrics to the row
+                                metrics = details.get("metrics", {})
+                                row["metrics_nloc"] = metrics.get("nloc", 0)
+                                row["metrics_depth"] = metrics.get("depth", 0)
+                                row["metrics_attributes"] = metrics.get("attribute_count", 0)
+                                row["metrics_references"] = metrics.get("reference_count", 0)
                             else:
                                 print(f"[BLOCK] StaticAnalyzer returned nested block '{temp_details.get('block_type')}'. Falling back to top-level finder.")
-                    except: pass
+                    except Exception as e:
+                        print(f"[DEBUG] StaticAnalyzer metrics fetch failed: {e}")
 
                 # Tier 2: Fallback (or if Tier 1 was nested) for top-level discovery
                 if not details:

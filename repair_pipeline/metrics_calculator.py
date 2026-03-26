@@ -80,13 +80,36 @@ class MetricsCalculator:
         new_to_dataset = sum(1 for er in extracted_rows if er.get('is_new_to_dataset', False))
         introduced_this_iteration = sum(1 for er in extracted_rows if er.get('introduced_in_this_iteration', False))
 
+        # Extract block metrics for the current problem (if possible)
+        # We look for the diagnostic that matches the OID of the problem we are fixing.
+        # This is a bit tricky here because we don't have the problem OID as an argument yet.
+        # But we can look at the extracted_rows - they already have metrics attached.
+        
+        metrics_nloc = 0
+        metrics_depth = 0
+        metrics_attr = 0
+        metrics_ref = 0
+        
+        # Try to find any row that has metrics populated
+        # (Assuming all diagnostics in the same file/block will share these)
+        diag_with_metrics = next((er for er in extracted_rows if er.get("metrics_nloc", 0) > 0), None)
+        if diag_with_metrics:
+            metrics_nloc = diag_with_metrics.get("metrics_nloc", 0)
+            metrics_depth = diag_with_metrics.get("metrics_depth", 0)
+            metrics_attr = diag_with_metrics.get("metrics_attributes", 0)
+            metrics_ref = diag_with_metrics.get("metrics_references", 0)
+
         return {
             "total": len(extracted_rows),
             "in_file": errors_in_file,
             "in_module": len(extracted_rows),
             "original": original_errors,           # Errors that existed before any fix
             "new_to_dataset": new_to_dataset,       # Errors never seen before in any run
-            "introduced_this_iteration": introduced_this_iteration  # Errors introduced by THIS fix
+            "introduced_this_iteration": introduced_this_iteration,  # Errors introduced by THIS fix
+            "metrics_nloc": metrics_nloc,
+            "metrics_depth": metrics_depth,
+            "metrics_attributes": metrics_attr,
+            "metrics_references": metrics_ref
         }
     
     def evaluate_resolution_metrics(self, row, extracted_rows, start_line, end_line, fixed_file_content):
@@ -195,6 +218,10 @@ class MetricsCalculator:
             "module_total_errors": error_counts["total"],
             "file_errors": error_counts["in_file"],
             "module_errors": error_counts["in_module"],
-            "module_original_errors_remaining": error_counts.get("original", 0),  # Ghost errors
-            "module_fix_introduced_errors": error_counts.get("introduced_this_iteration", 0)  # Errors introduced BY THIS iteration
+            "module_original_errors_remaining": error_counts.get("original", 0),
+            "module_fix_introduced_errors": error_counts.get("introduced_this_iteration", 0),
+            "metrics_nloc": error_counts.get("metrics_nloc", 0),
+            "metrics_depth": error_counts.get("metrics_depth", 0),
+            "metrics_attributes": error_counts.get("metrics_attributes", 0),
+            "metrics_references": error_counts.get("metrics_references", 0)
         }
