@@ -54,7 +54,7 @@ class MetricsCalculator:
                     self._original_error_counts[count_key] = self._original_error_counts.get(count_key, 0) + 1
 
     
-    def calculate_error_metrics(self, extracted_rows, original_file, baseline_errors=None):
+    def calculate_error_metrics(self, extracted_rows, original_file, baseline_errors=None, target_oid=None):
         """
         Calculate error counts at different scopes with categorization.
         
@@ -62,36 +62,69 @@ class MetricsCalculator:
             extracted_rows: List of extracted error dictionaries
             original_file: Path to the original file being fixed
             baseline_errors: Set of baseline error signatures (optional)
+            target_oid: OID of the specific problem we are fixing (optional, for block metrics)
             
         Returns:
             dict: Error counts by category
         """
         original_file_normalized = os.path.normpath(original_file)
         
+        # 1. Module and File level counts
         errors_in_file = sum(
             1 for er in extracted_rows 
             if os.path.normpath(os.path.join(self.clones_root, er.get("filename", "").replace("clones/", ""))) == original_file_normalized
         )
         
-        # Count error categories
-        # NOTE: is_new_error is removed (Issue 5) - it conflated truly-new errors with
-        # errors that existed in prior iterations. Use introduced_in_this_iteration instead.
         original_errors = sum(1 for er in extracted_rows if er.get('is_original_error', False))
         new_to_dataset = sum(1 for er in extracted_rows if er.get('is_new_to_dataset', False))
         introduced_this_iteration = sum(1 for er in extracted_rows if er.get('introduced_in_this_iteration', False))
 
-        # Extract block metrics for the current problem (if possible)
-        # We look for the diagnostic that matches the OID of the problem we are fixing.
-        # This is a bit tricky here because we don't have the problem OID as an argument yet.
-        # But we can look at the extracted_rows - they already have metrics attached.
+        # 2. Block level counts
+        block_total = 0
+        block_original = 0
+        block_introduced = 0
         
+        # Identify the target block range from the extracted rows
+        block_range = None
+        if target_oid:
+            # Look for ANY diagnostic that matches the target OID or lies in the same block as the target problem
+            # First, try to find a diagnostic that matches the OID (meaning it's NOT fixed)
+            target_er = next((er for er in extracted_rows if str(er.get("oid")) == str(target_oid)), None)
+            
+            if target_er:
+                b_start = target_er.get("impacted_block_start_line")
+                b_end = target_er.get("impacted_block_end_line")
+                if b_start is not None and b_end is not None:
+                    block_range = (int(b_start), int(b_end))
+            
+            # If target error is fixed, we still want to count OTHER errors in that block
+            # We'll need to know the block boundaries in the new file.
+            # For now, if OID is not found, block metrics remain 0 or we 
+            # could use the original problem's block range (but lines might have shifted).
+            
+        if block_range:
+            b_start, b_end = block_range
+            for er in extracted_rows:
+                # Check if diagnostic is in the original file AND within the block range
+                if os.path.normpath(os.path.join(self.clones_root, er.get("filename", "").replace("clones/", ""))) == original_file_normalized:
+                    diag_line = er.get("line_start")
+                    try:
+                        line = int(diag_line)
+                        if b_start <= line <= b_end:
+                            block_total += 1
+                            if er.get('is_original_error', False):
+                                block_original += 1
+                            if er.get('introduced_in_this_iteration', False):
+                                block_introduced += 1
+                    except (ValueError, TypeError):
+                        pass
+
+        # 3. Quality Metrics (HCL structure)
         metrics_nloc = 0
         metrics_depth = 0
         metrics_attr = 0
         metrics_ref = 0
         
-        # Try to find any row that has metrics populated
-        # (Assuming all diagnostics in the same file/block will share these)
         diag_with_metrics = next((er for er in extracted_rows if er.get("metrics_nloc", 0) > 0), None)
         if diag_with_metrics:
             metrics_nloc = diag_with_metrics.get("metrics_nloc", 0)
@@ -103,9 +136,12 @@ class MetricsCalculator:
             "total": len(extracted_rows),
             "in_file": errors_in_file,
             "in_module": len(extracted_rows),
-            "original": original_errors,           # Errors that existed before any fix
-            "new_to_dataset": new_to_dataset,       # Errors never seen before in any run
-            "introduced_this_iteration": introduced_this_iteration,  # Errors introduced by THIS fix
+            "original": original_errors,
+            "new_to_dataset": new_to_dataset,
+            "introduced_this_iteration": introduced_this_iteration,
+            "block_total": block_total,
+            "block_original": block_original,
+            "block_introduced": block_introduced,
             "metrics_nloc": metrics_nloc,
             "metrics_depth": metrics_depth,
             "metrics_attributes": metrics_attr,
@@ -213,6 +249,7 @@ class MetricsCalculator:
             "iteration_id": row.get("iteration_id", ""),
             "llm_name": row.get("llm_name", ""),
             "filename": relative_filename,
+            "is_fixed": resolution_metrics["specific_error_fixed"],
             "line_is_clean": resolution_metrics["line_is_clean"],
             "line_specific_error_fixed": resolution_metrics["specific_error_fixed"],
             "module_total_errors": error_counts["total"],
@@ -220,6 +257,9 @@ class MetricsCalculator:
             "module_errors": error_counts["in_module"],
             "module_original_errors_remaining": error_counts.get("original", 0),
             "module_fix_introduced_errors": error_counts.get("introduced_this_iteration", 0),
+            "block_total_errors": error_counts.get("block_total", 0),
+            "block_original_errors_remaining": error_counts.get("block_original", 0),
+            "block_fix_introduced_errors": error_counts.get("block_introduced", 0),
             "metrics_nloc": error_counts.get("metrics_nloc", 0),
             "metrics_depth": error_counts.get("metrics_depth", 0),
             "metrics_attributes": error_counts.get("metrics_attributes", 0),

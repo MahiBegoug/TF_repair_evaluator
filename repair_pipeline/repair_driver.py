@@ -56,9 +56,10 @@ class RepairEvaluator:
         if not os.path.exists(self.outcomes_csv):
             pd.DataFrame([], columns=[
                 "oid", "iteration_id", "llm_name", "filename",
-                "line_is_clean", "line_specific_error_fixed", 
+                "is_fixed", "line_is_clean", "line_specific_error_fixed", 
                 "module_total_errors", "file_errors", "module_errors",
                 "module_original_errors_remaining", "module_fix_introduced_errors",
+                "block_total_errors", "block_original_errors_remaining", "block_fix_introduced_errors",
                 "metrics_nloc", "metrics_depth", "metrics_attributes", "metrics_references"
             ]).to_csv(self.outcomes_csv, index=False)
 
@@ -130,9 +131,9 @@ class RepairEvaluator:
         """Get experiment errors - delegates to error_categorizer."""
         return self.error_categorizer.get_existing_experiment_errors(filename, current_iteration_id)
 
-    def _calculate_error_metrics(self, extracted_rows, original_file, baseline_errors=None):
+    def _calculate_error_metrics(self, extracted_rows, original_file, baseline_errors=None, target_oid=None):
         """Calculate error counts - delegates to metrics_calculator."""
-        return self.metrics_calculator.calculate_error_metrics(extracted_rows, original_file, baseline_errors)
+        return self.metrics_calculator.calculate_error_metrics(extracted_rows, original_file, baseline_errors, target_oid)
     
     def _evaluate_resolution_metrics(self, row, extracted_rows, start_line, end_line, fixed_file_content):
         """Evaluate whether the original error was resolved - delegates to metrics_calculator."""
@@ -182,8 +183,13 @@ class RepairEvaluator:
                 original_problem_oid=row.get("oid")  # Link new errors to original problem
             )
 
-            # Calculate error counts with categorization
-            error_counts = self._calculate_error_metrics(extracted_rows, original_file, baseline_errors)
+            # Calculate error counts with categorization and block scoping
+            error_counts = self._calculate_error_metrics(
+                extracted_rows, 
+                original_file, 
+                baseline_errors, 
+                target_oid=row.get("oid")
+            )
             print(f'[Metrics] Total: {error_counts["total"]}, Original: {error_counts["original"]}, '
                   f'New to Dataset: {error_counts["new_to_dataset"]}, '
                   f'Introduced This Iteration: {error_counts["introduced_this_iteration"]}, File: {error_counts["in_file"]}')
