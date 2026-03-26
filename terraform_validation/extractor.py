@@ -1,5 +1,71 @@
 import os
 import hashlib
+import re
+
+
+def _find_hcl_block(file_lines, target_line_1indexed):
+    """
+    Pure-Python HCL block finder.
+    
+    Walks from target_line upward to find the nearest enclosing block header
+    (a line matching `type "label" "label" {`), then walks forward to find
+    the matching closing brace using bracket counting.
+    
+    Returns a dict with:
+        block_type, block_identifiers, start_line, end_line, content
+    or None if no block found.
+    """
+    # HCL block header pattern: word optional-labels? {
+    BLOCK_HEADER = re.compile(
+        r'^\s*(resource|data|variable|output|locals|module|provider|terraform)\s*(.*?)\s*\{?\s*$'
+    )
+    
+    idx = target_line_1indexed - 1  # 0-indexed
+    if idx < 0 or idx >= len(file_lines):
+        return None
+
+    # Walk upward from target line to find the enclosing block header
+    block_start_idx = None
+    block_type = ""
+    block_identifiers = ""
+
+    for i in range(idx, -1, -1):
+        line = file_lines[i]
+        m = BLOCK_HEADER.match(line)
+        if m:
+            block_type = m.group(1).strip()
+            raw_labels = m.group(2).strip()
+            # Extract quoted labels (e.g. "aws_s3_bucket" "my_bucket")
+            labels = re.findall(r'"([^"]+)"', raw_labels)
+            block_identifiers = " ".join(labels)
+            block_start_idx = i
+            break
+
+    if block_start_idx is None:
+        return None
+
+    # Walk forward from block_start_idx to find the matching closing brace
+    depth = 0
+    block_end_idx = None
+    for i in range(block_start_idx, len(file_lines)):
+        depth += file_lines[i].count("{") - file_lines[i].count("}")
+        if depth == 0 and i > block_start_idx:
+            block_end_idx = i
+            break
+    
+    # Fallback: if depth never closes, just capture to end
+    if block_end_idx is None:
+        block_end_idx = len(file_lines) - 1
+
+    content = "\n".join(file_lines[block_start_idx:block_end_idx + 1])
+
+    return {
+        "block_type": block_type,
+        "block_identifiers": f"{block_type} {block_identifiers}".strip(),
+        "start_line": block_start_idx + 1,   # 1-indexed
+        "end_line": block_end_idx + 1,        # 1-indexed
+        "content": content
+    }
 
 
 class DiagnosticsExtractor:
@@ -62,11 +128,11 @@ class DiagnosticsExtractor:
         tf_cache = DiagnosticsExtractor.load_tf_files(module_path)
         diagnostics = DiagnosticsExtractor.normalize(result.get("diagnostics"))
 
-        # Initialize StaticAnalyzer for block enrichment (optional, doesn't fail if unavailable)
+        # Initialize StaticAnalyzer for block enrichment (from tf_dependency_analyzer in requirements.txt)
         try:
             from tf_dependency_analyzer.static.static_analyzer import StaticAnalyzer
             analyzer = StaticAnalyzer(module_path)
-        except Exception as e:
+        except Exception:
             analyzer = None
 
         for diag in diagnostics:
@@ -120,34 +186,45 @@ class DiagnosticsExtractor:
                 abs_fp = os.path.abspath(system_path).replace("\\", "/")
                 row["file_content"] = tf_cache.get(abs_fp, tf_cache.get(system_path, "[FILE NOT FOUND]"))
 
-                # Attempt block enrichment via StaticAnalyzer
-                if analyzer and line_start:
-                    try:
-                        details = analyzer.get_block_details_by_location(system_path, line_start)
-                        if details:
-                            def get_val(obj, key):
-                                if isinstance(obj, dict):
-                                    return obj.get(key, "")
-                                return getattr(obj, key, "")
+                # Two-tier block enrichment:
+                # 1st: StaticAnalyzer (tree-sitter, most accurate)
+                # 2nd: Pure-Python bracket matching (fallback if StaticAnalyzer unavailable)
+                if line_start:
+                    details = None
+                    if analyzer:
+                        try:
+                            details = analyzer.get_block_details_by_location(system_path, int(line_start))
+                        except Exception as e:
+                            print(f"[BLOCK] StaticAnalyzer failed at {filename_raw}:{line_start}: {e}")
 
-                            b_type = get_val(details, "block_type")
-                            identifiers = get_val(details, "identifiers")
-                            
-                            # identifiers may be a list (e.g. ['aws_s3_bucket', 'my_bucket'])
-                            if isinstance(identifiers, list):
-                                identifiers = " ".join(str(i) for i in identifiers)
-                                
-                            row["block_type"] = b_type
-                            row["block_identifiers"] = f"{b_type} {identifiers}".strip()
-                            row["impacted_block_start_line"] = get_val(details, "start_line")
-                            row["impacted_block_end_line"] = get_val(details, "end_line")
-                            row["impacted_block_content"] = get_val(details, "content")
-                        else:
-                            print(f"[BLOCK] No block details found at {filename_raw}:{line_start}")
-                    except Exception as e:
-                        print(f"[BLOCK] Failed to get block details at {filename_raw}:{line_start}: {e}")
-                elif not analyzer:
-                    print(f"[BLOCK] StaticAnalyzer unavailable - block_identifiers will be empty")
+                    if details:
+                        # StaticAnalyzer returns: block_type, identifiers (str), start_line, end_line, content
+                        b_type = details.get("block_type", "")
+                        identifiers = details.get("identifiers", "")
+                        if isinstance(identifiers, list):
+                            identifiers = " ".join(str(i) for i in identifiers)
+                        row["block_type"] = b_type
+                        row["block_identifiers"] = f"{b_type} {identifiers}".strip()
+                        row["impacted_block_start_line"] = details.get("start_line", "")
+                        row["impacted_block_end_line"] = details.get("end_line", "")
+                        row["impacted_block_content"] = details.get("content", "")
+                    else:
+                        # Fallback: pure-Python HCL bracket matching
+                        file_content_str = row.get("file_content", "")
+                        if file_content_str and file_content_str != "[FILE NOT FOUND]":
+                            try:
+                                file_lines = file_content_str.splitlines()
+                                fb = _find_hcl_block(file_lines, int(line_start))
+                                if fb:
+                                    row["block_type"] = fb["block_type"]
+                                    row["block_identifiers"] = fb["block_identifiers"]
+                                    row["impacted_block_start_line"] = fb["start_line"]
+                                    row["impacted_block_end_line"] = fb["end_line"]
+                                    row["impacted_block_content"] = fb["content"]
+                                else:
+                                    print(f"[BLOCK] No enclosing block found at {filename_raw}:{line_start}")
+                            except Exception as e:
+                                print(f"[BLOCK] Fallback block extraction failed at {filename_raw}:{line_start}: {e}")
 
             # Case 2: No file → include all TF files
             else:
