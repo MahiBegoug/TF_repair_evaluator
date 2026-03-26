@@ -1,0 +1,159 @@
+iteration_id,project_name,oid,filename,line_start,line_end,severity,summary,detail,working_directory,llm_name,prompt_content,fixed_block_content,raw_llm_output,explanation
+1,arriven__db1000n,29fe3cbb99e4,clones/arriven__db1000n/terraform/aws_eks/modules/kubernetes/main.tf,161,161,warning,Deprecated Resource,Deprecated; use kubernetes_role_binding_v1.,clones/arriven__db1000n/terraform/aws_eks/modules/kubernetes,CodeLlama-34b-Instruct-hf,"You are an expert in Terraform and infrastructure-as-code best practices.
+
+I will provide a single Terraform configuration block and a corresponding diagnostic message from `terraform validate`. 
+For context, `terraform validate` is a static analysis command that verifies whether a configuration is syntactically valid and internally consistent (e.g., checking for correct attribute names, valid references, missing required arguments, and deprecated features), without assessing remote state.
+
+
+Your task is to:
+
+1. Analyze the Terraform diagnostic and understand what it refers to.
+2. Locate the relevant section in the provided Terraform block.
+3. Suggest a corrected version of the block that resolves the diagnostic.
+4. Only suggest changes relevant to resolving the diagnostic. Do not refactor or reformat unrelated code.
+5. Do NOT generate any explanation, analysis, notes, or comments. Output ONLY the corrected code block, nothing else.
+6. Use the provided **Provider Documentation** below to ensure your fix is strictly schema-compliant. The documentation takes precedence over your general knowledge.
+
+### Example
+
+#### Diagnostic
+- **Severity**: error
+- **Summary**: Unsupported block type
+- **Detail**: Blocks of type ""tag"" are not expected here.
+
+#### Problematic Block
+```hcl
+resource ""aws_vpc"" ""main"" {
+  cidr_block = ""10.0.0.0/16""
+## <issue_line>
+  tag {
+    Name = ""main-vpc""
+  }
+## </issue_line>
+}
+```
+
+#### Expected Output
+
+<fixed_block_content><![CDATA[
+resource ""aws_vpc"" ""main"" {
+  cidr_block = ""10.0.0.0/16""
+  tags = {
+    Name = ""main-vpc""
+  }
+}
+]]></fixed_block_content>
+
+
+Review the following diagnostic information:
+
+### Diagnostic
+- **Severity**: warning
+- **Summary**: Deprecated Resource
+- **Detail**: Deprecated; use kubernetes_role_binding_v1.
+
+
+### Provider Documentation
+The following official provider documentation is relevant to this diagnostic. Use it to ensure your fix is schema-compliant:
+
+**Attributes:**
+- **id** (type: `string`) (optional, computed)
+
+**Nested Blocks:**
+- **metadata** (Nesting: list)
+- **role_ref** (Nesting: list)
+- **subject** (Nesting: list)
+
+
+
+### Problematic Block
+```hcl
+## <issue_line>
+resource ""kubernetes_role_binding"" ""cluster_autoscaler"" {
+## </issue_line>
+  metadata {
+    name      = ""cluster-autoscaler""
+    namespace = ""kube-system""
+    labels = {
+      k8s-addon = ""cluster-autoscaler.addons.k8s.io"",
+      k8s-app   = ""cluster-autoscaler""
+    }
+  }
+
+  role_ref {
+    api_group = ""rbac.authorization.k8s.io""
+    kind      = ""Role""
+    name      = ""cluster-autoscaler""
+  }
+  subject {
+    kind      = ""ServiceAccount""
+    name      = ""cluster-autoscaler""
+    namespace = ""kube-system""
+  }
+}
+```
+
+Your task is to fix the diagnostic in the ""Problematic Block"".
+
+IMPORTANT:
+1. Return the FULL fixed block content in `fixed_block_content`.
+2. Do NOT truncate or skip lines.
+3. Include the resource definition and all braces.
+4. Do NOT output any conversational text or explanations.
+5. Do NOT output the entire file, only the complete target block.
+6. The input block may contain `## <issue_line>` and `## </issue_line>` markers that wrap the exact line(s) causing the error. You MUST remove these markers in your fixed code.
+
+7. KEEP the code in Terraform/HCL format inside the XML code.
+8. Return STRICT XML only.
+
+Return STRICT XML only:
+<fixed_block_content><![CDATA[
+  ... (corrected FULL block content as a single text string) ...
+]]></fixed_block_content>
+
+IMPORTANT: Ensure `fixed_block_content` is treated as a string value, NOT as a nested object or list. NO EXPLANATIONS ALLOWED.
+","
+resource ""kubernetes_role_binding"" ""cluster_autoscaler"" {
+  metadata {
+    name      = ""cluster-autoscaler""
+    namespace = ""kube-system""
+    labels = {
+      k8s-addon = ""cluster-autoscaler.addons.k8s.io"",
+      k8s-app   = ""cluster-autoscaler""
+    }
+  }
+
+  role_ref {
+    api_group = ""rbac.authorization.k8s.io""
+    kind      = ""Role""
+    name      = ""cluster-autoscaler""
+  }
+  subject {
+    kind      = ""ServiceAccount""
+    name      = ""cluster-autoscaler""
+    namespace = ""kube-system""
+  }
+}
+","  <fixed_block_content><![CDATA[
+resource ""kubernetes_role_binding"" ""cluster_autoscaler"" {
+  metadata {
+    name      = ""cluster-autoscaler""
+    namespace = ""kube-system""
+    labels = {
+      k8s-addon = ""cluster-autoscaler.addons.k8s.io"",
+      k8s-app   = ""cluster-autoscaler""
+    }
+  }
+
+  role_ref {
+    api_group = ""rbac.authorization.k8s.io""
+    kind      = ""Role""
+    name      = ""cluster-autoscaler""
+  }
+  subject {
+    kind      = ""ServiceAccount""
+    name      = ""cluster-autoscaler""
+    namespace = ""kube-system""
+  }
+}
+]]></fixed_block_content>",
