@@ -242,8 +242,7 @@ class DiagnosticsExtractor:
                 "filename": "", "line_start": "", "col_start": "", "line_end": "", "col_end": "",
                 "block_type": "", "block_type_full": "", "impacted_block_type": "", "impacted_block_content": "", "block_identifiers": "",
                 "impacted_block_start_line": "", "impacted_block_end_line": "",
-                "file_content": "", "file_loc": "",
-                "metrics_nloc": 0, "metrics_depth": 0, "metrics_attributes": 0, "metrics_references": 0
+                "file_content": "", "file_loc": ""
             }
 
             # 2. Resolve file info
@@ -270,15 +269,7 @@ class DiagnosticsExtractor:
                             "block_type": block.get("block_type"),
                             "identifiers": block.get("identifiers") or block.get("address", ""),
                             "start_line": block.get("start_line"),
-                            "end_line": block.get("end_line"),
-                            "metrics": block.get("metrics", {})
                         }
-                        # Add metrics to the row
-                        metrics = details.get("metrics", {})
-                        row["metrics_nloc"] = metrics.get("nloc", 0)
-                        row["metrics_depth"] = metrics.get("depth", 0)
-                        row["metrics_attributes"] = metrics.get("attribute_count", 0)
-                        row["metrics_references"] = metrics.get("reference_count", 0)
                 except Exception as e:
                     print(f"[DEBUG] StandaloneBlockFinder failed: {e}")
 
@@ -323,12 +314,24 @@ class DiagnosticsExtractor:
 
     @staticmethod
     def compute_oid(r: dict) -> str:
-        base = f"{r['filename']}|{r['line_start']}|{r['line_end']}"
+        def _normalize(text: str) -> str:
+            return re.sub(r"\s+", " ", str(text).lower().strip())
+        
+        # OID represents the identity of the error (Location + Content)
+        # We include filename, block, summary, and detail.
+        # Line numbers are excluded for stability against code shifts.
+        idents = str(r.get('block_identifiers', '') or '').strip()
+        summary = _normalize(r.get('summary', '') or '')
+        detail = _normalize(r.get('detail', '') or '')
+        
+        base = f"{r['filename']}|{idents}|{summary}|{detail}"
         return hashlib.sha1(base.encode("utf-8")).hexdigest()[:12]
 
     @staticmethod
     def compute_specific_oid(r: dict) -> str:
         def _normalize(text: str) -> str:
             return re.sub(r"\s+", " ", str(text).lower().strip())
+        
+        # Specific OID includes line numbers for exact location parity
         base = f"{r['filename']}|{r['line_start']}|{r['line_end']}|{_normalize(r['summary'])}|{_normalize(r['detail'])}"
         return hashlib.sha1(base.encode("utf-8")).hexdigest()[:12]

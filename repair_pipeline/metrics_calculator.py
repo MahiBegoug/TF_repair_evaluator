@@ -79,58 +79,33 @@ class MetricsCalculator:
         new_to_dataset = sum(1 for er in extracted_rows if er.get('is_new_to_dataset', False))
         introduced_this_iteration = sum(1 for er in extracted_rows if er.get('introduced_in_this_iteration', False))
 
-        # 2. Block level counts
+        # 2. Block-level metrics: identify the scope of interest
         block_total = 0
         block_original = 0
         block_introduced = 0
         
-        # Identify the target block range from the extracted rows
-        block_range = None
+        block_scope = None
         if target_oid:
-            # Look for ANY diagnostic that matches the target OID or lies in the same block as the target problem
-            # First, try to find a diagnostic that matches the OID (meaning it's NOT fixed)
-            target_er = next((er for er in extracted_rows if str(er.get("oid")) == str(target_oid)), None)
-            
-            if target_er:
-                b_start = target_er.get("impacted_block_start_line")
-                b_end = target_er.get("impacted_block_end_line")
-                if b_start is not None and b_end is not None:
-                    block_range = (int(b_start), int(b_end))
-            
-            # If target error is fixed, we still want to count OTHER errors in that block
-            # We'll need to know the block boundaries in the new file.
-            # For now, if OID is not found, block metrics remain 0 or we 
-            # could use the original problem's block range (but lines might have shifted).
-            
-        if block_range:
-            b_start, b_end = block_range
-            for er in extracted_rows:
-                # Check if diagnostic is in the original file AND within the block range
-                if os.path.normpath(os.path.join(self.clones_root, er.get("filename", "").replace("clones/", ""))) == original_file_normalized:
-                    diag_line = er.get("line_start")
-                    try:
-                        line = int(diag_line)
-                        if b_start <= line <= b_end:
-                            block_total += 1
-                            if er.get('is_original_error', False):
-                                block_original += 1
-                            if er.get('introduced_in_this_iteration', False):
-                                block_introduced += 1
-                    except (ValueError, TypeError):
-                        pass
+            # First, check the baseline to see what block this OID originally belonged to
+            p_row = self._problems_by_oid.get(str(target_oid))
+            if p_row is not None:
+                block_scope = {
+                    "type": str(p_row.get("block_type", "")).strip(),
+                    "idents": str(p_row.get("block_identifiers", "")).strip()
+                }
 
-        # 3. Quality Metrics (HCL structure)
-        metrics_nloc = 0
-        metrics_depth = 0
-        metrics_attr = 0
-        metrics_ref = 0
-        
-        diag_with_metrics = next((er for er in extracted_rows if er.get("metrics_nloc", 0) > 0), None)
-        if diag_with_metrics:
-            metrics_nloc = diag_with_metrics.get("metrics_nloc", 0)
-            metrics_depth = diag_with_metrics.get("metrics_depth", 0)
-            metrics_attr = diag_with_metrics.get("metrics_attributes", 0)
-            metrics_ref = diag_with_metrics.get("metrics_references", 0)
+        if block_scope and block_scope["type"]:
+            for er in extracted_rows:
+                # Check if this remaining/new error matches the target block's identity
+                er_type = str(er.get("block_type", "")).strip()
+                er_idents = str(er.get("block_identifiers", "")).strip()
+                
+                if er_type == block_scope["type"] and er_idents == block_scope["idents"]:
+                    block_total += 1
+                    if er.get('is_original_error', False):
+                        block_original += 1
+                    if er.get('introduced_in_this_iteration', False):
+                        block_introduced += 1
 
         return {
             "total": len(extracted_rows),
@@ -141,11 +116,7 @@ class MetricsCalculator:
             "introduced_this_iteration": introduced_this_iteration,
             "block_total": block_total,
             "block_original": block_original,
-            "block_introduced": block_introduced,
-            "metrics_nloc": metrics_nloc,
-            "metrics_depth": metrics_depth,
-            "metrics_attributes": metrics_attr,
-            "metrics_references": metrics_ref
+            "block_introduced": block_introduced
         }
     
     def evaluate_resolution_metrics(self, row, extracted_rows, start_line, end_line, fixed_file_content):

@@ -6,7 +6,7 @@ import os
 
 def pass_at_k(n, c, k):
     """
-    Unbiased estimator for pass@k.
+    Unbiased estimator for pass@k. 
     """
     if n - c < k:
         return 1.0
@@ -19,11 +19,11 @@ def pass_at_k(n, c, k):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Calculate pass@k metric")
-    parser.add_argument("--problems-csv", required=True, help="Path to problems CSV (oid, filename)")
-    parser.add_argument("--fixes-csv", required=True, help="Path to fixes CSV (oid, iteration_id, plausible_fix)")
-    parser.add_argument("--k-values", nargs="+", type=int, default=[1, 5, 10], help="Values of k to calculate")
-    parser.add_argument("--save-to", help="Optional path to save the results CSV")
+    parser = argparse.ArgumentParser(description="Calculate pass@k metric with strict validation and scope-split")
+    parser.add_argument("--problems-csv", required=True, help="Path to problems CSV")
+    parser.add_argument("--fixes-csv", required=True, help="Path to fixes/outcomes CSV")
+    parser.add_argument("--k-values", nargs="+", type=int, default=[1, 5, 10], help="Values of k")
+    parser.add_argument("--save-to", help="Optional path to save results")
     args = parser.parse_args()
 
     try:
@@ -33,8 +33,14 @@ def main():
         print(f"Error: {e}")
         return
 
-    # Filter fixes to only include those for the defined problems
-    # This ensures we are evaluating against the correct set of problems
+    # HARDENING Improvement A: Enforce one row = one candidate attempt
+    if 'oid' in fixes_df.columns and 'iteration_id' in fixes_df.columns:
+        dups = fixes_df.duplicated(subset=['oid', 'iteration_id'], keep=False)
+        if dups.any():
+            print(f"WARNING: {dups.sum()} duplicate (oid, iteration_id) rows detected. Keeping only the first occurrence.")
+            fixes_df = fixes_df.drop_duplicates(subset=['oid', 'iteration_id'], keep='first')
+
+    # Ensure OIDs in fixes exist in problems
     valid_oids = set(problems_df['oid'])
     fixes_df = fixes_df[fixes_df['oid'].isin(valid_oids)]
 
@@ -44,48 +50,79 @@ def main():
     if 'module_fix_introduced_errors' in fixes_df.columns and 'introduced_this_iteration' not in fixes_df.columns:
         fixes_df['introduced_this_iteration'] = fixes_df['module_fix_introduced_errors']
 
-    # Using 'specific_error_fixed' as the primary success metric (Warning Removal).
+    # HARDENING Improvement B: Handle booleans and NaNs safely
+    if 'specific_error_fixed' in fixes_df.columns:
+        fixes_df['specific_error_fixed'] = fixes_df['specific_error_fixed'].fillna(False).astype(bool)
+    if 'introduced_this_iteration' in fixes_df.columns:
+        fixes_df['introduced_this_iteration'] = fixes_df['introduced_this_iteration'].fillna(0).astype(int)
+    if 'block_fix_introduced_errors' in fixes_df.columns:
+        fixes_df['block_fix_introduced_errors'] = fixes_df['block_fix_introduced_errors'].fillna(0).astype(int)
+
+    # SUCCESS AGGREGATION
     group_cols = ['oid']
+    if 'specific_error_fixed' not in fixes_df.columns:
+        print("Error: Required column 'specific_error_fixed' missing for evaluation.")
+        return
+
     stats = fixes_df.groupby(group_cols)['specific_error_fixed'].agg(['count', 'sum']).reset_index()
     stats.rename(columns={'count': 'n', 'sum': 'c'}, inplace=True)
     
-    # Strict Pass (Regression-Free Repair): specific warning removed AND no new errors introduced
-    if 'introduced_this_iteration' in fixes_df.columns:
-        fixes_df['strict_success'] = fixes_df['specific_error_fixed'] & (fixes_df['introduced_this_iteration'] == 0)
-        strict_stats = fixes_df.groupby(group_cols)['strict_success'].agg(['count', 'sum']).reset_index()
-        strict_stats.rename(columns={'count': 'n', 'sum': 'c'}, inplace=True)
+    # SCOPE-SEPARATED METRICS (Improvement E)
+    # 1. Block-Level
+    if 'block_fix_introduced_errors' in fixes_df.columns:
+        fixes_df['block_strict_success'] = fixes_df['specific_error_fixed'] & (fixes_df['block_fix_introduced_errors'] == 0)
     else:
-        strict_stats = None
+        fixes_df['block_strict_success'] = fixes_df['specific_error_fixed'] # Fallback
+            
+    # 2. Module-Level (Standard strict)
+    if 'introduced_this_iteration' in fixes_df.columns:
+        fixes_df['module_strict_success'] = fixes_df['specific_error_fixed'] & (fixes_df['introduced_this_iteration'] == 0)
+    else:
+        fixes_df['module_strict_success'] = fixes_df['block_strict_success'] # Fallback
+            
+    # Regression Rates
+    block_reg_rate = (fixes_df['block_fix_introduced_errors'] > 0).mean() if 'block_fix_introduced_errors' in fixes_df.columns else 0.0
+    module_reg_rate = (fixes_df['introduced_this_iteration'] > 0).mean() if 'introduced_this_iteration' in fixes_df.columns else 0.0
 
-    results = []
+    # Grouping
+    block_strict_stats = fixes_df.groupby(group_cols)['block_strict_success'].agg(['count', 'sum']).reset_index()
+    block_strict_stats.rename(columns={'count': 'n', 'sum': 'c'}, inplace=True)
+    
+    module_strict_stats = fixes_df.groupby(group_cols)['module_strict_success'].agg(['count', 'sum']).reset_index()
+    module_strict_stats.rename(columns={'count': 'n', 'sum': 'c'}, inplace=True)
 
-    # Determine model name from filename if possible, or use generic
-    model_name = os.path.basename(args.fixes_csv).replace("_synthetic_fixes.csv", "").replace("_fixes.csv", "")
-
-    row = {"LLM": model_name}
+    # HARDENING Improvement D: Warn when k > n for many problems
+    print("\n--- SAMPLE SIZE VALIDATION ---")
     for k in args.k_values:
-        # Calculate standard pass@k for each problem
+        underpowered = stats[stats['n'] < k]
+        if not underpowered.empty:
+            pct = (len(underpowered) / len(stats)) * 100
+            print(f"WARNING: {pct:.1f}% of problems ({len(underpowered)}/{len(stats)}) have fewer than {k} samples. pass@{k} estimates may be mathematically awkward.")
+
+    # COMPUTE PASS@K
+    results = []
+    model_name = os.path.basename(args.fixes_csv)
+    row = {"LLM": model_name}
+    
+    for k in args.k_values:
         scores = stats.apply(lambda r: pass_at_k(r['n'], r['c'], k), axis=1)
         row[f"pass@{k}"] = scores.mean()
         
-        # Calculate strict_pass@k (Regression-Free)
-        if strict_stats is not None:
-            strict_scores = strict_stats.apply(lambda r: pass_at_k(r['n'], r['c'], k), axis=1)
-            row[f"strict_pass@{k}"] = strict_scores.mean()
-            
-    # Calculate Error Introduction Rate (Regression Rate)
-    # What percentage of ALL attempted fixes produced by this model introduced new errors?
-    if 'introduced_this_iteration' in fixes_df.columns:
-        fixes_df['has_regression'] = fixes_df['introduced_this_iteration'] > 0
-        row["Regression_Rate"] = fixes_df['has_regression'].mean()
+        b_scores = block_strict_stats.apply(lambda r: pass_at_k(r['n'], r['c'], k), axis=1)
+        row[f"block_strict_pass@{k}"] = b_scores.mean()
         
-    results.append(row)
-
-    # Format output
-    results_df = pd.DataFrame(results)
-    print(results_df)
+        m_scores = module_strict_stats.apply(lambda r: pass_at_k(r['n'], r['c'], k), axis=1)
+        row[f"module_strict_pass@{k}"] = m_scores.mean()
+            
+    row["Block_Reg_Rate"] = block_reg_rate
+    row["Module_Reg_Rate"] = module_reg_rate
+        
+    results_df = pd.DataFrame([row])
+    print("\n--- FINAL SCOPE-SEPARATED RESULTS (OUTDATED SCRIPT) ---")
+    print(results_df.to_string(index=False))
 
     if args.save_to:
+        os.makedirs(os.path.dirname(args.save_to), exist_ok=True)
         results_df.to_csv(args.save_to, index=False)
         print(f"Results saved to {args.save_to}")
 

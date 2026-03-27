@@ -25,6 +25,7 @@ class ErrorCategorizer:
         
         # Cache for baseline errors (original errors before any fixes)
         self.baseline_errors_cache = {}  # {filename: [error_signatures]}
+        self.baseline_oids_cache = {}    # {filename: {oid}}
         
         # Cache for cross-experiment error tracking
         # Structure: {filename|iteration: {error_signature: {'first_iteration': str, 'iterations': [str]}}}
@@ -46,9 +47,11 @@ class ErrorCategorizer:
         Returns:
             list: Same extracted_rows with categorization fields added
         """
-        # Get baseline errors if not provided
+        # Get baseline errors and OIDs if not provided
         if baseline_errors is None:
             baseline_errors = self.get_baseline_errors(original_file, project=project)
+        
+        baseline_oids = self.baseline_oids_cache.get(f"{original_file}|{project}", set())
         
         # Load existing experiment errors for cross-experiment tracking
         existing_experiment_errors = self.get_existing_experiment_errors(
@@ -70,7 +73,9 @@ class ErrorCategorizer:
                 sig = f"{error.get('filename')}|line_{error.get('line_start')}|{summary}|{detail}"
             
             # 3-WAY CHECK: baseline, existing experiments, or truly new
-            if sig in baseline_errors:
+            is_originally_baseline = (error.get('oid') in baseline_oids) or (sig in baseline_errors)
+
+            if is_originally_baseline:
                 # Error existed in original file
                 error['is_original_error'] = True
                 error['is_new_error'] = False  # Deprecated, but keep for compatibility
@@ -199,6 +204,8 @@ class ErrorCategorizer:
         # which matches what terraform validate actually emits.               #
         # ------------------------------------------------------------------ #
         error_signatures = set()
+        baseline_oids = set()
+        
         for _, problem in file_problems.iterrows():
             block_id = str(problem.get('block_identifiers', '') or '').strip()
             summary  = str(problem.get('summary', '') or '').strip()
@@ -212,9 +219,15 @@ class ErrorCategorizer:
                 sig = f"{filename}|line_{problem.get('line_start')}|{summary}|{detail}"
 
             error_signatures.add(sig)
+            
+            # Also track OIDs for exact matching
+            p_oid = problem.get('oid')
+            if p_oid:
+                baseline_oids.add(str(p_oid))
 
-        print(f"[BASELINE] Found {len(error_signatures)} original errors from problems.csv")
+        print(f"[BASELINE] Found {len(error_signatures)} signatures and {len(baseline_oids)} OIDs from problems.csv")
         self.baseline_errors_cache[cache_key] = error_signatures
+        self.baseline_oids_cache[cache_key] = baseline_oids
         return error_signatures
     
     def get_existing_experiment_errors(self, filename, current_iteration_id, original_problem_oid=None):
