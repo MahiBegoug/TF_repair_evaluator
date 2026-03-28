@@ -27,6 +27,8 @@ def main():
     clones_dir = config.get("clones_dir", "../TFReproducer/clones")
     repair_mode = config.get("repair_mode", "auto")
     problems_dataset = config.get("problems_dataset", None)
+    use_parallel = config.get("use_parallel", False)
+    parallel_workers = config.get("parallel_workers", 4)
 
     if not os.path.exists(input_dir):
         print(f"Error: Input directory '{input_dir}' does not exist.")
@@ -79,6 +81,10 @@ def main():
 
         if problems_dataset:
             cmd.extend(["--problems-dataset", problems_dataset])
+
+        if use_parallel:
+            cmd.append("--parallel")
+            cmd.extend(["--parallel-workers", str(parallel_workers)])
 
         try:
             subprocess.run(cmd, check=True)

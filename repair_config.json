@@ -3,10 +3,12 @@
     "responses": {
         "input_dir": "llm_responses",
         "models": [
-            "CodeLlama_34b_Instruct_hf_docs_snippet_marked_code_only_xml.csv"
+            "codellama_subset_20.csv"
         ]
     },
     "output_dir": "llms_fixes_results",
     "clones_dir": "../TF_validation_reproducer/clones",
-    "repair_mode": "block"
+    "repair_mode": "block",
+    "use_parallel": true,
+    "parallel_workers": 12
 }

@@ -79,7 +79,7 @@ class RepairEvaluator:
         """Extract fix content and coordinates - delegates to file_resolver."""
         return self.file_resolver.get_fix_content_and_coordinates(row, self.repair_mode)
     
-    def _apply_and_validate(self, original_file, project, fixed_content, start_line, end_line, iteration_id, baseline_errors=None, original_problem_oid=None):
+    def _apply_and_validate(self, original_file, project, fixed_content, start_line, end_line, iteration_id, baseline_errors=None, original_problem_oid=None, write_to_csv=True):
         """Apply fix, run terraform validate, and extract diagnostics with error categorization."""
         
         # Use ValidationService to run validation and extract diagnostics
@@ -112,7 +112,7 @@ class RepairEvaluator:
                 error['exists_in_iterations'] = ''
         
         # Write enriched diagnostics to CSV
-        if self.output_csv and extracted_rows:
+        if write_to_csv and self.output_csv and extracted_rows:
             DiagnosticsWriter.write_rows(
                 extracted_rows, 
                 self.output_csv, 
@@ -142,9 +142,22 @@ class RepairEvaluator:
         """Create outcome row for CSV - delegates to metrics_calculator."""
         return self.metrics_calculator.create_outcome_row(row, original_file, resolution_metrics, error_counts)
     
-    def evaluate_repairs(self, llm_fixes_csv: str):
+    def evaluate_repairs(self, llm_fixes_csv: str, parallel=False, num_workers=4):
+        """
+        Main entry point for evaluating repairs.
+        Supports both serial and parallel execution.
+        """
         df = pd.read_csv(llm_fixes_csv)
+        
+        if parallel:
+            from repair_pipeline.parallel_driver import ParallelRepairEvaluator
+            pe = ParallelRepairEvaluator(self)
+            pe.evaluate(df, num_workers=num_workers)
+        else:
+            self.evaluate_repairs_serial(df)
 
+    def evaluate_repairs_serial(self, df):
+        """Original serial implementation of evaluate_repairs."""
         for _, row in df.iterrows():
             # Extract project name
             project = self._extract_project_name(row)

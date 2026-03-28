@@ -10,6 +10,8 @@ if __name__ == "__main__":
     parser.add_argument("--fixes-csv", required=True, help="Input CSV with LLM fixes")
     parser.add_argument("--repair-mode", default="auto", choices=["auto", "block", "file"], help="Mode of repair: block or file")
     parser.add_argument("--problems-dataset", default=None, help="Path to problems dataset for block coordinates")
+    parser.add_argument("--parallel", action="store_true", help="Enable parallel evaluation")
+    parser.add_argument("--parallel-workers", type=int, default=4, help="Number of parallel workers")
     
     args = parser.parse_args()
     
@@ -29,5 +31,7 @@ if __name__ == "__main__":
     )
     
     evaluator.evaluate_repairs(
-        llm_fixes_csv=args.fixes_csv
+        llm_fixes_csv=args.fixes_csv,
+        parallel=args.parallel,
+        num_workers=args.parallel_workers
     )

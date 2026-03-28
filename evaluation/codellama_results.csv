@@ -1,0 +1,2 @@
+LLM,pass@1,block_strict_pass@1,module_strict_pass@1,pass@5,block_strict_pass@5,module_strict_pass@5,pass@10,block_strict_pass@10,module_strict_pass@10,pass@16,block_strict_pass@16,module_strict_pass@16,Block_Reg_Rate,Module_Reg_Rate
+CodeLlama_34b_Instruct_hf_docs_snippet_marked_code_only_xml_repair_results.csv,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.012605042016806723,0.012605042016806723,0.012605042016806723,0.0,0.9358401262161451
