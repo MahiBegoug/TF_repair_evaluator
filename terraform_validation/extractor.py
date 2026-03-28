@@ -269,6 +269,7 @@ class DiagnosticsExtractor:
                             "block_type": block.get("block_type"),
                             "identifiers": block.get("identifiers") or block.get("address", ""),
                             "start_line": block.get("start_line"),
+                            "end_line": block.get("end_line"),
                         }
                 except Exception as e:
                     print(f"[DEBUG] StandaloneBlockFinder failed: {e}")
