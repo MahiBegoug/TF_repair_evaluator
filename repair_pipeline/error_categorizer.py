@@ -5,6 +5,7 @@ Handles error categorization (baseline, cross-experiment, truly new) for the rep
 """
 import os
 import pandas as pd
+from repair_pipeline.file_resolver import FileCoordinateResolver
 
 
 class ErrorCategorizer:
@@ -65,7 +66,7 @@ class ErrorCategorizer:
         for error in extracted_rows:
             # Create signature: use block_identifiers (stable) instead of line numbers
             # Consistent normalization between baseline and runtime categorization
-            filename = str(error.get('filename', '') or '').strip().replace("\\", "/")
+            filename = FileCoordinateResolver.normalize_path(error.get('filename', ''))
             block_id = str(error.get('block_identifiers', '') or '').strip()
             summary = str(error.get('summary', '') or '').strip()
             detail = str(error.get('detail', '') or '').strip()
@@ -213,8 +214,8 @@ class ErrorCategorizer:
         
         
         for _, problem in file_problems.iterrows():
-            # Normalize filename for signature
-            filename = str(problem.get('filename', '') or '').strip().replace("\\", "/")
+            # Normalize filename for signature using the robust utility
+            filename = FileCoordinateResolver.normalize_path(problem.get('filename', ''))
             block_id = str(problem.get('block_identifiers', '') or '').strip()
             summary  = str(problem.get('summary', '') or '').strip()
             detail   = str(problem.get('detail', '') or '').strip()
@@ -291,7 +292,7 @@ class ErrorCategorizer:
             experiment_errors = {}
             for _, error in file_diagnostics.iterrows():
                 # Create same signature format as in get_baseline_errors
-                filename = str(error.get('filename', '') or '').strip().replace("\\", "/")
+                filename = FileCoordinateResolver.normalize_path(error.get('filename', ''))
                 block_id = str(error.get('block_identifiers', '') or '').strip()
                 summary = str(error.get('summary', '') or '').strip()
                 detail = str(error.get('detail', '') or '').strip()
