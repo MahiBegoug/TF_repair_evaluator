@@ -61,13 +61,18 @@ class FileCoordinateResolver:
         Returns:
             str: Project name or None
         """
-        if "project_name" in row:
-            return row["project_name"]
+        if str(row.get("project_name", "")).strip() and pd.notna(row.get("project_name")):
+            return str(row["project_name"]).strip()
         
-        # Assumption: filename starts with clones/<project_name>/...
-        parts = row["filename"].split("/")
-        if len(parts) > 1 and parts[0] == "clones":
-            return parts[1]
+        # Robust path parsing: search for clones/ and take the next segment
+        filename = str(row.get("filename", "") or "").replace("\\", "/")
+        if "clones/" in filename:
+            parts = filename.split("clones/")
+            if len(parts) > 1:
+                # The segment immediately following 'clones/' is the project name
+                project_part = parts[1].split("/")[0]
+                if project_part:
+                    return project_part
         
         return None
     
@@ -81,11 +86,14 @@ class FileCoordinateResolver:
         Returns:
             str: Absolute file path
         """
-        relative_path = filename
-        if relative_path.startswith("clones/"):
-            relative_path = relative_path[len("clones/"):]
+        # Robust path resolution: find clones/ and normalize
+        path_str = str(filename or "").replace("\\", "/")
+        if "clones/" in path_str:
+            # Extract everything from clones/ onwards
+            relative_path = path_str.split("clones/")[1]
+            return os.path.normpath(os.path.join(self.clones_root, relative_path))
         
-        return os.path.normpath(os.path.join(self.clones_root, relative_path))
+        return os.path.normpath(os.path.join(self.clones_root, filename))
     
     def get_block_coordinates_from_problems(self, oid, project_name=None, filename=None, specific_oid=None):
         """
