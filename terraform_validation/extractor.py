@@ -150,19 +150,8 @@ class DiagnosticsExtractor:
             
             # Normalize filename to matches baseline OID format (clones/project/path)
             # This handles cases where clones_dir is ../ or absolute.
-            if "/clones/" in abs_fp:
-                rel_path = "clones/" + abs_fp.split("/clones/")[1]
-            elif "\\clones\\" in abs_fp.lower():
-                # Handle Windows-style and mixed paths
-                parts = re.split(r'[\\/]clones[\\/]', abs_fp, flags=re.IGNORECASE)
-                rel_path = "clones/" + parts[-1].replace("\\", "/")
-            else:
-                try:
-                    rel_path = os.path.relpath(system_path, os.getcwd()).replace("\\", "/")
-                except (ValueError, OSError):
-                    rel_path = abs_fp
-            
-            info["filename"] = rel_path
+            from repair_pipeline.file_resolver import FileCoordinateResolver
+            info["filename"] = FileCoordinateResolver.normalize_path(abs_fp)
 
             content = tf_cache.get(abs_fp, "[FILE NOT FOUND]")
             if content == "[FILE NOT FOUND]" and os.path.exists(abs_fp):
@@ -234,7 +223,7 @@ class DiagnosticsExtractor:
             row = {
                 "project_name": project_name,
                 "latest_commit": latest_commit,
-                "working_directory": os.path.relpath(module_path, os.getcwd()).replace("\\", "/"),
+                "working_directory": FileCoordinateResolver.normalize_path(module_path),
                 "severity": diag.get("severity", ""),
                 "summary": diag.get("summary", ""),
                 "detail": diag.get("detail", ""),
