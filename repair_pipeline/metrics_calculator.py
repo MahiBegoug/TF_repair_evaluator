@@ -206,7 +206,9 @@ class MetricsCalculator:
         
         return {
             "line_is_clean": line_is_clean,
-            "specific_error_fixed": specific_error_fixed
+            "specific_error_fixed": specific_error_fixed,
+            "matched_oid": p_row.get("oid") if p_row is not None else None,
+            "matched_specific_oid": p_row.get("specific_oid") if p_row is not None else None
         }
     
     def create_outcome_row(self, row, original_file, resolution_metrics, error_counts):
@@ -229,9 +231,13 @@ class MetricsCalculator:
         except (ValueError, OSError):
             relative_filename = original_file
         
+        # Prioritize OIDs from the baseline problem dataset for consistent tracking
+        final_oid = resolution_metrics.get("matched_oid") or row.get("oid", "")
+        final_spec_oid = resolution_metrics.get("matched_specific_oid") or row.get("specific_oid", "")
+        
         return {
-            "oid": row.get("oid", ""),
-            "specific_oid": row.get("specific_oid", ""),  # Include explicit OID for better tracking
+            "oid": final_oid,
+            "specific_oid": final_spec_oid,
             "iteration_id": row.get("iteration_id", ""),
             "llm_name": row.get("llm_name", ""),
             "filename": relative_filename,

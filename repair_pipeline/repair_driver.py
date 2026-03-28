@@ -55,7 +55,7 @@ class RepairEvaluator:
         self.outcomes_csv = outcomes_csv
         if not os.path.exists(self.outcomes_csv):
             pd.DataFrame([], columns=[
-                "oid", "iteration_id", "llm_name", "filename",
+                "oid", "specific_oid", "iteration_id", "llm_name", "filename",
                 "is_fixed", "line_is_clean", "line_specific_error_fixed", 
                 "module_total_errors", "file_errors", "module_errors",
                 "module_original_errors_remaining", "module_fix_introduced_errors",
