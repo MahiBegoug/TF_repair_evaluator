@@ -26,6 +26,7 @@ class ErrorCategorizer:
         # Cache for baseline errors (original errors before any fixes)
         self.baseline_errors_cache = {}  # {filename: [error_signatures]}
         self.baseline_oids_cache = {}    # {filename: {oid}}
+        self.baseline_specific_oids_cache = {} # {filename: {specific_oid}}
         
         # Cache for cross-experiment error tracking
         # Structure: {filename|iteration: {error_signature: {'first_iteration': str, 'iterations': [str]}}}
@@ -52,6 +53,7 @@ class ErrorCategorizer:
             baseline_errors = self.get_baseline_errors(original_file, project=project)
         
         baseline_oids = self.baseline_oids_cache.get(f"{original_file}|{project}", set())
+        baseline_specific_oids = self.baseline_specific_oids_cache.get(f"{original_file}|{project}", set())
         
         # Load existing experiment errors for cross-experiment tracking
         existing_experiment_errors = self.get_existing_experiment_errors(
@@ -62,18 +64,25 @@ class ErrorCategorizer:
         
         for error in extracted_rows:
             # Create signature: use block_identifiers (stable) instead of line numbers
-            block_id = error.get('block_identifiers', '')
-            summary = error.get('summary', '')
-            detail = error.get('detail', '')
+            # Consistent normalization between baseline and runtime categorization
+            filename = str(error.get('filename', '') or '').strip().replace("\\", "/")
+            block_id = str(error.get('block_identifiers', '') or '').strip()
+            summary = str(error.get('summary', '') or '').strip()
+            detail = str(error.get('detail', '') or '').strip()
             
             # Prefer block_identifiers, fallback to line
             if block_id:
-                sig = f"{error.get('filename')}|{block_id}|{summary}|{detail}"
+                sig = f"{filename}|{block_id}|{summary}|{detail}"
             else:
-                sig = f"{error.get('filename')}|line_{error.get('line_start')}|{summary}|{detail}"
+                sig = f"{filename}|line_{error.get('line_start')}|{summary}|{detail}"
             
-            # 3-WAY CHECK: baseline, existing experiments, or truly new
-            is_originally_baseline = (error.get('oid') in baseline_oids) or (sig in baseline_errors)
+            # 3-WAY CHECK: baseline (by specific_oid, oid, or sig), existing experiments, or truly new
+            # prioritizes specific_oid for high-fidelity content-based matching
+            is_originally_baseline = (
+                (error.get('specific_oid') in baseline_specific_oids) or 
+                (error.get('oid') in baseline_oids) or 
+                (sig in baseline_errors)
+            )
 
             if is_originally_baseline:
                 # Error existed in original file
@@ -84,7 +93,7 @@ class ErrorCategorizer:
                 error['first_seen_in'] = 'baseline'
                 error['exists_in_iterations'] = ''
                 
-            elif sig in existing_experiment_errors:
+            elif (sig in existing_experiment_errors) or (error.get('specific_oid') in existing_experiment_errors):
                 # Error exists in other iterations (but not baseline)
                 error['is_original_error'] = False
                 error['is_new_error'] = True  # Deprecated - was "not in baseline"
@@ -95,8 +104,10 @@ class ErrorCategorizer:
                 # of whether Iteration 1 also made the same mistake.
                 error['introduced_in_this_iteration'] = True  
                 
-                error['first_seen_in'] = existing_experiment_errors[sig]['first_iteration']
-                error['exists_in_iterations'] = ','.join(existing_experiment_errors[sig]['iterations'])
+                # Get iteration info from cross-experiment cache
+                exp_data = existing_experiment_errors.get(error.get('specific_oid')) or existing_experiment_errors.get(sig)
+                error['first_seen_in'] = exp_data['first_iteration']
+                error['exists_in_iterations'] = ','.join(exp_data['iterations'])
                 
             else:
                 # Truly new error - never seen before
@@ -205,12 +216,14 @@ class ErrorCategorizer:
         # ------------------------------------------------------------------ #
         error_signatures = set()
         baseline_oids = set()
+        baseline_specific_oids = set()
         
         for _, problem in file_problems.iterrows():
+            # Normalize filename for signature
+            filename = str(problem.get('filename', '') or '').strip().replace("\\", "/")
             block_id = str(problem.get('block_identifiers', '') or '').strip()
             summary  = str(problem.get('summary', '') or '').strip()
             detail   = str(problem.get('detail', '') or '').strip()
-            filename = str(problem.get('filename', '') or '').strip()
 
             if block_id:
                 sig = f"{filename}|{block_id}|{summary}|{detail}"
@@ -220,14 +233,19 @@ class ErrorCategorizer:
 
             error_signatures.add(sig)
             
-            # Also track OIDs for exact matching
+            # Track OIDs and specific_oids for exact/content matching
             p_oid = problem.get('oid')
+            p_spec_oid = problem.get('specific_oid')
+            
             if p_oid:
                 baseline_oids.add(str(p_oid))
+            if p_spec_oid:
+                baseline_specific_oids.add(str(p_spec_oid))
 
-        print(f"[BASELINE] Found {len(error_signatures)} signatures and {len(baseline_oids)} OIDs from problems.csv")
+        print(f"[BASELINE] Found {len(error_signatures)} signatures and {len(baseline_specific_oids)} Specific OIDs from problems.csv")
         self.baseline_errors_cache[cache_key] = error_signatures
         self.baseline_oids_cache[cache_key] = baseline_oids
+        self.baseline_specific_oids_cache[cache_key] = baseline_specific_oids
         return error_signatures
     
     def get_existing_experiment_errors(self, filename, current_iteration_id, original_problem_oid=None):
@@ -280,27 +298,31 @@ class ErrorCategorizer:
             experiment_errors = {}
             for _, error in file_diagnostics.iterrows():
                 # Create same signature format as in get_baseline_errors
-                block_id = error.get('block_identifiers', '')
-                summary = error.get('summary', '')
-                detail = error.get('detail', '')
+                filename = str(error.get('filename', '') or '').strip().replace("\\", "/")
+                block_id = str(error.get('block_identifiers', '') or '').strip()
+                summary = str(error.get('summary', '') or '').strip()
+                detail = str(error.get('detail', '') or '').strip()
                 
                 # Prefer block_identifiers over line numbers
-                if block_id and pd.notna(block_id):
-                    sig = f"{error.get('filename')}|{block_id}|{summary}|{detail}"
+                if block_id:
+                    sig = f"{filename}|{block_id}|{summary}|{detail}"
                 else:
-                    sig = f"{error.get('filename')}|line_{error.get('line_start')}|{summary}|{detail}"
+                    sig = f"{filename}|line_{error.get('line_start')}|{summary}|{detail}"
+                
+                # Use specific_oid as primary key for iteration cross-tracking if available
+                sig_key = error.get('specific_oid') or sig
                 
                 iteration = str(error.get('iteration_id', 'unknown'))
                 
                 # Track which iterations have this error
-                if sig not in experiment_errors:
-                    experiment_errors[sig] = {
+                if sig_key not in experiment_errors:
+                    experiment_errors[sig_key] = {
                         'first_iteration': iteration,
                         'iterations': [iteration]
                     }
                 else:
-                    if iteration not in experiment_errors[sig]['iterations']:
-                        experiment_errors[sig]['iterations'].append(iteration)
+                    if iteration not in experiment_errors[sig_key]['iterations']:
+                        experiment_errors[sig_key]['iterations'].append(iteration)
             
             print(f"[CROSS-EXP] Identified {len(experiment_errors)} unique error signatures from other experiments")
             
