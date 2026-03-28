@@ -51,6 +51,26 @@ class FileCoordinateResolver:
                 if oid_key and oid_key not in self._coord_index_oid:
                     self._coord_index_oid[oid_key] = coords
     
+    @staticmethod
+    def normalize_path(path):
+        """
+        Standardize path formatting:
+        - Convert backslashes to forward slashes
+        - Remove leading/trailing whitespace
+        - Strip common repository root prefixes like 'clones/' or '../'
+        """
+        if not path:
+            return ""
+        
+        # 1. Normalize separators and whitespace
+        p = str(path).strip().replace("\\", "/")
+        
+        # 2. Strip common prefixes for repository relative matching
+        if "clones/" in p:
+            p = "clones/" + p.split("clones/")[-1]
+            
+        return p
+
     def extract_project_name(self, row):
         """
         Extract project name from row, either directly or from filename.
@@ -64,8 +84,8 @@ class FileCoordinateResolver:
         if str(row.get("project_name", "")).strip() and pd.notna(row.get("project_name")):
             return str(row["project_name"]).strip()
         
-        # Robust path parsing: search for clones/ and take the next segment
-        filename = str(row.get("filename", "") or "").replace("\\", "/")
+        # Use robust normalization
+        filename = self.normalize_path(row.get("filename", ""))
         if "clones/" in filename:
             parts = filename.split("clones/")
             if len(parts) > 1:
@@ -86,14 +106,14 @@ class FileCoordinateResolver:
         Returns:
             str: Absolute file path
         """
-        # Robust path resolution: find clones/ and normalize
-        path_str = str(filename or "").replace("\\", "/")
-        if "clones/" in path_str:
+        # Use robust normalization
+        p = self.normalize_path(filename)
+        if "clones/" in p:
             # Extract everything from clones/ onwards
-            relative_path = path_str.split("clones/")[1]
+            relative_path = p.split("clones/")[1]
             return os.path.normpath(os.path.join(self.clones_root, relative_path))
         
-        return os.path.normpath(os.path.join(self.clones_root, filename))
+        return os.path.normpath(os.path.join(self.clones_root, p))
     
     def get_block_coordinates_from_problems(self, oid, project_name=None, filename=None, specific_oid=None):
         """
