@@ -40,10 +40,9 @@ class MetricsCalculator:
                 if spec_oid_key and spec_oid_key not in self._problems_by_specific_oid:
                     self._problems_by_specific_oid[spec_oid_key] = row
                 
-                from repair_pipeline.file_resolver import FileCoordinateResolver
-                # Build block-scoped error count index with normalized path
+                # Build block-scoped error count index
                 count_key = (
-                    FileCoordinateResolver.normalize_path(row.get("filename", "")),
+                    str(row.get("filename", "")).strip(),
                     str(row.get("block_type", "")).strip(),
                     str(row.get("block_identifiers", "")).strip(),
                     str(row.get("summary", "")).strip()
@@ -76,13 +75,9 @@ class MetricsCalculator:
         original_file_normalized = os.path.normpath(original_file)
         
         # 1. Module and File level counts
-        # Use centralized normalization for file membership check
-        from repair_pipeline.file_resolver import FileCoordinateResolver
-        norm_original = FileCoordinateResolver.normalize_path(original_file)
-        
         errors_in_file = sum(
             1 for er in extracted_rows 
-            if FileCoordinateResolver.normalize_path(er.get("filename", "")) == norm_original
+            if os.path.normpath(os.path.join(self.clones_root, er.get("filename", "").replace("clones/", ""))) == original_file_normalized
         )
         
         original_errors = sum(1 for er in extracted_rows if er.get('is_original_error', False))
@@ -143,8 +138,8 @@ class MetricsCalculator:
         Returns:
             dict: Resolution metrics (line_is_clean, specific_error_fixed)
         """
-        line_is_clean = False
-        specific_error_fixed = False
+        line_is_clean = None
+        specific_error_fixed = None
         p_row = None
         
         if self.problems is not None and not self.problems.empty:

@@ -48,17 +48,12 @@ class ErrorCategorizer:
         Returns:
             list: Same extracted_rows with categorization fields added
         """
-        # Normalize inputs for cache keys
-        from repair_pipeline.file_resolver import FileCoordinateResolver
-        norm_original = FileCoordinateResolver.normalize_path(original_file)
-        cache_key = f"{norm_original}|{project}"
-
         # Get baseline errors and OIDs if not provided
         if baseline_errors is None:
             baseline_errors = self.get_baseline_errors(original_file, project=project)
         
-        baseline_oids = self.baseline_oids_cache.get(cache_key, set())
-        baseline_specific_oids = self.baseline_specific_oids_cache.get(cache_key, set())
+        baseline_oids = self.baseline_oids_cache.get(f"{original_file}|{project}", set())
+        baseline_specific_oids = self.baseline_specific_oids_cache.get(f"{original_file}|{project}", set())
         
         # Load existing experiment errors for cross-experiment tracking
         existing_experiment_errors = self.get_existing_experiment_errors(
@@ -70,7 +65,7 @@ class ErrorCategorizer:
         for error in extracted_rows:
             # Create signature: use block_identifiers (stable) instead of line numbers
             # Consistent normalization between baseline and runtime categorization
-            filename = FileCoordinateResolver.normalize_path(error.get('filename', ''))
+            filename = str(error.get('filename', '') or '').strip().replace("\\", "/")
             block_id = str(error.get('block_identifiers', '') or '').strip()
             summary = str(error.get('summary', '') or '').strip()
             detail = str(error.get('detail', '') or '').strip()
@@ -146,9 +141,7 @@ class ErrorCategorizer:
         Returns:
             set: Error signatures from baseline.
         """
-        from repair_pipeline.file_resolver import FileCoordinateResolver
-        norm_file = FileCoordinateResolver.normalize_path(original_file)
-        cache_key = f"{norm_file}|{project}"
+        cache_key = f"{original_file}|{project}"
 
         # Check cache first
         if cache_key in self.baseline_errors_cache:
@@ -220,9 +213,8 @@ class ErrorCategorizer:
         
         
         for _, problem in file_problems.iterrows():
-            # Use robust normalization for consistent signature matching
-            from repair_pipeline.file_resolver import FileCoordinateResolver
-            filename = FileCoordinateResolver.normalize_path(problem.get('filename', ''))
+            # Normalize filename for signature
+            filename = str(problem.get('filename', '') or '').strip().replace("\\", "/")
             block_id = str(problem.get('block_identifiers', '') or '').strip()
             summary  = str(problem.get('summary', '') or '').strip()
             detail   = str(problem.get('detail', '') or '').strip()

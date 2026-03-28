@@ -51,26 +51,6 @@ class FileCoordinateResolver:
                 if oid_key and oid_key not in self._coord_index_oid:
                     self._coord_index_oid[oid_key] = coords
     
-    @staticmethod
-    def normalize_path(path):
-        """
-        Standardize path formatting:
-        - Convert backslashes to forward slashes
-        - Remove leading/trailing whitespace
-        - Strip common repository root prefixes like 'clones/' or '../'
-        """
-        if not path:
-            return ""
-        
-        # 1. Normalize separators and whitespace
-        p = str(path).strip().replace("\\", "/")
-        
-        # 2. Strip common prefixes for repository relative matching
-        if "clones/" in p:
-            p = "clones/" + p.split("clones/")[-1]
-            
-        return p
-
     def extract_project_name(self, row):
         """
         Extract project name from row, either directly or from filename.
@@ -84,8 +64,8 @@ class FileCoordinateResolver:
         if str(row.get("project_name", "")).strip() and pd.notna(row.get("project_name")):
             return str(row["project_name"]).strip()
         
-        # Use robust normalization
-        filename = self.normalize_path(row.get("filename", ""))
+        # Robust path parsing: search for clones/ and take the next segment
+        filename = str(row.get("filename", "") or "").replace("\\", "/")
         if "clones/" in filename:
             parts = filename.split("clones/")
             if len(parts) > 1:

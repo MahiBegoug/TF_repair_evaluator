@@ -1,6 +1,7 @@
 import os
 import hashlib
 import re
+from repair_pipeline.file_resolver import FileCoordinateResolver
 
 
 def count_hcl_loc(content: str) -> int:
@@ -148,9 +149,7 @@ class DiagnosticsExtractor:
             abs_fp = os.path.abspath(system_path).replace("\\", "/")
             info["absolute_filename"] = abs_fp
             
-            # Normalize filename to matches baseline OID format (clones/project/path)
-            # This handles cases where clones_dir is ../ or absolute.
-            from repair_pipeline.file_resolver import FileCoordinateResolver
+            # Use robust normalization
             info["filename"] = FileCoordinateResolver.normalize_path(abs_fp)
 
             content = tf_cache.get(abs_fp, "[FILE NOT FOUND]")
@@ -309,7 +308,8 @@ class DiagnosticsExtractor:
         physical file location (filename, start line, end line).
         Matches original benchmark logic.
         """
-        filename = str(r.get('filename', '')).strip()
+        from repair_pipeline.file_resolver import FileCoordinateResolver
+        filename = FileCoordinateResolver.normalize_path(r.get('filename', ''))
         line_start = str(r.get('line_start', '')).strip()
         line_end = str(r.get('line_end', '')).strip()
         
@@ -324,10 +324,11 @@ class DiagnosticsExtractor:
         Matches original benchmark logic.
         """
         import re
+        from repair_pipeline.file_resolver import FileCoordinateResolver
         def _normalize(text: str) -> str:
             return re.sub(r"\s+", " ", str(text).lower().strip())
             
-        filename = str(r.get('filename', '')).strip()
+        filename = FileCoordinateResolver.normalize_path(r.get('filename', ''))
         line_start = str(r.get('line_start', '')).strip()
         line_end = str(r.get('line_end', '')).strip()
         summary = _normalize(r.get("summary", ""))
