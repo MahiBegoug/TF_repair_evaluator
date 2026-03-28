@@ -4,6 +4,7 @@ Metrics Calculator
 Handles calculation of error metrics and resolution evaluation for the repair pipeline.
 """
 import os
+from repair_pipeline.file_resolver import FileCoordinateResolver
 
 
 class MetricsCalculator:
@@ -225,12 +226,8 @@ class MetricsCalculator:
         Returns:
             dict: Outcome row for CSV
         """
-        # Convert to relative path
-        try:
-            relative_filename = os.path.relpath(original_file, os.getcwd())
-            relative_filename = relative_filename.replace("\\", "/")
-        except (ValueError, OSError):
-            relative_filename = original_file
+        # Use robust, systematic normalization instead of relative disk paths
+        relative_filename = FileCoordinateResolver.normalize_path(original_file)
         
         # Prioritize OIDs from the baseline problem dataset for consistent tracking
         final_oid = resolution_metrics.get("matched_oid") or row.get("oid", "")
