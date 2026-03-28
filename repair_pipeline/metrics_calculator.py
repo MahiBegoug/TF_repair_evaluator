@@ -140,6 +140,7 @@ class MetricsCalculator:
         """
         line_is_clean = None
         specific_error_fixed = None
+        p_row = None
         
         if self.problems is not None and not self.problems.empty:
             # 1. Primary Lookup (Specific OID)

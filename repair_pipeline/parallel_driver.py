@@ -109,7 +109,7 @@ class ParallelRepairEvaluator:
         evaluator_kwargs = {
             "output_csv": self.parent.output_csv,
             "outcomes_csv": self.parent.outcomes_csv,
-            "problems_dataset": None
+            "problems_dataset": self.parent.problems_dataset_path
         }
         
         tasks = []

@@ -31,6 +31,7 @@ class RepairEvaluator:
         self.output_csv = output_csv
         self.clones_root = clones_root
         self.repair_mode = repair_mode
+        self.problems_dataset_path = problems_dataset  # Save path for parallel workers
         self.problems = pd.read_csv(problems_dataset) if problems_dataset and os.path.exists(problems_dataset) else None
         self.error_matcher = ErrorMatchingService(line_tolerance=3)
         self.file_resolver = FileCoordinateResolver(clones_root=clones_root, problems_dataset=self.problems)
