@@ -145,17 +145,14 @@ class ErrorCategorizer:
 
         # Check cache first
         if cache_key in self.baseline_errors_cache:
-            print(f"[BASELINE] Using cached baseline: "
                   f"{len(self.baseline_errors_cache[cache_key])} original errors")
             return self.baseline_errors_cache[cache_key]
 
         # If no problems dataset, return empty
         if self.problems is None:
-            print("[BASELINE] No problems.csv provided - cannot determine baseline errors")
             self.baseline_errors_cache[cache_key] = set()
             return set()
 
-        print("[BASELINE] Using problems.csv for baseline errors")
 
         # ------------------------------------------------------------------ #
         # Step 1 – filter problems to only those relevant to this file        #
@@ -183,7 +180,6 @@ class ErrorCategorizer:
             ]
             if file_problems.empty:
                 # T2: relax to basename only (same project)
-                print(f"[BASELINE] Full-path match empty for project='{project}'. "
                       f"Falling back to basename='{basename}'.")
                 file_problems = self.problems[
                     project_mask &
@@ -191,7 +187,6 @@ class ErrorCategorizer:
                 ]
             if file_problems.empty:
                 # T3: drop project constraint entirely
-                print(f"[BASELINE] Still empty — dropping project constraint.")
                 file_problems = self.problems[
                     self.problems['filename'].str.contains(basename, na=False, regex=False)
                 ]
@@ -218,6 +213,7 @@ class ErrorCategorizer:
         baseline_oids = set()
         baseline_specific_oids = set()
         
+        
         for _, problem in file_problems.iterrows():
             # Normalize filename for signature
             filename = str(problem.get('filename', '') or '').strip().replace("\\", "/")
@@ -242,7 +238,6 @@ class ErrorCategorizer:
             if p_spec_oid:
                 baseline_specific_oids.add(str(p_spec_oid))
 
-        print(f"[BASELINE] Found {len(error_signatures)} signatures and {len(baseline_specific_oids)} Specific OIDs from problems.csv")
         self.baseline_errors_cache[cache_key] = error_signatures
         self.baseline_oids_cache[cache_key] = baseline_oids
         self.baseline_specific_oids_cache[cache_key] = baseline_specific_oids

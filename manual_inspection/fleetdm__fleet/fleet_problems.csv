@@ -1,0 +1,1231 @@
+"project_name","latest_commit","working_directory","oid","specific_oid","info_github","is_cross_module","severity","summary","detail","filename","line_start","col_start","line_end","col_end","block_type","block_type_full","impacted_block_type","impacted_block_content","impacted_block_start_line","impacted_block_end_line","block_identifiers","fan_in_count","fan_out_count","metrics_nloc","metrics_depth","metrics_loc","metrics_template_expressions","metrics_references","metrics_attributes","metrics_comment_count","metrics_function_call_count","metrics_heredoc_count","metrics_string_literal_count","metrics_loop_expression_count","metrics_conditional_count","metrics_nested_block_count","metrics_splat_count","metrics_object_elem_count","metrics_object_count","metrics_tuple_count","metrics_tuple_elem_count","metrics_param_count","metrics_comparison_count","metrics_logical_count","provider_name","provider_version","resource_schema","suggested_replacement_schemas","matched_suggested_resource_names","matched_suggested_resource_frames","block_documentation_identifiers","matched_type","file_content","file_loc","problem_class","problem_category"
+"fleetdm__fleet","a0b5b726374b03f5a1cccfe93a5ceee6b56b0365","clones/fleetdm__fleet/infrastructure/loadtesting/terraform/osquery_perf","180a1a6c9b09","789406eff033","https://github.com/fleetdm/fleet/blob/a0b5b726374b03f5a1cccfe93a5ceee6b56b0365/infrastructure/loadtesting/terraform/osquery_perf/providers.tf#L59","False","warning","Deprecated Parameter","The parameter ""dynamodb_table"" is deprecated. Use parameter ""use_lockfile"" instead.","clones/fleetdm__fleet/infrastructure/loadtesting/terraform/osquery_perf/providers.tf","59","40","59","41","data","data terraform_remote_state","data","data ""terraform_remote_state"" ""shared"" {
+  backend = ""s3""
+  config = {
+    bucket               = ""fleet-terraform-state20220408141538466600000002""
+    key                  = ""loadtesting/loadtesting/shared/terraform.tfstate"" # This should be set to account_alias/unique_key/terraform.tfstate
+    workspace_key_prefix = ""loadtesting""                                      # This should be set to the account alias
+    region               = ""us-east-2""
+    encrypt              = true
+    kms_key_id           = ""9f98a443-ffd7-4dbe-a9c3-37df89b2e42a""
+    dynamodb_table       = ""tf-remote-state-lock""
+    assume_role = {
+      role_arn = ""arn:aws:iam::353365949058:role/terraform-loadtesting""
+    }
+  }
+}","59","73","terraform_remote_state shared","0","0","0","15","15","0","0","2","2","0","0","8","0","0","0","0","9","2","0","0","0","0","0","terraform","","{""attributes"": {""backend"": {""type"": ""string"", ""description"": ""The remote backend to use, e.g. `remote` or `http`."", ""required"": true}, ""config"": {""type"": ""dynamic"", ""description"": ""The configuration of the remote backend."", ""optional"": true}, ""defaults"": {""type"": ""dynamic"", ""description"": ""Default values for outputs, in case the state file is empty."", ""optional"": true}, ""outputs"": {""type"": ""dynamic"", ""description"": ""An object containing every root-level output in the remote state."", ""computed"": true}, ""workspace"": {""type"": ""string"", ""description"": ""The Terraform workspace to use, if the backend supports workspaces."", ""optional"": true}}, ""block_types"": {}, ""matched_block_name"": ""terraform_remote_state"", ""matched_block_type"": ""data""}","","","","terraform_remote_state","data","terraform {
+  required_providers {
+    aws = {
+      source  = ""hashicorp/aws""
+      version = "">= 5.68.0""
+    }
+    docker = {
+      source  = ""kreuzwerker/docker""
+      version = ""~> 3.6.0""
+    }
+    git = {
+      source  = ""metio/git""
+      version = ""2025.10.10""
+    }
+  }
+  backend ""s3"" {
+    bucket               = ""fleet-terraform-state20220408141538466600000002""
+    key                  = ""loadtesting/loadtesting/osqp/terraform.tfstate"" # This should be set to account_alias/unique_key/terraform.tfstate
+    workspace_key_prefix = ""loadtesting""                                    # This should be set to the account alias
+    region               = ""us-east-2""
+    encrypt              = true
+    kms_key_id           = ""9f98a443-ffd7-4dbe-a9c3-37df89b2e42a""
+    dynamodb_table       = ""tf-remote-state-lock""
+    assume_role = {
+      role_arn = ""arn:aws:iam::353365949058:role/terraform-loadtesting""
+    }
+  }
+}
+
+provider ""aws"" {
+  region = ""us-east-2""
+  default_tags {
+    tags = {
+      environment = ""loadtest""
+      terraform   = ""https://github.com/fleetdm/fleet/tree/main/infrastructure/loadtesting""
+      state       = ""s3://fleet-terraform-state20220408141538466600000002/loadtesting/${terraform.workspace}/loadtesting/loadtesting/osqp/terraform.tfstate""
+      workspace   = ""${terraform.workspace}""
+    }
+  }
+}
+
+data ""terraform_remote_state"" ""infra"" {
+  backend   = ""s3""
+  workspace = terraform.workspace
+  config = {
+    bucket               = ""fleet-terraform-state20220408141538466600000002""
+    key                  = ""loadtesting/loadtesting/terraform.tfstate"" # This should be set to account_alias/unique_key/terraform.tfstate
+    workspace_key_prefix = ""loadtesting""                               # This should be set to the account alias
+    region               = ""us-east-2""
+    encrypt              = true
+    kms_key_id           = ""9f98a443-ffd7-4dbe-a9c3-37df89b2e42a""
+    dynamodb_table       = ""tf-remote-state-lock""
+    assume_role = {
+      role_arn = ""arn:aws:iam::353365949058:role/terraform-loadtesting""
+    }
+  }
+}
+
+data ""terraform_remote_state"" ""shared"" {
+  backend = ""s3""
+  config = {
+    bucket               = ""fleet-terraform-state20220408141538466600000002""
+    key                  = ""loadtesting/loadtesting/shared/terraform.tfstate"" # This should be set to account_alias/unique_key/terraform.tfstate
+    workspace_key_prefix = ""loadtesting""                                      # This should be set to the account alias
+    region               = ""us-east-2""
+    encrypt              = true
+    kms_key_id           = ""9f98a443-ffd7-4dbe-a9c3-37df89b2e42a""
+    dynamodb_table       = ""tf-remote-state-lock""
+    assume_role = {
+      role_arn = ""arn:aws:iam::353365949058:role/terraform-loadtesting""
+    }
+  }
+}
+
+provider ""docker"" {
+  # Configuration options
+  registry_auth {
+    address  = ""${data.aws_caller_identity.current.account_id}.dkr.ecr.us-east-2.amazonaws.com""
+    username = data.aws_ecr_authorization_token.token.user_name
+    password = data.aws_ecr_authorization_token.token.password
+  }
+}
+
+provider ""git"" {}
+","78","Deprecated Parameters","Provider Evolution"
+"fleetdm__fleet","a0b5b726374b03f5a1cccfe93a5ceee6b56b0365","clones/fleetdm__fleet/infrastructure/loadtesting/terraform/osquery_perf","a07b6efd1010","c34967e7a111","https://github.com/fleetdm/fleet/blob/a0b5b726374b03f5a1cccfe93a5ceee6b56b0365/infrastructure/loadtesting/terraform/osquery_perf/providers.tf#L42","False","warning","Deprecated Parameter","The parameter ""dynamodb_table"" is deprecated. Use parameter ""use_lockfile"" instead.","clones/fleetdm__fleet/infrastructure/loadtesting/terraform/osquery_perf/providers.tf","42","39","42","40","data","data terraform_remote_state","data","data ""terraform_remote_state"" ""infra"" {
+  backend   = ""s3""
+  workspace = terraform.workspace
+  config = {
+    bucket               = ""fleet-terraform-state20220408141538466600000002""
+    key                  = ""loadtesting/loadtesting/terraform.tfstate"" # This should be set to account_alias/unique_key/terraform.tfstate
+    workspace_key_prefix = ""loadtesting""                               # This should be set to the account alias
+    region               = ""us-east-2""
+    encrypt              = true
+    kms_key_id           = ""9f98a443-ffd7-4dbe-a9c3-37df89b2e42a""
+    dynamodb_table       = ""tf-remote-state-lock""
+    assume_role = {
+      role_arn = ""arn:aws:iam::353365949058:role/terraform-loadtesting""
+    }
+  }
+}","42","57","terraform_remote_state infra","1","1","0","16","16","0","1","3","2","0","0","8","0","0","0","0","9","2","0","0","0","0","0","terraform","","{""attributes"": {""backend"": {""type"": ""string"", ""description"": ""The remote backend to use, e.g. `remote` or `http`."", ""required"": true}, ""config"": {""type"": ""dynamic"", ""description"": ""The configuration of the remote backend."", ""optional"": true}, ""defaults"": {""type"": ""dynamic"", ""description"": ""Default values for outputs, in case the state file is empty."", ""optional"": true}, ""outputs"": {""type"": ""dynamic"", ""description"": ""An object containing every root-level output in the remote state."", ""computed"": true}, ""workspace"": {""type"": ""string"", ""description"": ""The Terraform workspace to use, if the backend supports workspaces."", ""optional"": true}}, ""block_types"": {}, ""matched_block_name"": ""terraform_remote_state"", ""matched_block_type"": ""data""}","","","","terraform_remote_state","data","terraform {
+  required_providers {
+    aws = {
+      source  = ""hashicorp/aws""
+      version = "">= 5.68.0""
+    }
+    docker = {
+      source  = ""kreuzwerker/docker""
+      version = ""~> 3.6.0""
+    }
+    git = {
+      source  = ""metio/git""
+      version = ""2025.10.10""
+    }
+  }
+  backend ""s3"" {
+    bucket               = ""fleet-terraform-state20220408141538466600000002""
+    key                  = ""loadtesting/loadtesting/osqp/terraform.tfstate"" # This should be set to account_alias/unique_key/terraform.tfstate
+    workspace_key_prefix = ""loadtesting""                                    # This should be set to the account alias
+    region               = ""us-east-2""
+    encrypt              = true
+    kms_key_id           = ""9f98a443-ffd7-4dbe-a9c3-37df89b2e42a""
+    dynamodb_table       = ""tf-remote-state-lock""
+    assume_role = {
+      role_arn = ""arn:aws:iam::353365949058:role/terraform-loadtesting""
+    }
+  }
+}
+
+provider ""aws"" {
+  region = ""us-east-2""
+  default_tags {
+    tags = {
+      environment = ""loadtest""
+      terraform   = ""https://github.com/fleetdm/fleet/tree/main/infrastructure/loadtesting""
+      state       = ""s3://fleet-terraform-state20220408141538466600000002/loadtesting/${terraform.workspace}/loadtesting/loadtesting/osqp/terraform.tfstate""
+      workspace   = ""${terraform.workspace}""
+    }
+  }
+}
+
+data ""terraform_remote_state"" ""infra"" {
+  backend   = ""s3""
+  workspace = terraform.workspace
+  config = {
+    bucket               = ""fleet-terraform-state20220408141538466600000002""
+    key                  = ""loadtesting/loadtesting/terraform.tfstate"" # This should be set to account_alias/unique_key/terraform.tfstate
+    workspace_key_prefix = ""loadtesting""                               # This should be set to the account alias
+    region               = ""us-east-2""
+    encrypt              = true
+    kms_key_id           = ""9f98a443-ffd7-4dbe-a9c3-37df89b2e42a""
+    dynamodb_table       = ""tf-remote-state-lock""
+    assume_role = {
+      role_arn = ""arn:aws:iam::353365949058:role/terraform-loadtesting""
+    }
+  }
+}
+
+data ""terraform_remote_state"" ""shared"" {
+  backend = ""s3""
+  config = {
+    bucket               = ""fleet-terraform-state20220408141538466600000002""
+    key                  = ""loadtesting/loadtesting/shared/terraform.tfstate"" # This should be set to account_alias/unique_key/terraform.tfstate
+    workspace_key_prefix = ""loadtesting""                                      # This should be set to the account alias
+    region               = ""us-east-2""
+    encrypt              = true
+    kms_key_id           = ""9f98a443-ffd7-4dbe-a9c3-37df89b2e42a""
+    dynamodb_table       = ""tf-remote-state-lock""
+    assume_role = {
+      role_arn = ""arn:aws:iam::353365949058:role/terraform-loadtesting""
+    }
+  }
+}
+
+provider ""docker"" {
+  # Configuration options
+  registry_auth {
+    address  = ""${data.aws_caller_identity.current.account_id}.dkr.ecr.us-east-2.amazonaws.com""
+    username = data.aws_ecr_authorization_token.token.user_name
+    password = data.aws_ecr_authorization_token.token.password
+  }
+}
+
+provider ""git"" {}
+","78","Deprecated Parameters","Provider Evolution"
+"fleetdm__fleet","a0b5b726374b03f5a1cccfe93a5ceee6b56b0365","clones/fleetdm__fleet/infrastructure/loadtesting/terraform","c5b76377f6b0","cd1fd925365f","https://github.com/fleetdm/fleet/blob/a0b5b726374b03f5a1cccfe93a5ceee6b56b0365/infrastructure/loadtesting/terraform/init.tf#L60","False","warning","Deprecated Parameter","The parameter ""dynamodb_table"" is deprecated. Use parameter ""use_lockfile"" instead.","clones/fleetdm__fleet/infrastructure/loadtesting/terraform/init.tf","60","40","60","41","data","data terraform_remote_state","data","data ""terraform_remote_state"" ""shared"" {
+  backend = ""s3""
+  config = {
+    bucket               = ""fleet-terraform-state20220408141538466600000002""
+    key                  = ""loadtesting/loadtesting/shared/terraform.tfstate"" # This should be set to account_alias/unique_key/terraform.tfstate
+    workspace_key_prefix = ""loadtesting""                                      # This should be set to the account alias
+    region               = ""us-east-2""
+    encrypt              = true
+    kms_key_id           = ""9f98a443-ffd7-4dbe-a9c3-37df89b2e42a""
+    dynamodb_table       = ""tf-remote-state-lock""
+    assume_role = {
+      role_arn = ""arn:aws:iam::353365949058:role/terraform-loadtesting""
+    }
+  }
+}","60","74","terraform_remote_state shared","22","0","0","15","15","0","0","2","2","0","0","8","0","0","0","0","9","2","0","0","0","0","0","terraform","","{""attributes"": {""backend"": {""type"": ""string"", ""description"": ""The remote backend to use, e.g. `remote` or `http`."", ""required"": true}, ""config"": {""type"": ""dynamic"", ""description"": ""The configuration of the remote backend."", ""optional"": true}, ""defaults"": {""type"": ""dynamic"", ""description"": ""Default values for outputs, in case the state file is empty."", ""optional"": true}, ""outputs"": {""type"": ""dynamic"", ""description"": ""An object containing every root-level output in the remote state."", ""computed"": true}, ""workspace"": {""type"": ""string"", ""description"": ""The Terraform workspace to use, if the backend supports workspaces."", ""optional"": true}}, ""block_types"": {}, ""matched_block_name"": ""terraform_remote_state"", ""matched_block_type"": ""data""}","","","","terraform_remote_state","data","provider ""aws"" {
+  region = ""us-east-2""
+  default_tags {
+    tags = {
+      environment = ""loadtest""
+      terraform   = ""https://github.com/fleetdm/fleet/tree/main/infrastructure/loadtesting""
+      state       = ""s3://fleet-terraform-state20220408141538466600000002/loadtesting/${terraform.workspace}/loadtesting/loadtesting/terraform.tfstate""
+      workspace   = ""${terraform.workspace}""
+    }
+  }
+}
+
+terraform {
+  required_providers {
+    aws = {
+      source  = ""hashicorp/aws""
+      version = ""~> 5.0""
+    }
+    docker = {
+      source  = ""kreuzwerker/docker""
+      version = ""~> 2.16.0""
+    }
+    git = {
+      source  = ""metio/git""
+      version = ""2025.10.10""
+    }
+  }
+  backend ""s3"" {
+    bucket               = ""fleet-terraform-state20220408141538466600000002""
+    key                  = ""loadtesting/loadtesting/terraform.tfstate"" # This should be set to account_alias/unique_key/terraform.tfstate
+    workspace_key_prefix = ""loadtesting""                               # This should be set to the account alias
+    region               = ""us-east-2""
+    encrypt              = true
+    kms_key_id           = ""9f98a443-ffd7-4dbe-a9c3-37df89b2e42a""
+    dynamodb_table       = ""tf-remote-state-lock""
+    assume_role = {
+      role_arn = ""arn:aws:iam::353365949058:role/terraform-loadtesting""
+    }
+  }
+}
+
+data ""aws_caller_identity"" ""current"" {}
+data ""aws_region"" ""current"" {}
+
+provider ""docker"" {
+  # Configuration options
+  registry_auth {
+    address  = ""${data.aws_caller_identity.current.account_id}.dkr.ecr.us-east-2.amazonaws.com""
+    username = data.aws_ecr_authorization_token.token.user_name
+    password = data.aws_ecr_authorization_token.token.password
+  }
+}
+
+provider ""git"" {}
+
+data ""git_repository"" ""tf"" {
+  directory = ""${path.module}/../../../""
+}
+
+data ""terraform_remote_state"" ""shared"" {
+  backend = ""s3""
+  config = {
+    bucket               = ""fleet-terraform-state20220408141538466600000002""
+    key                  = ""loadtesting/loadtesting/shared/terraform.tfstate"" # This should be set to account_alias/unique_key/terraform.tfstate
+    workspace_key_prefix = ""loadtesting""                                      # This should be set to the account alias
+    region               = ""us-east-2""
+    encrypt              = true
+    kms_key_id           = ""9f98a443-ffd7-4dbe-a9c3-37df89b2e42a""
+    dynamodb_table       = ""tf-remote-state-lock""
+    assume_role = {
+      role_arn = ""arn:aws:iam::353365949058:role/terraform-loadtesting""
+    }
+  }
+}
+","67","Deprecated Parameters","Provider Evolution"
+"fleetdm__fleet","a0b5b726374b03f5a1cccfe93a5ceee6b56b0365","clones/fleetdm__fleet/infrastructure/loadtesting/terraform","655aa3a236fa","74f43bb3a5cd","https://github.com/fleetdm/fleet/blob/a0b5b726374b03f5a1cccfe93a5ceee6b56b0365/infrastructure/loadtesting/terraform/firehose.tf#L22","False","warning","Invalid Attribute Combination","No attribute specified when one (and only one) of [rule[0].filter,rule[0].prefix] is required
+
+This will be an error in a future version of the provider","clones/fleetdm__fleet/infrastructure/loadtesting/terraform/firehose.tf","22","68","22","69","resource","resource aws_s3_bucket_lifecycle_configuration","resource","resource ""aws_s3_bucket_lifecycle_configuration"" ""osquery-results"" {
+  bucket = aws_s3_bucket.osquery-results.id
+
+  rule {
+    id     = ""rule-1""
+    status = ""Enabled""
+    expiration {
+      days = 1
+    }
+  }
+}","22","32","aws_s3_bucket_lifecycle_configuration osquery-results","0","1","1","11","10","0","2","4","0","0","0","2","0","0","2","0","0","0","0","0","0","0","0","aws","5.100.0","{""attributes"": {""bucket"": {""type"": ""string"", ""description_kind"": ""plain"", ""required"": true}, ""expected_bucket_owner"": {""type"": ""string"", ""description_kind"": ""plain"", ""optional"": true, ""computed"": true}, ""id"": {""type"": ""string"", ""description_kind"": ""plain"", ""deprecated"": true, ""computed"": true}, ""transition_default_minimum_object_size"": {""type"": ""string"", ""description_kind"": ""plain"", ""optional"": true, ""computed"": true}}, ""block_types"": {""rule"": {""nesting_mode"": ""list"", ""block"": {""attributes"": {""id"": {""type"": ""string"", ""description_kind"": ""plain"", ""required"": true}, ""prefix"": {""type"": ""string"", ""description_kind"": ""plain"", ""deprecated"": true, ""optional"": true, ""computed"": true}, ""status"": {""type"": ""string"", ""description_kind"": ""plain"", ""required"": true}}, ""block_types"": {""abort_incomplete_multipart_upload"": {""nesting_mode"": ""list"", ""block"": {""attributes"": {""days_after_initiation"": {""type"": ""number"", ""description_kind"": ""plain"", ""optional"": true}}, ""description_kind"": ""plain""}}, ""expiration"": {""nesting_mode"": ""list"", ""block"": {""attributes"": {""date"": {""type"": ""string"", ""description_kind"": ""plain"", ""optional"": true}, ""days"": {""type"": ""number"", ""description_kind"": ""plain"", ""optional"": true, ""computed"": true}, ""expired_object_delete_marker"": {""type"": ""bool"", ""description_kind"": ""plain"", ""optional"": true, ""computed"": true}}, ""description_kind"": ""plain""}}, ""filter"": {""nesting_mode"": ""list"", ""block"": {""attributes"": {""object_size_greater_than"": {""type"": ""number"", ""description_kind"": ""plain"", ""optional"": true, ""computed"": true}, ""object_size_less_than"": {""type"": ""number"", ""description_kind"": ""plain"", ""optional"": true, ""computed"": true}, ""prefix"": {""type"": ""string"", ""description_kind"": ""plain"", ""optional"": true, ""computed"": true}}, ""block_types"": {""and"": {""nesting_mode"": ""list"", ""block"": {""attributes"": {""object_size_greater_than"": {""type"": ""number"", ""description_kind"": ""plain"", ""optional"": true, ""computed"": true}, ""object_size_less_than"": {""type"": ""number"", ""description_kind"": ""plain"", ""optional"": true, ""computed"": true}, ""prefix"": {""type"": ""string"", ""description_kind"": ""plain"", ""optional"": true, ""computed"": true}, ""tags"": {""type"": [""map"", ""string""], ""description_kind"": ""plain"", ""optional"": true}}, ""description_kind"": ""plain""}}, ""tag"": {""nesting_mode"": ""list"", ""block"": {""attributes"": {""key"": {""type"": ""string"", ""description_kind"": ""plain"", ""required"": true}, ""value"": {""type"": ""string"", ""description_kind"": ""plain"", ""required"": true}}, ""description_kind"": ""plain""}}}, ""description_kind"": ""plain""}}, ""noncurrent_version_expiration"": {""nesting_mode"": ""list"", ""block"": {""attributes"": {""newer_noncurrent_versions"": {""type"": ""number"", ""description_kind"": ""plain"", ""optional"": true, ""computed"": true}, ""noncurrent_days"": {""type"": ""number"", ""description_kind"": ""plain"", ""required"": true}}, ""description_kind"": ""plain""}}, ""noncurrent_version_transition"": {""nesting_mode"": ""set"", ""block"": {""attributes"": {""newer_noncurrent_versions"": {""type"": ""number"", ""description_kind"": ""plain"", ""optional"": true, ""computed"": true}, ""noncurrent_days"": {""type"": ""number"", ""description_kind"": ""plain"", ""required"": true}, ""storage_class"": {""type"": ""string"", ""description_kind"": ""plain"", ""required"": true}}, ""description_kind"": ""plain""}}, ""transition"": {""nesting_mode"": ""set"", ""block"": {""attributes"": {""date"": {""type"": ""string"", ""description_kind"": ""plain"", ""optional"": true}, ""days"": {""type"": ""number"", ""description_kind"": ""plain"", ""optional"": true, ""computed"": true}, ""storage_class"": {""type"": ""string"", ""description_kind"": ""plain"", ""required"": true}}, ""description_kind"": ""plain""}}}, ""description_kind"": ""plain""}}, ""timeouts"": {""nesting_mode"": ""single"", ""block"": {""attributes"": {""create"": {""type"": ""string"", ""description"": ""A string that can be [parsed as a duration](https://pkg.go.dev/time#ParseDuration) consisting of numbers and unit suffixes, such as \""30s\"" or \""2h45m\"". Valid time units are \""s\"" (seconds), \""m\"" (minutes), \""h\"" (hours)."", ""description_kind"": ""plain"", ""optional"": true}, ""update"": {""type"": ""string"", ""description"": ""A string that can be [parsed as a duration](https://pkg.go.dev/time#ParseDuration) consisting of numbers and unit suffixes, such as \""30s\"" or \""2h45m\"". Valid time units are \""s\"" (seconds), \""m\"" (minutes), \""h\"" (hours)."", ""description_kind"": ""plain"", ""optional"": true}}, ""description_kind"": ""plain""}}}, ""matched_block_name"": ""aws_s3_bucket_lifecycle_configuration"", ""matched_block_type"": ""resource""}","","","","aws_s3_bucket_lifecycle_configuration","resource","resource ""aws_s3_bucket"" ""osquery-results"" { #tfsec:ignore:aws-s3-encryption-customer-key tfsec:ignore:aws-s3-enable-bucket-logging tfsec:ignore:aws-s3-enable-versioning
+  bucket = ""${local.prefix}-loadtest-osquery-logs-archive""
+
+  # Allow destroy of non-empty buckets
+  force_destroy = true
+
+  #checkov:skip=CKV_AWS_18:dev env
+  #checkov:skip=CKV_AWS_144:dev env
+  #checkov:skip=CKV_AWS_21:dev env
+}
+
+resource ""aws_s3_bucket_server_side_encryption_configuration"" ""osquery-results"" {
+  bucket = aws_s3_bucket.osquery-results.id
+
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm = ""aws:kms""
+    }
+  }
+}
+
+resource ""aws_s3_bucket_lifecycle_configuration"" ""osquery-results"" {
+  bucket = aws_s3_bucket.osquery-results.id
+
+  rule {
+    id     = ""rule-1""
+    status = ""Enabled""
+    expiration {
+      days = 1
+    }
+  }
+}
+
+resource ""aws_s3_bucket_public_access_block"" ""osquery-results"" {
+  bucket = aws_s3_bucket.osquery-results.id
+
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
+resource ""aws_s3_bucket"" ""osquery-status"" { #tfsec:ignore:aws-s3-encryption-customer-key tfsec:ignore:aws-s3-enable-bucket-logging tfsec:ignore:aws-s3-enable-versioning
+  bucket = ""${local.prefix}-loadtest-osquery-status-archive""
+
+  # Allow destroy of non-empty buckets
+  force_destroy = true
+
+  #checkov:skip=CKV_AWS_18:dev env
+  #checkov:skip=CKV_AWS_144:dev env
+  #checkov:skip=CKV_AWS_21:dev env
+}
+
+resource ""aws_s3_bucket_lifecycle_configuration"" ""osquery-status"" {
+  bucket = aws_s3_bucket.osquery-status.id
+
+  rule {
+    id     = ""rule-1""
+    status = ""Enabled""
+    expiration {
+      days = 1
+    }
+  }
+}
+
+resource ""aws_s3_bucket_server_side_encryption_configuration"" ""osquery-status"" {
+  bucket = aws_s3_bucket.osquery-status.id
+
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm = ""aws:kms""
+    }
+  }
+}
+
+resource ""aws_s3_bucket_public_access_block"" ""osquery-status"" {
+  bucket = aws_s3_bucket.osquery-status.id
+
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
+data ""aws_iam_policy_document"" ""osquery_results_policy_doc"" {
+  statement {
+    effect = ""Allow""
+    actions = [
+      ""s3:AbortMultipartUpload"",
+      ""s3:GetBucketLocation"",
+      ""s3:ListBucket"",
+      ""s3:ListBucketMultipartUploads"",
+      ""s3:PutObject""
+    ]
+    resources = [aws_s3_bucket.osquery-results.arn, ""${aws_s3_bucket.osquery-results.arn}/*""] #tfsec:ignore:aws-iam-no-policy-wildcards
+  }
+}
+
+data ""aws_iam_policy_document"" ""osquery_status_policy_doc"" {
+  statement {
+    effect = ""Allow""
+    actions = [
+      ""s3:AbortMultipartUpload"",
+      ""s3:GetBucketLocation"",
+      ""s3:ListBucket"",
+      ""s3:ListBucketMultipartUploads"",
+      ""s3:PutObject""
+    ]
+    resources = [aws_s3_bucket.osquery-status.arn, ""${aws_s3_bucket.osquery-status.arn}/*""] #tfsec:ignore:aws-iam-no-policy-wildcards
+  }
+}
+
+resource ""aws_iam_policy"" ""firehose-results"" {
+  name   = ""${local.prefix}-osquery_results_firehose_policy""
+  policy = data.aws_iam_policy_document.osquery_results_policy_doc.json
+}
+
+resource ""aws_iam_policy"" ""firehose-status"" {
+  name   = ""${local.prefix}-osquery_status_firehose_policy""
+  policy = data.aws_iam_policy_document.osquery_status_policy_doc.json
+}
+
+resource ""aws_iam_role"" ""firehose-results"" {
+  assume_role_policy = data.aws_iam_policy_document.osquery_firehose_assume_role.json
+}
+
+resource ""aws_iam_role"" ""firehose-status"" {
+  assume_role_policy = data.aws_iam_policy_document.osquery_firehose_assume_role.json
+}
+
+resource ""aws_iam_role_policy_attachment"" ""firehose-results"" {
+  policy_arn = aws_iam_policy.firehose-results.arn
+  role       = aws_iam_role.firehose-results.name
+}
+
+resource ""aws_iam_role_policy_attachment"" ""firehose-status"" {
+  policy_arn = aws_iam_policy.firehose-status.arn
+  role       = aws_iam_role.firehose-status.name
+}
+
+data ""aws_iam_policy_document"" ""osquery_firehose_assume_role"" {
+  statement {
+    effect  = ""Allow""
+    actions = [""sts:AssumeRole""]
+    principals {
+      identifiers = [""firehose.amazonaws.com""]
+      type        = ""Service""
+    }
+  }
+}
+
+resource ""aws_kinesis_firehose_delivery_stream"" ""osquery_results"" {
+  name        = ""${local.prefix}-osquery_results""
+  destination = ""extended_s3""
+
+  extended_s3_configuration {
+    role_arn   = aws_iam_role.firehose-results.arn
+    bucket_arn = aws_s3_bucket.osquery-results.arn
+  }
+}
+
+resource ""aws_kinesis_firehose_delivery_stream"" ""osquery_status"" {
+  name        = ""${local.prefix}-osquery_status""
+  destination = ""extended_s3""
+
+  extended_s3_configuration {
+    role_arn   = aws_iam_role.firehose-status.arn
+    bucket_arn = aws_s3_bucket.osquery-status.arn
+  }
+}
+","132","Unsupported attribute","Schema & Structural Violation"
+"fleetdm__fleet","a0b5b726374b03f5a1cccfe93a5ceee6b56b0365","clones/fleetdm__fleet/infrastructure/loadtesting/terraform","f4bd1fddeef9","4c758e78974c","https://github.com/fleetdm/fleet/blob/a0b5b726374b03f5a1cccfe93a5ceee6b56b0365/infrastructure/loadtesting/terraform/firehose.tf#L54","False","warning","Invalid Attribute Combination","No attribute specified when one (and only one) of [rule[0].filter,rule[0].prefix] is required
+
+This will be an error in a future version of the provider","clones/fleetdm__fleet/infrastructure/loadtesting/terraform/firehose.tf","54","67","54","68","resource","resource aws_s3_bucket_lifecycle_configuration","resource","resource ""aws_s3_bucket_lifecycle_configuration"" ""osquery-status"" {
+  bucket = aws_s3_bucket.osquery-status.id
+
+  rule {
+    id     = ""rule-1""
+    status = ""Enabled""
+    expiration {
+      days = 1
+    }
+  }
+}","54","64","aws_s3_bucket_lifecycle_configuration osquery-status","0","1","1","11","10","0","2","4","0","0","0","2","0","0","2","0","0","0","0","0","0","0","0","aws","5.100.0","{""attributes"": {""bucket"": {""type"": ""string"", ""description_kind"": ""plain"", ""required"": true}, ""expected_bucket_owner"": {""type"": ""string"", ""description_kind"": ""plain"", ""optional"": true, ""computed"": true}, ""id"": {""type"": ""string"", ""description_kind"": ""plain"", ""deprecated"": true, ""computed"": true}, ""transition_default_minimum_object_size"": {""type"": ""string"", ""description_kind"": ""plain"", ""optional"": true, ""computed"": true}}, ""block_types"": {""rule"": {""nesting_mode"": ""list"", ""block"": {""attributes"": {""id"": {""type"": ""string"", ""description_kind"": ""plain"", ""required"": true}, ""prefix"": {""type"": ""string"", ""description_kind"": ""plain"", ""deprecated"": true, ""optional"": true, ""computed"": true}, ""status"": {""type"": ""string"", ""description_kind"": ""plain"", ""required"": true}}, ""block_types"": {""abort_incomplete_multipart_upload"": {""nesting_mode"": ""list"", ""block"": {""attributes"": {""days_after_initiation"": {""type"": ""number"", ""description_kind"": ""plain"", ""optional"": true}}, ""description_kind"": ""plain""}}, ""expiration"": {""nesting_mode"": ""list"", ""block"": {""attributes"": {""date"": {""type"": ""string"", ""description_kind"": ""plain"", ""optional"": true}, ""days"": {""type"": ""number"", ""description_kind"": ""plain"", ""optional"": true, ""computed"": true}, ""expired_object_delete_marker"": {""type"": ""bool"", ""description_kind"": ""plain"", ""optional"": true, ""computed"": true}}, ""description_kind"": ""plain""}}, ""filter"": {""nesting_mode"": ""list"", ""block"": {""attributes"": {""object_size_greater_than"": {""type"": ""number"", ""description_kind"": ""plain"", ""optional"": true, ""computed"": true}, ""object_size_less_than"": {""type"": ""number"", ""description_kind"": ""plain"", ""optional"": true, ""computed"": true}, ""prefix"": {""type"": ""string"", ""description_kind"": ""plain"", ""optional"": true, ""computed"": true}}, ""block_types"": {""and"": {""nesting_mode"": ""list"", ""block"": {""attributes"": {""object_size_greater_than"": {""type"": ""number"", ""description_kind"": ""plain"", ""optional"": true, ""computed"": true}, ""object_size_less_than"": {""type"": ""number"", ""description_kind"": ""plain"", ""optional"": true, ""computed"": true}, ""prefix"": {""type"": ""string"", ""description_kind"": ""plain"", ""optional"": true, ""computed"": true}, ""tags"": {""type"": [""map"", ""string""], ""description_kind"": ""plain"", ""optional"": true}}, ""description_kind"": ""plain""}}, ""tag"": {""nesting_mode"": ""list"", ""block"": {""attributes"": {""key"": {""type"": ""string"", ""description_kind"": ""plain"", ""required"": true}, ""value"": {""type"": ""string"", ""description_kind"": ""plain"", ""required"": true}}, ""description_kind"": ""plain""}}}, ""description_kind"": ""plain""}}, ""noncurrent_version_expiration"": {""nesting_mode"": ""list"", ""block"": {""attributes"": {""newer_noncurrent_versions"": {""type"": ""number"", ""description_kind"": ""plain"", ""optional"": true, ""computed"": true}, ""noncurrent_days"": {""type"": ""number"", ""description_kind"": ""plain"", ""required"": true}}, ""description_kind"": ""plain""}}, ""noncurrent_version_transition"": {""nesting_mode"": ""set"", ""block"": {""attributes"": {""newer_noncurrent_versions"": {""type"": ""number"", ""description_kind"": ""plain"", ""optional"": true, ""computed"": true}, ""noncurrent_days"": {""type"": ""number"", ""description_kind"": ""plain"", ""required"": true}, ""storage_class"": {""type"": ""string"", ""description_kind"": ""plain"", ""required"": true}}, ""description_kind"": ""plain""}}, ""transition"": {""nesting_mode"": ""set"", ""block"": {""attributes"": {""date"": {""type"": ""string"", ""description_kind"": ""plain"", ""optional"": true}, ""days"": {""type"": ""number"", ""description_kind"": ""plain"", ""optional"": true, ""computed"": true}, ""storage_class"": {""type"": ""string"", ""description_kind"": ""plain"", ""required"": true}}, ""description_kind"": ""plain""}}}, ""description_kind"": ""plain""}}, ""timeouts"": {""nesting_mode"": ""single"", ""block"": {""attributes"": {""create"": {""type"": ""string"", ""description"": ""A string that can be [parsed as a duration](https://pkg.go.dev/time#ParseDuration) consisting of numbers and unit suffixes, such as \""30s\"" or \""2h45m\"". Valid time units are \""s\"" (seconds), \""m\"" (minutes), \""h\"" (hours)."", ""description_kind"": ""plain"", ""optional"": true}, ""update"": {""type"": ""string"", ""description"": ""A string that can be [parsed as a duration](https://pkg.go.dev/time#ParseDuration) consisting of numbers and unit suffixes, such as \""30s\"" or \""2h45m\"". Valid time units are \""s\"" (seconds), \""m\"" (minutes), \""h\"" (hours)."", ""description_kind"": ""plain"", ""optional"": true}}, ""description_kind"": ""plain""}}}, ""matched_block_name"": ""aws_s3_bucket_lifecycle_configuration"", ""matched_block_type"": ""resource""}","","","","aws_s3_bucket_lifecycle_configuration","resource","resource ""aws_s3_bucket"" ""osquery-results"" { #tfsec:ignore:aws-s3-encryption-customer-key tfsec:ignore:aws-s3-enable-bucket-logging tfsec:ignore:aws-s3-enable-versioning
+  bucket = ""${local.prefix}-loadtest-osquery-logs-archive""
+
+  # Allow destroy of non-empty buckets
+  force_destroy = true
+
+  #checkov:skip=CKV_AWS_18:dev env
+  #checkov:skip=CKV_AWS_144:dev env
+  #checkov:skip=CKV_AWS_21:dev env
+}
+
+resource ""aws_s3_bucket_server_side_encryption_configuration"" ""osquery-results"" {
+  bucket = aws_s3_bucket.osquery-results.id
+
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm = ""aws:kms""
+    }
+  }
+}
+
+resource ""aws_s3_bucket_lifecycle_configuration"" ""osquery-results"" {
+  bucket = aws_s3_bucket.osquery-results.id
+
+  rule {
+    id     = ""rule-1""
+    status = ""Enabled""
+    expiration {
+      days = 1
+    }
+  }
+}
+
+resource ""aws_s3_bucket_public_access_block"" ""osquery-results"" {
+  bucket = aws_s3_bucket.osquery-results.id
+
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
+resource ""aws_s3_bucket"" ""osquery-status"" { #tfsec:ignore:aws-s3-encryption-customer-key tfsec:ignore:aws-s3-enable-bucket-logging tfsec:ignore:aws-s3-enable-versioning
+  bucket = ""${local.prefix}-loadtest-osquery-status-archive""
+
+  # Allow destroy of non-empty buckets
+  force_destroy = true
+
+  #checkov:skip=CKV_AWS_18:dev env
+  #checkov:skip=CKV_AWS_144:dev env
+  #checkov:skip=CKV_AWS_21:dev env
+}
+
+resource ""aws_s3_bucket_lifecycle_configuration"" ""osquery-status"" {
+  bucket = aws_s3_bucket.osquery-status.id
+
+  rule {
+    id     = ""rule-1""
+    status = ""Enabled""
+    expiration {
+      days = 1
+    }
+  }
+}
+
+resource ""aws_s3_bucket_server_side_encryption_configuration"" ""osquery-status"" {
+  bucket = aws_s3_bucket.osquery-status.id
+
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm = ""aws:kms""
+    }
+  }
+}
+
+resource ""aws_s3_bucket_public_access_block"" ""osquery-status"" {
+  bucket = aws_s3_bucket.osquery-status.id
+
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
+data ""aws_iam_policy_document"" ""osquery_results_policy_doc"" {
+  statement {
+    effect = ""Allow""
+    actions = [
+      ""s3:AbortMultipartUpload"",
+      ""s3:GetBucketLocation"",
+      ""s3:ListBucket"",
+      ""s3:ListBucketMultipartUploads"",
+      ""s3:PutObject""
+    ]
+    resources = [aws_s3_bucket.osquery-results.arn, ""${aws_s3_bucket.osquery-results.arn}/*""] #tfsec:ignore:aws-iam-no-policy-wildcards
+  }
+}
+
+data ""aws_iam_policy_document"" ""osquery_status_policy_doc"" {
+  statement {
+    effect = ""Allow""
+    actions = [
+      ""s3:AbortMultipartUpload"",
+      ""s3:GetBucketLocation"",
+      ""s3:ListBucket"",
+      ""s3:ListBucketMultipartUploads"",
+      ""s3:PutObject""
+    ]
+    resources = [aws_s3_bucket.osquery-status.arn, ""${aws_s3_bucket.osquery-status.arn}/*""] #tfsec:ignore:aws-iam-no-policy-wildcards
+  }
+}
+
+resource ""aws_iam_policy"" ""firehose-results"" {
+  name   = ""${local.prefix}-osquery_results_firehose_policy""
+  policy = data.aws_iam_policy_document.osquery_results_policy_doc.json
+}
+
+resource ""aws_iam_policy"" ""firehose-status"" {
+  name   = ""${local.prefix}-osquery_status_firehose_policy""
+  policy = data.aws_iam_policy_document.osquery_status_policy_doc.json
+}
+
+resource ""aws_iam_role"" ""firehose-results"" {
+  assume_role_policy = data.aws_iam_policy_document.osquery_firehose_assume_role.json
+}
+
+resource ""aws_iam_role"" ""firehose-status"" {
+  assume_role_policy = data.aws_iam_policy_document.osquery_firehose_assume_role.json
+}
+
+resource ""aws_iam_role_policy_attachment"" ""firehose-results"" {
+  policy_arn = aws_iam_policy.firehose-results.arn
+  role       = aws_iam_role.firehose-results.name
+}
+
+resource ""aws_iam_role_policy_attachment"" ""firehose-status"" {
+  policy_arn = aws_iam_policy.firehose-status.arn
+  role       = aws_iam_role.firehose-status.name
+}
+
+data ""aws_iam_policy_document"" ""osquery_firehose_assume_role"" {
+  statement {
+    effect  = ""Allow""
+    actions = [""sts:AssumeRole""]
+    principals {
+      identifiers = [""firehose.amazonaws.com""]
+      type        = ""Service""
+    }
+  }
+}
+
+resource ""aws_kinesis_firehose_delivery_stream"" ""osquery_results"" {
+  name        = ""${local.prefix}-osquery_results""
+  destination = ""extended_s3""
+
+  extended_s3_configuration {
+    role_arn   = aws_iam_role.firehose-results.arn
+    bucket_arn = aws_s3_bucket.osquery-results.arn
+  }
+}
+
+resource ""aws_kinesis_firehose_delivery_stream"" ""osquery_status"" {
+  name        = ""${local.prefix}-osquery_status""
+  destination = ""extended_s3""
+
+  extended_s3_configuration {
+    role_arn   = aws_iam_role.firehose-status.arn
+    bucket_arn = aws_s3_bucket.osquery-status.arn
+  }
+}
+","132","Unsupported attribute","Schema & Structural Violation"
+"fleetdm__fleet","a0b5b726374b03f5a1cccfe93a5ceee6b56b0365","clones/fleetdm__fleet/infrastructure/guardduty/members","0694730715fa","42253d2706ab","https://github.com/fleetdm/fleet/blob/a0b5b726374b03f5a1cccfe93a5ceee6b56b0365/infrastructure/guardduty/members/main.tf#L64","False","error","Invalid index","The given key does not identify an element in this collection value: the given index is greater than or equal to the length of the collection.","clones/fleetdm__fleet/infrastructure/guardduty/members/main.tf","64","47","64","50","locals","locals locals","locals","  region     = split("":"", terraform.workspace)[1]","64","64","locals","3","1","0","1","1","0","1","1","0","1","0","1","0","0","0","0","0","0","0","0","2","0","0","locals","","","","","","locals","locals","terraform {
+  required_providers {
+    aws = {
+      source  = ""hashicorp/aws""
+      version = ""~> 4.10.0""
+    }
+  }
+  backend ""s3"" {
+    bucket               = ""fleet-terraform-state20220408141538466600000002""
+    key                  = ""root/guardduty/members/terraform.tfstate"" # This should be set to account_alias/unique_key/terraform.tfstate
+    workspace_key_prefix = ""root""                                     # This should be set to the account alias
+    region               = ""us-east-2""
+    encrypt              = true
+    kms_key_id           = ""9f98a443-ffd7-4dbe-a9c3-37df89b2e42a""
+    dynamodb_table       = ""tf-remote-state-lock""
+    role_arn             = ""arn:aws:iam::353365949058:role/terraform-root""
+  }
+}
+
+provider ""aws"" {
+  region = local.region
+  alias  = ""security""
+  assume_role {
+    role_arn = ""arn:aws:iam::353365949058:role/admin""
+  }
+  default_tags {
+    tags = {
+      environment = ""guardduty-${terraform.workspace}""
+      terraform   = ""https://github.com/fleetdm/fleet/tree/main/infrastructure/guardduty/members""
+      state       = ""s3://fleet-terraform-state20220408141538466600000002/root/guardduty/members/terraform.tfstate""
+    }
+  }
+}
+
+provider ""aws"" {
+  region = local.region
+  alias  = ""member""
+  assume_role {
+    role_arn = ""arn:aws:iam::${local.account_id}:role/admin""
+  }
+  default_tags {
+    tags = {
+      environment = ""guardduty-${terraform.workspace}""
+      terraform   = ""https://github.com/fleetdm/fleet/tree/main/infrastructure/guardduty/members""
+      state       = ""s3://fleet-terraform-state20220408141538466600000002/root/guardduty/members/terraform.tfstate""
+    }
+  }
+}
+
+provider ""aws"" {
+  region = local.region
+  alias  = ""root""
+  default_tags {
+    tags = {
+      environment = ""guardduty-${terraform.workspace}""
+      terraform   = ""https://github.com/fleetdm/fleet/tree/main/infrastructure/guardduty/members""
+      state       = ""s3://fleet-terraform-state20220408141538466600000002/root/guardduty/members/terraform.tfstate""
+    }
+  }
+}
+
+locals {
+  account_id = split("":"", terraform.workspace)[0]
+  region     = split("":"", terraform.workspace)[1]
+  accounts   = { for i in data.aws_organizations_organization.main.non_master_accounts : i.id => i.email }
+}
+
+data ""aws_organizations_organization"" ""main"" {
+  provider = aws.root
+}
+
+resource ""aws_guardduty_member"" ""member"" {
+  provider                   = aws.security
+  account_id                 = aws_guardduty_detector.member.account_id
+  detector_id                = data.aws_guardduty_detector.security.id
+  email                      = local.accounts[local.account_id]
+  disable_email_notification = true
+  invite                     = true
+  lifecycle {
+    ignore_changes = [email]
+  }
+}
+
+resource ""aws_guardduty_detector"" ""member"" {
+  provider = aws.member
+}
+
+data ""aws_guardduty_detector"" ""security"" {
+  provider = aws.security
+}
+
+data ""aws_caller_identity"" ""security"" {}
+","83","Invalid index","Type & Expression Error"
+"fleetdm__fleet","a0b5b726374b03f5a1cccfe93a5ceee6b56b0365","clones/fleetdm__fleet/infrastructure/loadtesting/terraform/signoz","a27ca067d146","c3c8a014f049","https://github.com/fleetdm/fleet/blob/a0b5b726374b03f5a1cccfe93a5ceee6b56b0365/infrastructure/loadtesting/terraform/signoz/main.tf#L45","False","warning","Deprecated Parameter","The parameter ""dynamodb_table"" is deprecated. Use parameter ""use_lockfile"" instead.","clones/fleetdm__fleet/infrastructure/loadtesting/terraform/signoz/main.tf","45","44","45","45","data","data terraform_remote_state","data","data ""terraform_remote_state"" ""shared_vpc"" {
+  backend = ""s3""
+  config = {
+    bucket               = ""fleet-terraform-state20220408141538466600000002""
+    key                  = ""loadtesting/loadtesting/shared/terraform.tfstate""
+    workspace_key_prefix = ""loadtesting""
+    region               = ""us-east-2""
+    encrypt              = true
+    kms_key_id           = ""9f98a443-ffd7-4dbe-a9c3-37df89b2e42a""
+    dynamodb_table       = ""tf-remote-state-lock""
+    assume_role = {
+      role_arn = ""arn:aws:iam::353365949058:role/terraform-loadtesting""
+    }
+  }
+}","45","59","terraform_remote_state shared_vpc","1","0","0","15","15","0","0","2","0","0","0","8","0","0","0","0","9","2","0","0","0","0","0","terraform","","{""attributes"": {""backend"": {""type"": ""string"", ""description"": ""The remote backend to use, e.g. `remote` or `http`."", ""required"": true}, ""config"": {""type"": ""dynamic"", ""description"": ""The configuration of the remote backend."", ""optional"": true}, ""defaults"": {""type"": ""dynamic"", ""description"": ""Default values for outputs, in case the state file is empty."", ""optional"": true}, ""outputs"": {""type"": ""dynamic"", ""description"": ""An object containing every root-level output in the remote state."", ""computed"": true}, ""workspace"": {""type"": ""string"", ""description"": ""The Terraform workspace to use, if the backend supports workspaces."", ""optional"": true}}, ""block_types"": {}, ""matched_block_name"": ""terraform_remote_state"", ""matched_block_type"": ""data""}","","","","terraform_remote_state","data","terraform {
+  required_version = "">= 1.5""
+
+  required_providers {
+    aws = {
+      source  = ""hashicorp/aws""
+      version = "">= 5.68.0""
+    }
+    helm = {
+      source  = ""hashicorp/helm""
+      version = ""~> 2.11""
+    }
+    kubernetes = {
+      source  = ""hashicorp/kubernetes""
+      version = ""~> 2.23""
+    }
+  }
+
+  backend ""s3"" {
+    bucket               = ""fleet-terraform-state20220408141538466600000002""
+    key                  = ""loadtesting/loadtesting/signoz/terraform.tfstate""
+    workspace_key_prefix = ""loadtesting""
+    region               = ""us-east-2""
+    encrypt              = true
+    kms_key_id           = ""9f98a443-ffd7-4dbe-a9c3-37df89b2e42a""
+    dynamodb_table       = ""tf-remote-state-lock""
+    assume_role = {
+      role_arn = ""arn:aws:iam::353365949058:role/terraform-loadtesting""
+    }
+  }
+}
+
+provider ""aws"" {
+  region = var.aws_region
+  default_tags {
+    tags = {
+      environment = ""loadtest-signoz""
+      terraform   = ""https://github.com/fleetdm/fleet/tree/main/infrastructure/loadtesting/terraform/signoz""
+      workspace   = terraform.workspace
+    }
+  }
+}
+
+# Read shared VPC from remote state
+data ""terraform_remote_state"" ""shared_vpc"" {
+  backend = ""s3""
+  config = {
+    bucket               = ""fleet-terraform-state20220408141538466600000002""
+    key                  = ""loadtesting/loadtesting/shared/terraform.tfstate""
+    workspace_key_prefix = ""loadtesting""
+    region               = ""us-east-2""
+    encrypt              = true
+    kms_key_id           = ""9f98a443-ffd7-4dbe-a9c3-37df89b2e42a""
+    dynamodb_table       = ""tf-remote-state-lock""
+    assume_role = {
+      role_arn = ""arn:aws:iam::353365949058:role/terraform-loadtesting""
+    }
+  }
+}
+
+# Providers for Helm/Kubernetes after cluster is created
+provider ""helm"" {
+  kubernetes {
+    host                   = module.eks.cluster_endpoint
+    cluster_ca_certificate = base64decode(module.eks.cluster_certificate_authority_data)
+    exec {
+      api_version = ""client.authentication.k8s.io/v1beta1""
+      command     = ""aws""
+      args = [
+        ""eks"",
+        ""get-token"",
+        ""--cluster-name"",
+        module.eks.cluster_name,
+        ""--region"",
+        var.aws_region
+      ]
+    }
+  }
+}
+
+provider ""kubernetes"" {
+  host                   = module.eks.cluster_endpoint
+  cluster_ca_certificate = base64decode(module.eks.cluster_certificate_authority_data)
+  exec {
+    api_version = ""client.authentication.k8s.io/v1beta1""
+    command     = ""aws""
+    args = [
+      ""eks"",
+      ""get-token"",
+      ""--cluster-name"",
+      module.eks.cluster_name,
+      ""--region"",
+      var.aws_region
+    ]
+  }
+}
+
+locals {
+  cluster_name = ""signoz-${terraform.workspace}""
+}
+
+# Use shared fleet VPC
+module ""eks"" {
+  source  = ""terraform-aws-modules/eks/aws""
+  version = ""~> 21.0""
+
+  name               = local.cluster_name
+  kubernetes_version = ""1.31""
+
+  endpoint_public_access = true
+
+  vpc_id     = data.terraform_remote_state.shared_vpc.outputs.vpc.vpc_id
+  subnet_ids = data.terraform_remote_state.shared_vpc.outputs.vpc.private_subnets
+
+  # IMPORTANT: Install critical addons BEFORE node group to avoid circular dependency
+  # Nodes need VPC CNI to become Ready, but terraform waits for nodes to be Ready
+  # before creating addons. This causes a deadlock where nodes are stuck NotReady.
+  # Solution: Use addons with before_compute=true to install VPC CNI before node group completes.
+  addons = {
+    vpc-cni = {
+      most_recent    = true
+      before_compute = true
+    }
+    kube-proxy = {
+      most_recent    = true
+      before_compute = true
+    }
+    coredns = {
+      most_recent    = true
+      before_compute = true
+    }
+  }
+
+  # Managed node group
+  eks_managed_node_groups = {
+    default = {
+      min_size       = 1
+      max_size       = 1
+      desired_size   = 1
+      instance_types = [""t3.2xlarge""]
+    }
+  }
+
+  # Enable cluster creator admin access
+  enable_cluster_creator_admin_permissions = true
+
+  # Enable OIDC provider for IRSA (IAM Roles for Service Accounts)
+  enable_irsa = true
+}
+
+# IAM Role for EBS CSI Driver Service Account (IRSA)
+module ""ebs_csi_irsa_role"" {
+  source  = ""terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks""
+  version = ""~> 5.0""
+
+  role_name             = ""${local.cluster_name}-ebs-csi-driver""
+  attach_ebs_csi_policy = true
+
+  oidc_providers = {
+    main = {
+      provider_arn               = module.eks.oidc_provider_arn
+      namespace_service_accounts = [""kube-system:ebs-csi-controller-sa""]
+    }
+  }
+}
+
+# EBS CSI Driver addon with IRSA support
+# This must be created separately to avoid circular dependency with OIDC provider
+resource ""aws_eks_addon"" ""ebs_csi"" {
+  cluster_name             = module.eks.cluster_name
+  addon_name               = ""aws-ebs-csi-driver""
+  addon_version            = data.aws_eks_addon_version.ebs_csi.version
+  service_account_role_arn = module.ebs_csi_irsa_role.iam_role_arn
+
+  depends_on = [
+    module.ebs_csi_irsa_role,
+    module.eks
+  ]
+}
+
+data ""aws_eks_addon_version"" ""ebs_csi"" {
+  addon_name         = ""aws-ebs-csi-driver""
+  kubernetes_version = module.eks.cluster_version
+  most_recent        = true
+}
+
+# Wait for EBS CSI driver to be active
+resource ""time_sleep"" ""wait_for_ebs_csi"" {
+  depends_on = [aws_eks_addon.ebs_csi]
+
+  create_duration = ""60s""
+}
+
+# Create gp3 storage class using EBS CSI driver
+resource ""kubernetes_storage_class_v1"" ""gp3"" {
+  metadata {
+    name = ""gp3""
+    annotations = {
+      ""storageclass.kubernetes.io/is-default-class"" = ""true""
+    }
+  }
+
+  storage_provisioner    = ""ebs.csi.aws.com""
+  reclaim_policy         = ""Delete""
+  allow_volume_expansion = true
+  volume_binding_mode    = ""WaitForFirstConsumer""
+
+  parameters = {
+    type      = ""gp3""
+    encrypted = ""true""
+    fsType    = ""ext4""
+  }
+
+  depends_on = [time_sleep.wait_for_ebs_csi]
+}
+
+# SigNoz via Helm
+resource ""helm_release"" ""signoz"" {
+  name       = ""signoz""
+  repository = ""https://charts.signoz.io""
+  chart      = ""signoz""
+  namespace  = ""signoz""
+  timeout    = 3600 # 60 minutes - allows for worst-case AWS delays during both apply and destroy
+
+  create_namespace = true
+  wait             = true
+  wait_for_jobs    = false
+
+  # OTEL Collector configuration overrides for production stability
+  values = [
+    file(""${path.module}/otel-collector-values.yaml"")
+  ]
+
+  set {
+    name  = ""cloud""
+    value = ""false""
+  }
+
+  set {
+    name  = ""signoz.service.type""
+    value = ""LoadBalancer""
+  }
+
+  # OTLP collector should be internal only (not publicly accessible)
+  set {
+    name  = ""otelCollector.service.type""
+    value = ""LoadBalancer""
+  }
+
+  set {
+    name  = ""otelCollector.service.annotations.service\\.beta\\.kubernetes\\.io/aws-load-balancer-scheme""
+    value = ""internal""
+  }
+
+  # Clickhouse storage configuration
+  set {
+    name  = ""clickhouse.persistence.size""
+    value = ""200Gi""
+  }
+
+  set {
+    name  = ""clickhouse.persistence.storageClass""
+    value = ""gp3""
+  }
+
+  # Zookeeper storage configuration
+  set {
+    name  = ""zookeeper.persistence.storageClass""
+    value = ""gp3""
+  }
+
+  # SigNoz (alertmanager) storage configuration
+  set {
+    name  = ""alertmanager.persistence.storageClass""
+    value = ""gp3""
+  }
+
+  # ClickHouse resource configuration for loadtest
+  # Default 100m CPU and 200Mi memory are way too low for high-volume telemetry
+  set {
+    name  = ""clickhouse.resources.requests.cpu""
+    value = ""2000m""
+  }
+
+  set {
+    name  = ""clickhouse.resources.requests.memory""
+    value = ""4Gi""
+  }
+
+  set {
+    name  = ""clickhouse.resources.limits.cpu""
+    value = ""4000m""
+  }
+
+  set {
+    name  = ""clickhouse.resources.limits.memory""
+    value = ""8Gi""
+  }
+
+  # OTEL Collector resource configuration for loadtest
+  set {
+    name  = ""otelCollector.resources.requests.memory""
+    value = ""8Gi""
+  }
+
+  set {
+    name  = ""otelCollector.resources.limits.memory""
+    value = ""12Gi""
+  }
+
+  set {
+    name  = ""otelCollector.resources.requests.cpu""
+    value = ""1000m""
+  }
+
+  set {
+    name  = ""otelCollector.resources.limits.cpu""
+    value = ""4000m""
+  }
+
+  # Only need 1 replica since we have 1 LoadBalancer endpoint
+  set {
+    name  = ""otelCollector.replicaCount""
+    value = ""1""
+  }
+
+  depends_on = [
+    module.eks,
+    kubernetes_storage_class_v1.gp3
+  ]
+}
+","258","Deprecated Parameters","Provider Evolution"
+"fleetdm__fleet","a0b5b726374b03f5a1cccfe93a5ceee6b56b0365","clones/fleetdm__fleet/infrastructure/loadtesting/terraform/infra","5ace18013232","ec0371cc3e94","https://github.com/fleetdm/fleet/blob/a0b5b726374b03f5a1cccfe93a5ceee6b56b0365/infrastructure/loadtesting/terraform/infra/signoz.tf#L6","False","warning","Deprecated Parameter","The parameter ""dynamodb_table"" is deprecated. Use parameter ""use_lockfile"" instead.","clones/fleetdm__fleet/infrastructure/loadtesting/terraform/infra/signoz.tf","6","40","6","41","data","data terraform_remote_state","data","data ""terraform_remote_state"" ""signoz"" {
+  count   = var.enable_otel ? 1 : 0
+  backend = ""s3""
+  config = {
+    bucket               = ""fleet-terraform-state20220408141538466600000002""
+    key                  = ""loadtesting/loadtesting/signoz/terraform.tfstate""
+    workspace_key_prefix = ""loadtesting""
+    region               = ""us-east-2""
+    encrypt              = true
+    kms_key_id           = ""9f98a443-ffd7-4dbe-a9c3-37df89b2e42a""
+    dynamodb_table       = ""tf-remote-state-lock""
+    assume_role = {
+      role_arn = ""arn:aws:iam::353365949058:role/terraform-loadtesting""
+    }
+  }
+  workspace = terraform.workspace
+}","6","22","terraform_remote_state signoz","5","2","0","17","17","0","2","4","0","0","0","8","0","1","0","0","9","2","0","0","0","0","0","terraform","","{""attributes"": {""backend"": {""type"": ""string"", ""description"": ""The remote backend to use, e.g. `remote` or `http`."", ""required"": true}, ""config"": {""type"": ""dynamic"", ""description"": ""The configuration of the remote backend."", ""optional"": true}, ""defaults"": {""type"": ""dynamic"", ""description"": ""Default values for outputs, in case the state file is empty."", ""optional"": true}, ""outputs"": {""type"": ""dynamic"", ""description"": ""An object containing every root-level output in the remote state."", ""computed"": true}, ""workspace"": {""type"": ""string"", ""description"": ""The Terraform workspace to use, if the backend supports workspaces."", ""optional"": true}}, ""block_types"": {}, ""matched_block_name"": ""terraform_remote_state"", ""matched_block_type"": ""data""}","","","","terraform_remote_state","data","# SigNoz deployment for OpenTelemetry tracing
+# SigNoz is deployed as a separate Terraform root module
+# This reads its outputs via remote state
+
+# Read SigNoz deployment from remote state
+data ""terraform_remote_state"" ""signoz"" {
+  count   = var.enable_otel ? 1 : 0
+  backend = ""s3""
+  config = {
+    bucket               = ""fleet-terraform-state20220408141538466600000002""
+    key                  = ""loadtesting/loadtesting/signoz/terraform.tfstate""
+    workspace_key_prefix = ""loadtesting""
+    region               = ""us-east-2""
+    encrypt              = true
+    kms_key_id           = ""9f98a443-ffd7-4dbe-a9c3-37df89b2e42a""
+    dynamodb_table       = ""tf-remote-state-lock""
+    assume_role = {
+      role_arn = ""arn:aws:iam::353365949058:role/terraform-loadtesting""
+    }
+  }
+  workspace = terraform.workspace
+}
+
+# Outputs from SigNoz remote state
+output ""signoz_cluster_name"" {
+  description = ""SigNoz EKS cluster name""
+  value       = var.enable_otel ? try(data.terraform_remote_state.signoz[0].outputs.cluster_name, ""SigNoz not deployed yet"") : null
+}
+
+output ""signoz_otel_collector_endpoint"" {
+  description = ""Internal OTLP collector endpoint for Fleet""
+  value       = var.enable_otel ? try(data.terraform_remote_state.signoz[0].outputs.otel_collector_endpoint, ""SigNoz not deployed yet"") : null
+}
+
+output ""signoz_configure_kubectl"" {
+  description = ""Command to configure kubectl for SigNoz""
+  value       = var.enable_otel ? try(data.terraform_remote_state.signoz[0].outputs.configure_kubectl, ""SigNoz not deployed yet"") : null
+}
+","29","Deprecated Parameters","Provider Evolution"
+"fleetdm__fleet","a0b5b726374b03f5a1cccfe93a5ceee6b56b0365","clones/fleetdm__fleet/infrastructure/loadtesting/terraform/infra","9c6d58fe6571","34e9f4434b27","https://github.com/fleetdm/fleet/blob/a0b5b726374b03f5a1cccfe93a5ceee6b56b0365/infrastructure/loadtesting/terraform/infra/providers.tf#L42","False","warning","Deprecated Parameter","The parameter ""dynamodb_table"" is deprecated. Use parameter ""use_lockfile"" instead.","clones/fleetdm__fleet/infrastructure/loadtesting/terraform/infra/providers.tf","42","40","42","41","data","data terraform_remote_state","data","data ""terraform_remote_state"" ""shared"" {
+  backend = ""s3""
+  config = {
+    bucket               = ""fleet-terraform-state20220408141538466600000002""
+    key                  = ""loadtesting/loadtesting/shared/terraform.tfstate"" # This should be set to account_alias/unique_key/terraform.tfstate
+    workspace_key_prefix = ""loadtesting""                                      # This should be set to the account alias
+    region               = ""us-east-2""
+    encrypt              = true
+    kms_key_id           = ""9f98a443-ffd7-4dbe-a9c3-37df89b2e42a""
+    dynamodb_table       = ""tf-remote-state-lock""
+    assume_role = {
+      role_arn = ""arn:aws:iam::353365949058:role/terraform-loadtesting""
+    }
+  }
+}","42","56","terraform_remote_state shared","6","0","0","15","15","0","0","2","2","0","0","8","0","0","0","0","9","2","0","0","0","0","0","terraform","","{""attributes"": {""backend"": {""type"": ""string"", ""description"": ""The remote backend to use, e.g. `remote` or `http`."", ""required"": true}, ""config"": {""type"": ""dynamic"", ""description"": ""The configuration of the remote backend."", ""optional"": true}, ""defaults"": {""type"": ""dynamic"", ""description"": ""Default values for outputs, in case the state file is empty."", ""optional"": true}, ""outputs"": {""type"": ""dynamic"", ""description"": ""An object containing every root-level output in the remote state."", ""computed"": true}, ""workspace"": {""type"": ""string"", ""description"": ""The Terraform workspace to use, if the backend supports workspaces."", ""optional"": true}}, ""block_types"": {}, ""matched_block_name"": ""terraform_remote_state"", ""matched_block_type"": ""data""}","","","","terraform_remote_state","data","terraform {
+  required_providers {
+    aws = {
+      source  = ""hashicorp/aws""
+      version = "">= 5.68.0""
+    }
+    docker = {
+      source  = ""kreuzwerker/docker""
+      version = ""3.6.2""
+    }
+    git = {
+      source  = ""metio/git""
+      version = ""2025.10.10""
+    }
+  }
+  backend ""s3"" {
+    bucket               = ""fleet-terraform-state20220408141538466600000002""
+    key                  = ""loadtesting/loadtesting/terraform.tfstate"" # This should be set to account_alias/unique_key/terraform.tfstate
+    workspace_key_prefix = ""loadtesting""                               # This should be set to the account alias
+    region               = ""us-east-2""
+    encrypt              = true
+    kms_key_id           = ""9f98a443-ffd7-4dbe-a9c3-37df89b2e42a""
+    dynamodb_table       = ""tf-remote-state-lock""
+    assume_role = {
+      role_arn = ""arn:aws:iam::353365949058:role/terraform-loadtesting""
+    }
+  }
+}
+
+provider ""aws"" {
+  region = ""us-east-2""
+  default_tags {
+    tags = {
+      environment = ""loadtest""
+      terraform   = ""https://github.com/fleetdm/fleet/tree/main/infrastructure/loadtesting""
+      state       = ""s3://fleet-terraform-state20220408141538466600000002/loadtesting/${terraform.workspace}/loadtesting/loadtesting/terraform.tfstate""
+      workspace   = ""${terraform.workspace}""
+    }
+  }
+}
+
+data ""terraform_remote_state"" ""shared"" {
+  backend = ""s3""
+  config = {
+    bucket               = ""fleet-terraform-state20220408141538466600000002""
+    key                  = ""loadtesting/loadtesting/shared/terraform.tfstate"" # This should be set to account_alias/unique_key/terraform.tfstate
+    workspace_key_prefix = ""loadtesting""                                      # This should be set to the account alias
+    region               = ""us-east-2""
+    encrypt              = true
+    kms_key_id           = ""9f98a443-ffd7-4dbe-a9c3-37df89b2e42a""
+    dynamodb_table       = ""tf-remote-state-lock""
+    assume_role = {
+      role_arn = ""arn:aws:iam::353365949058:role/terraform-loadtesting""
+    }
+  }
+}
+
+provider ""docker"" {
+  # Configuration options
+  registry_auth {
+    address  = ""${data.aws_caller_identity.current.account_id}.dkr.ecr.us-east-2.amazonaws.com""
+    username = data.aws_ecr_authorization_token.token.user_name
+    password = data.aws_ecr_authorization_token.token.password
+  }
+}
+
+provider ""git"" {}
+","62","Deprecated Parameters","Provider Evolution"
