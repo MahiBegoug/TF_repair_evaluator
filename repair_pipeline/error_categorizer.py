@@ -150,65 +150,42 @@ class ErrorCategorizer:
 
 
         # ------------------------------------------------------------------ #
-        # Step 1 – filter problems to only those relevant to this file        #
+        # Step 1 – filter problems to only those relevant to this scope       #
         #                                                                     #
-        # Lookup strategy (most precise → least precise):                    #
-        #   T1: project_name  +  full filename suffix match  (unambiguous)   #
-        #   T2: basename only                                (last resort)    #
+        # If project is available, we load the ENTITY module/project context  #
+        # because Terraform validation returns errors for the whole module.   #
         # ------------------------------------------------------------------ #
-        basename = os.path.basename(original_file)
-        # Normalize absolute path to forward-slash format for suffix comparison
-        norm_original = original_file.replace("\\", "/")
         has_project_col = 'project_name' in self.problems.columns
+        basename = os.path.basename(original_file)
+        norm_original = original_file.replace("\\", "/")
 
         def _full_path_match(prob_filename):
-            """True if the problems.csv relative path is a suffix of original_file."""
             rel = str(prob_filename).replace("\\", "/").lstrip("/")
             return norm_original.endswith(rel)
 
         if project and has_project_col:
-            # T1: same project + exact full-path suffix
+            # BROAD SCOPE: load every error for the project
             project_mask = self.problems['project_name'].astype(str) == str(project)
-            file_problems = self.problems[
-                project_mask &
-                self.problems['filename'].apply(_full_path_match)
-            ]
+            file_problems = self.problems[project_mask]
+            
+            # Fallback if project match returned nothing (unlikely but safe)
             if file_problems.empty:
-                # T2: relax to basename only (same project)
-                file_problems = self.problems[
-                    project_mask &
-                    self.problems['filename'].str.contains(basename, na=False, regex=False)
-                ]
-            if file_problems.empty:
-                # T3: drop project constraint entirely
-                file_problems = self.problems[
-                    self.problems['filename'].str.contains(basename, na=False, regex=False)
-                ]
+                file_problems = self.problems[self.problems['filename'].apply(_full_path_match)]
         else:
-            # No project hint: try full-path first, then basename
-            file_problems = self.problems[
-                self.problems['filename'].apply(_full_path_match)
-            ]
+            # NARROW SCOPE: load only for this specific file
+            file_problems = self.problems[self.problems['filename'].apply(_full_path_match)]
             if file_problems.empty:
-                file_problems = self.problems[
-                    self.problems['filename'].str.contains(basename, na=False, regex=False)
-                ]
-
+                file_problems = self.problems[self.problems['filename'].str.contains(basename, na=False, regex=False)]
 
         # ------------------------------------------------------------------ #
         # Step 2 – build signatures  (must match categorize_errors format)   #
-        #                                                                     #
-        # CRITICAL: use the `block_identifiers` column directly.             #
-        # `block_type`/`impacted_block_type` (e.g. "resource resource") are  #
-        # NOT the same as `block_identifiers` (e.g. "aws_s3_bucket my_name") #
-        # which matches what terraform validate actually emits.               #
         # ------------------------------------------------------------------ #
+        from terraform_validation.extractor import DiagnosticsExtractor
+        
         error_signatures = set()
         baseline_oids = set()
         baseline_specific_oids = set()
         
-        
-        from terraform_validation.extractor import DiagnosticsExtractor
         for _, problem in file_problems.iterrows():
             # Robust normalization for signature
             filename = FileCoordinateResolver.normalize_path(problem.get('filename', ''))
@@ -222,15 +199,16 @@ class ErrorCategorizer:
             # Track OIDs and specific_oids for exact/content matching
             p_oid = problem.get('oid')
             p_spec_oid = problem.get('specific_oid')
-            
-            if p_oid:
-                baseline_oids.add(str(p_oid))
-            if p_spec_oid:
-                baseline_specific_oids.add(str(p_spec_oid))
+            if p_oid: 
+                baseline_oids.add(str(p_oid).strip())
+            if p_spec_oid: 
+                baseline_specific_oids.add(str(p_spec_oid).strip())
 
+        # Update caches
         self.baseline_errors_cache[cache_key] = error_signatures
         self.baseline_oids_cache[cache_key] = baseline_oids
         self.baseline_specific_oids_cache[cache_key] = baseline_specific_oids
+        
         return error_signatures
     
     def get_existing_experiment_errors(self, filename, current_iteration_id, original_problem_oid=None):
