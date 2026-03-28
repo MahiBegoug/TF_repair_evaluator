@@ -314,24 +314,34 @@ class DiagnosticsExtractor:
 
     @staticmethod
     def compute_oid(r: dict) -> str:
-        def _normalize(text: str) -> str:
-            return re.sub(r"\s+", " ", str(text).lower().strip())
+        """
+        Location-based OID: groups all diagnostics at the same
+        physical file location (filename, start line, end line).
+        Matches original benchmark logic.
+        """
+        filename = str(r.get('filename', '')).strip()
+        line_start = str(r.get('line_start', '')).strip()
+        line_end = str(r.get('line_end', '')).strip()
         
-        # OID represents the identity of the error (Location + Content)
-        # We include filename, block, summary, and detail.
-        # Line numbers are excluded for stability against code shifts.
-        idents = str(r.get('block_identifiers', '') or '').strip()
-        summary = _normalize(r.get('summary', '') or '')
-        detail = _normalize(r.get('detail', '') or '')
-        
-        base = f"{r['filename']}|{idents}|{summary}|{detail}"
+        base = f"{filename}|{line_start}|{line_end}"
         return hashlib.sha1(base.encode("utf-8")).hexdigest()[:12]
 
     @staticmethod
     def compute_specific_oid(r: dict) -> str:
+        """
+        Specific OID: uniquely identifies the exact diagnostic
+        by combining file location with the summary and detail text.
+        Matches original benchmark logic.
+        """
+        import re
         def _normalize(text: str) -> str:
             return re.sub(r"\s+", " ", str(text).lower().strip())
+            
+        filename = str(r.get('filename', '')).strip()
+        line_start = str(r.get('line_start', '')).strip()
+        line_end = str(r.get('line_end', '')).strip()
+        summary = _normalize(r.get("summary", ""))
+        detail = _normalize(r.get("detail", ""))
         
-        # Specific OID includes line numbers for exact location parity
-        base = f"{r['filename']}|{r['line_start']}|{r['line_end']}|{_normalize(r['summary'])}|{_normalize(r['detail'])}"
+        base = f"{filename}|{line_start}|{line_end}|{summary}|{detail}"
         return hashlib.sha1(base.encode("utf-8")).hexdigest()[:12]

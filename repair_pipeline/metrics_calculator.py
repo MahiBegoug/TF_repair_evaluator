@@ -21,19 +21,24 @@ class MetricsCalculator:
         self.clones_root = clones_root
         self.error_matcher = error_matcher
         self.problems = problems_dataset
-        # Build an OID -> problem-row dict for O(1) lookup in evaluate_resolution_metrics.
-        # Previously this was an O(n) DataFrame scan on every fix evaluated.
-        self._problems_by_oid = {}
+        # Build lookup indices for both OID types
+        self._problems_by_oid = {}          # Legacy location-based grouping
+        self._problems_by_specific_oid = {} # High-fidelity matching key
         self._original_error_counts = {}
         
-        # Track physical locations to deduplicate module-call echoes identically to the post-fix evaluator
+        # Track physical locations to deduplicate module-call echoes
         seen_physical_locations = {}
         
         if problems_dataset is not None and not problems_dataset.empty:
             for _, row in problems_dataset.iterrows():
-                oid_key = str(row["oid"])
-                if oid_key not in self._problems_by_oid:
+                oid_key = str(row.get("oid", "")).strip()
+                spec_oid_key = str(row.get("specific_oid", "")).strip()
+                
+                # Index by both OIDs for maximum flexibility
+                if oid_key and oid_key not in self._problems_by_oid:
                     self._problems_by_oid[oid_key] = row
+                if spec_oid_key and spec_oid_key not in self._problems_by_specific_oid:
+                    self._problems_by_specific_oid[spec_oid_key] = row
                 
                 # Build block-scoped error count index
                 count_key = (
@@ -136,9 +141,18 @@ class MetricsCalculator:
         line_is_clean = None
         specific_error_fixed = None
         
-        if self._problems_by_oid and "oid" in row:
-            target_oid = str(row["oid"])
-            p_row = self._problems_by_oid.get(target_oid)
+        if self.problems is not None and not self.problems.empty:
+            # 1. Primary Lookup (Specific OID)
+            # Re-calculate specific_oid for the LLM response row to ensure parity
+            from terraform_validation.extractor import DiagnosticsExtractor
+            target_spec_oid = DiagnosticsExtractor.compute_specific_oid(row)
+            
+            p_row = self._problems_by_specific_oid.get(target_spec_oid)
+            
+            # 2. Fallback Lookup (Legacy OID)
+            if p_row is None and "oid" in row:
+                target_oid = str(row["oid"]).strip()
+                p_row = self._problems_by_oid.get(target_oid)
 
             if p_row is not None:
                 # Prepare original error information
@@ -217,6 +231,7 @@ class MetricsCalculator:
         
         return {
             "oid": row.get("oid", ""),
+            "specific_oid": row.get("specific_oid", ""),  # Include explicit OID for better tracking
             "iteration_id": row.get("iteration_id", ""),
             "llm_name": row.get("llm_name", ""),
             "filename": relative_filename,
