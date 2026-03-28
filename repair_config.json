@@ -9,6 +9,6 @@
     "output_dir": "llms_fixes_results",
     "clones_dir": "../TF_validation_reproducer/clones",
     "repair_mode": "block",
-    "use_parallel": false,
+    "use_parallel": true,
     "parallel_workers": 12
 }
