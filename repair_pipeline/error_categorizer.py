@@ -32,8 +32,8 @@ class ErrorCategorizer:
         # Structure: {filename|iteration: {error_signature: {'first_iteration': str, 'iterations': [str]}}}
         self.experiment_errors_cache = {}
     
-    def categorize_errors(self, extracted_rows, original_file, iteration_id,
-                          baseline_errors=None, original_problem_oid=None, project=None):
+    def categorize_errors(self, extracted_rows, original_file, iteration_id, project=None,
+                          baseline_errors=None, original_problem_oid=None):
         """
         Categorize errors as baseline, cross-experiment, or truly new.
         

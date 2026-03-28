@@ -99,6 +99,7 @@ class RepairEvaluator:
                 extracted_rows,
                 original_file,
                 iteration_id,
+                project=project,
                 baseline_errors=baseline_errors,
                 original_problem_oid=original_problem_oid
             )
