@@ -22,20 +22,33 @@ class FileCoordinateResolver:
         self.problems = problems_dataset
         # Build a composite index keyed by (project_name, oid, filename) for O(1) lookup.
         # Falls back gracefully to an oid-only index when the extra columns are absent.
-        self._coord_index = {}      # (project_name, oid, filename) -> (start, end)
-        self._coord_index_oid = {}  # oid -> (start, end)  – fallback
+        self._coord_index = {}          # (project_name, oid, filename) -> (start, end)
+        self._coord_index_oid = {}      # oid -> (start, end)  – fallback
+        self._coord_index_specific = {} # specific_oid -> (start, end) – high-fidelity match
+        
         if problems_dataset is not None:
             required_cols = {"oid", "impacted_block_start_line", "impacted_block_end_line"}
             has_composite = required_cols | {"project_name", "filename"} <= set(problems_dataset.columns)
+            
             for _, row in problems_dataset.iterrows():
-                oid_key = str(row["oid"])
-                coords = (int(row["impacted_block_start_line"]), int(row["impacted_block_end_line"]))
+                oid_key = str(row.get("oid", "")).strip()
+                spec_oid_key = str(row.get("specific_oid", "")).strip()
+                
+                start_line = int(row.get("impacted_block_start_line", -1))
+                end_line = int(row.get("impacted_block_end_line", -1))
+                coords = (start_line, end_line)
+                
+                # High-fidelity specific OID match (highest priority)
+                if spec_oid_key and spec_oid_key not in self._coord_index_specific:
+                    self._coord_index_specific[spec_oid_key] = coords
+                    
                 # Full composite key
-                if has_composite:
+                if has_composite and row.get("project_name") and row.get("filename"):
                     composite_key = (str(row["project_name"]), oid_key, str(row["filename"]))
                     self._coord_index[composite_key] = coords
-                # OID-only fallback (first match wins)
-                if oid_key not in self._coord_index_oid:
+                    
+                # OID-only fallback
+                if oid_key and oid_key not in self._coord_index_oid:
                     self._coord_index_oid[oid_key] = coords
     
     def extract_project_name(self, row):
@@ -74,26 +87,23 @@ class FileCoordinateResolver:
         
         return os.path.normpath(os.path.join(self.clones_root, relative_path))
     
-    def get_block_coordinates_from_problems(self, oid, project_name=None, filename=None):
+    def get_block_coordinates_from_problems(self, oid, project_name=None, filename=None, specific_oid=None):
         """
         Get block coordinates from problems dataset.
-
+        
         Lookup strategy (most precise → least precise):
+          0. Specific OID   – guaranteed 100% hash parity with benchmark.
           1. Composite key  (project_name, oid, filename) – fastest & unambiguous.
-          2. OID-only fallback – used when project_name / filename are not available.
-
-        Args:
-            oid:          Object ID to look up.
-            project_name: (optional) Project name for composite lookup.
-            filename:     (optional) Relative filename for composite lookup.
-
-        Returns:
-            tuple: (start_line, end_line) or (None, None) if not found.
+          2. OID-only fallback.
         """
         if self.problems is None or not oid:
             return None, None
 
         target_oid = str(oid)
+        
+        # --- 0. Specific OID lookup (Highest Parity) ---
+        if specific_oid and str(specific_oid) in self._coord_index_specific:
+            return self._coord_index_specific[str(specific_oid)]
 
         # --- 1. Composite lookup (project_name + oid + filename) ---
         if project_name and filename:
@@ -139,12 +149,17 @@ class FileCoordinateResolver:
             # Get coordinates from problems dataset or fallback to row.
             # Pass project_name + filename alongside OID for the most precise lookup.
             if "oid" in row and pd.notna(row["oid"]):
+                # Calculate specific_oid for high-fidelity lookup
+                from terraform_validation.extractor import DiagnosticsExtractor
+                spec_oid = DiagnosticsExtractor.compute_specific_oid(row)
+                
                 project_name = row.get("project_name") if "project_name" in row else None
                 filename = row.get("filename") if "filename" in row else None
                 start_line, end_line = self.get_block_coordinates_from_problems(
                     row["oid"],
                     project_name=project_name if project_name and pd.notna(project_name) else None,
                     filename=filename if filename and pd.notna(filename) else None,
+                    specific_oid=spec_oid
                 )
             
             # Fallback to row's own coordinates
