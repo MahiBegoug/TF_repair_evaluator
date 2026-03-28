@@ -145,7 +145,6 @@ class ErrorCategorizer:
 
         # Check cache first
         if cache_key in self.baseline_errors_cache:
-                  f"{len(self.baseline_errors_cache[cache_key])} original errors")
             return self.baseline_errors_cache[cache_key]
 
         # If no problems dataset, return empty
@@ -180,7 +179,6 @@ class ErrorCategorizer:
             ]
             if file_problems.empty:
                 # T2: relax to basename only (same project)
-                      f"Falling back to basename='{basename}'.")
                 file_problems = self.problems[
                     project_mask &
                     self.problems['filename'].str.contains(basename, na=False, regex=False)
