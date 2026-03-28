@@ -41,12 +41,12 @@ class MetricsCalculator:
                 if spec_oid_key and spec_oid_key not in self._problems_by_specific_oid:
                     self._problems_by_specific_oid[spec_oid_key] = row
                 
-                # Build block-scoped error count index
+                # Build block-scoped error count index with robust normalization
                 count_key = (
-                    str(row.get("filename", "")).strip(),
+                    FileCoordinateResolver.normalize_path(row.get("filename", "")),
                     str(row.get("block_type", "")).strip(),
                     str(row.get("block_identifiers", "")).strip(),
-                    str(row.get("summary", "")).strip()
+                    str(row.get("summary", "")).strip().lower()
                 )
                 
                 line_start = row.get("line_start", -1)
@@ -192,10 +192,10 @@ class MetricsCalculator:
                     
                     # Get the original density of this error in the block
                     count_key = (
-                        str(p_row.get("filename", "")).strip(),
+                        FileCoordinateResolver.normalize_path(p_row.get("filename", "")),
                         str(p_row.get("block_type", "")).strip(),
                         str(p_row.get("block_identifiers", "")).strip(),
-                        original_summary.strip()
+                        original_summary.strip().lower()
                     )
                     original_count = self._original_error_counts.get(count_key, 1)
 

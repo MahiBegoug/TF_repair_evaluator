@@ -302,6 +302,14 @@ class DiagnosticsExtractor:
         return rows
 
     @staticmethod
+    def normalize_for_oid(text: str) -> str:
+        """Normalize text for consistent hashing (lowercase, strip whitespace/quotes)."""
+        if not text:
+            return ""
+        # Remove common HCL diagnostic noise (quotes, backticks)
+        return str(text).lower().strip().replace('"', '').replace("'", "").replace("`", "")
+
+    @staticmethod
     def compute_oid(r: dict) -> str:
         """
         Location-based OID: groups all diagnostics at the same
@@ -325,14 +333,14 @@ class DiagnosticsExtractor:
         """
         import re
         from repair_pipeline.file_resolver import FileCoordinateResolver
-        def _normalize(text: str) -> str:
-            return re.sub(r"\s+", " ", str(text).lower().strip())
-            
+        
         filename = FileCoordinateResolver.normalize_path(r.get('filename', ''))
         line_start = str(r.get('line_start', '')).strip()
         line_end = str(r.get('line_end', '')).strip()
-        summary = _normalize(r.get("summary", ""))
-        detail = _normalize(r.get("detail", ""))
+        
+        # Consistent normalization for all components
+        summary = DiagnosticsExtractor.normalize_for_oid(r.get("summary", ""))
+        detail = DiagnosticsExtractor.normalize_for_oid(r.get("detail", ""))
         
         base = f"{filename}|{line_start}|{line_end}|{summary}|{detail}"
         return hashlib.sha1(base.encode("utf-8")).hexdigest()[:12]

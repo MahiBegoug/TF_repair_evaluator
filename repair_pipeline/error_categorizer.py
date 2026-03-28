@@ -62,27 +62,22 @@ class ErrorCategorizer:
             iteration_id, 
             original_problem_oid=original_problem_oid
         )
-        
         for error in extracted_rows:
-            # Create signature: use block_identifiers (stable) instead of line numbers
-            # Consistent normalization between baseline and runtime categorization
+            from terraform_validation.extractor import DiagnosticsExtractor
+            
+            # Normalize fields for a stable signature that ignores line shifts and wording noise
             filename = FileCoordinateResolver.normalize_path(error.get('filename', ''))
             block_id = str(error.get('block_identifiers', '') or '').strip()
-            summary = str(error.get('summary', '') or '').strip()
-            detail = str(error.get('detail', '') or '').strip()
+            summary = DiagnosticsExtractor.normalize_for_oid(error.get('summary', ''))
             
-            # Prefer block_identifiers, fallback to line
-            if block_id:
-                sig = f"{filename}|{block_id}|{summary}|{detail}"
-            else:
-                sig = f"{filename}|line_{error.get('line_start')}|{summary}|{detail}"
+            # Stable signature: doesn't include detail/line_start to be resilient to changes
+            stable_sig = f"{filename}|{block_id}|{summary}"
             
-            # 3-WAY CHECK: baseline (by specific_oid, oid, or sig), existing experiments, or truly new
-            # prioritizes specific_oid for high-fidelity content-based matching
+            # 3-WAY CHECK: baseline (by specific_oid, oid, or stable signature), existing experiments, or truly new
             is_originally_baseline = (
                 (error.get('specific_oid') in baseline_specific_oids) or 
                 (error.get('oid') in baseline_oids) or 
-                (sig in baseline_errors)
+                (stable_sig in baseline_errors)
             )
 
             if is_originally_baseline:
@@ -94,7 +89,7 @@ class ErrorCategorizer:
                 error['first_seen_in'] = 'baseline'
                 error['exists_in_iterations'] = ''
                 
-            elif (sig in existing_experiment_errors) or (error.get('specific_oid') in existing_experiment_errors):
+            elif (stable_sig in existing_experiment_errors) or (error.get('specific_oid') in existing_experiment_errors):
                 # Error exists in other iterations (but not baseline)
                 error['is_original_error'] = False
                 error['is_new_error'] = True  # Deprecated - was "not in baseline"
@@ -106,7 +101,7 @@ class ErrorCategorizer:
                 error['introduced_in_this_iteration'] = True  
                 
                 # Get iteration info from cross-experiment cache
-                exp_data = existing_experiment_errors.get(error.get('specific_oid')) or existing_experiment_errors.get(sig)
+                exp_data = existing_experiment_errors.get(error.get('specific_oid')) or existing_experiment_errors.get(stable_sig)
                 error['first_seen_in'] = exp_data['first_iteration']
                 error['exists_in_iterations'] = ','.join(exp_data['iterations'])
                 
@@ -213,20 +208,16 @@ class ErrorCategorizer:
         baseline_specific_oids = set()
         
         
+        from terraform_validation.extractor import DiagnosticsExtractor
         for _, problem in file_problems.iterrows():
-            # Normalize filename for signature using the robust utility
+            # Robust normalization for signature
             filename = FileCoordinateResolver.normalize_path(problem.get('filename', ''))
             block_id = str(problem.get('block_identifiers', '') or '').strip()
-            summary  = str(problem.get('summary', '') or '').strip()
-            detail   = str(problem.get('detail', '') or '').strip()
+            summary  = DiagnosticsExtractor.normalize_for_oid(problem.get('summary', ''))
 
-            if block_id:
-                sig = f"{filename}|{block_id}|{summary}|{detail}"
-            else:
-                # Fallback: use line number when block_identifiers is empty
-                sig = f"{filename}|line_{problem.get('line_start')}|{summary}|{detail}"
-
-            error_signatures.add(sig)
+            # Signature excludes detail/line_start for stability
+            stable_sig = f"{filename}|{block_id}|{summary}"
+            error_signatures.add(stable_sig)
             
             # Track OIDs and specific_oids for exact/content matching
             p_oid = problem.get('oid')
