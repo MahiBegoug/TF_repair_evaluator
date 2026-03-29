@@ -8,3 +8,5 @@ llms_fixes_results/
 llms_fixes_results_test/
 kubespray_refactored_test_report.html
 clones/
+slurm_jobs/
+slurm_logs/
