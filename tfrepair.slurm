@@ -15,35 +15,38 @@
 
 set -euo pipefail
 
-# Prefer running from the repo root (directory containing this script), not the submit directory.
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# IMPORTANT:
+# On many clusters, SLURM copies the batch script to something like:
+#   /var/spool/slurmd/job<id>/slurm_script
+# before executing it. In that case, using BASH_SOURCE[0] to locate the repo
+# root will point at the spool directory, not your repository.
+#
+# The most reliable "repo root" is the directory you submitted from.
 SUBMIT_DIR="${SLURM_SUBMIT_DIR:-$PWD}"
+cd "${SUBMIT_DIR}"
+REPO_DIR="$PWD"
 
 # Resolve config path:
 # - If arg is absolute, use it.
-# - If relative, prefer SUBMIT_DIR (so `sbatch tfrepair.slurm my.json` works from anywhere),
-#   then fall back to SCRIPT_DIR.
+# - If relative, resolve from SUBMIT_DIR (the directory you submitted the job from).
 CONFIG_ARG="${1:-repair_config.json}"
 if [[ "${CONFIG_ARG}" = /* ]]; then
   CONFIG_PATH="${CONFIG_ARG}"
 elif [[ -f "${SUBMIT_DIR}/${CONFIG_ARG}" ]]; then
   CONFIG_PATH="${SUBMIT_DIR}/${CONFIG_ARG}"
-elif [[ -f "${SCRIPT_DIR}/${CONFIG_ARG}" ]]; then
-  CONFIG_PATH="${SCRIPT_DIR}/${CONFIG_ARG}"
 else
   echo "[SLURM] error: config not found: ${CONFIG_ARG}" >&2
-  echo "[SLURM] looked in: ${SUBMIT_DIR}/${CONFIG_ARG} and ${SCRIPT_DIR}/${CONFIG_ARG}" >&2
+  echo "[SLURM] looked in: ${SUBMIT_DIR}/${CONFIG_ARG}" >&2
   exit 2
 fi
 
-# Always run from the repo root so relative paths inside repair_config.json are stable.
-cd "${SCRIPT_DIR}"
+# We are already running from the repo root (SUBMIT_DIR), so relative paths are stable.
 export PYTHONUNBUFFERED=1
 
 echo "[SLURM] job_id=${SLURM_JOB_ID:-N/A}"
 echo "[SLURM] host=$(hostname)"
 echo "[SLURM] submit_dir=${SUBMIT_DIR}"
-echo "[SLURM] repo_dir=${SCRIPT_DIR}"
+echo "[SLURM] repo_dir=${REPO_DIR}"
 echo "[SLURM] pwd=$PWD"
 echo "[SLURM] start=$(date -Is)"
 echo "[SLURM] config=${CONFIG_PATH}"
@@ -64,7 +67,7 @@ if ! command -v "${PYTHON_BIN}" >/dev/null 2>&1; then
 fi
 
 if [[ ! -f "run_repair_pipeline.py" ]]; then
-  echo "[SLURM] error: run_repair_pipeline.py not found in repo_dir=${SCRIPT_DIR}" >&2
+  echo "[SLURM] error: run_repair_pipeline.py not found in repo_dir=${REPO_DIR}" >&2
   exit 4
 fi
 
