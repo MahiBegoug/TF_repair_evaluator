@@ -288,6 +288,12 @@
                                     <strong>Type:</strong> {{ solution.fix_type }}<br>
                                     
                                     <div class="validation-status">
+                                        {% if 'diff_same_exact' in solution._fields and solution.diff_same_exact %}
+                                            <span class="badge badge-secondary">No Code Change</span>
+                                        {% elif 'diff_same_ignore_ws' in solution._fields and solution.diff_same_ignore_ws %}
+                                            <span class="badge badge-secondary">Whitespace-only Change</span>
+                                        {% endif %}
+                                        
                                         {% set line_is_clean = solution.line_is_clean|default(none) %}
                                         {% set new_errors_list = solution.new_errors|default([]) %}
                                         {% set same_line_errors = new_errors_list|selectattr('same_line', 'equalto', true)|list %}
@@ -403,7 +409,13 @@
                                     {% if solution.diff %}
                                         <pre><code class="language-diff">{{ solution.diff|safe }}</code></pre>
                                     {% else %}
-                                        <span class="no-answer">No diff generated</span>
+                                        {% if 'diff_same_exact' in solution._fields and solution.diff_same_exact %}
+                                            <span class="no-answer">No diff (content identical)</span>
+                                        {% elif 'diff_same_ignore_ws' in solution._fields and solution.diff_same_ignore_ws %}
+                                            <span class="no-answer">No diff (whitespace-only change)</span>
+                                        {% else %}
+                                            <span class="no-answer">No diff generated</span>
+                                        {% endif %}
                                     {% endif %}
                                     
                                     <!-- New Errors Section -->
