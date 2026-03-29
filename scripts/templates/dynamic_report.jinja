@@ -288,10 +288,15 @@
                                     <strong>Type:</strong> {{ solution.fix_type }}<br>
                                     
                                     <div class="validation-status">
+                                        {% set badge_err_summary = (solution.original_problem_summary|default(solution.summary|default('')))|string %}
                                         {% if 'diff_same_exact' in solution._fields and solution.diff_same_exact %}
-                                            <span class="badge badge-secondary">No Code Change</span>
+                                            <span class="badge badge-secondary" title="No code change for: {{ badge_err_summary|e }}">
+                                                No Code Change{% if badge_err_summary %}: {{ badge_err_summary|truncate(60, True, '...') }}{% endif %}
+                                            </span>
                                         {% elif 'diff_same_ignore_ws' in solution._fields and solution.diff_same_ignore_ws %}
-                                            <span class="badge badge-secondary">Whitespace-only Change</span>
+                                            <span class="badge badge-secondary" title="Whitespace-only change for: {{ badge_err_summary|e }}">
+                                                Whitespace-only Change{% if badge_err_summary %}: {{ badge_err_summary|truncate(60, True, '...') }}{% endif %}
+                                            </span>
                                         {% endif %}
                                         
                                         {% set line_is_clean = solution.line_is_clean|default(none) %}
