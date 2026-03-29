@@ -325,13 +325,10 @@ class DiagnosticsExtractor:
         Note: This OID is used for "what terraform validate reported at a location"
         and is not guaranteed to match the benchmark problems dataset's OID scheme.
         """
-        # Keep this consistent with the original/legacy location-based OID used by
-        # upstream datasets: sha1(filename|line_start|line_end)[:12].
-        # Expect `filename` to already be normalized elsewhere (forward slashes,
-        # clones/... prefix).
-        filename = str(r.get("filename", ""))
-        line_start = str(r.get("line_start", ""))
-        line_end = str(r.get("line_end", ""))
+        from repair_pipeline.file_resolver import FileCoordinateResolver
+        filename = FileCoordinateResolver.normalize_path(r.get('filename', ''))
+        line_start = str(r.get('line_start', '')).strip()
+        line_end = str(r.get('line_end', '')).strip()
 
         base = f"{filename}|{line_start}|{line_end}"
         return hashlib.sha1(base.encode("utf-8")).hexdigest()[:12]
@@ -343,14 +340,15 @@ class DiagnosticsExtractor:
         by combining file location with the summary and detail text.
         Matches original benchmark logic.
         """
-        # Keep this consistent with the original/legacy specific OID:
-        # sha1(filename|line_start|line_end|norm(summary)|norm(detail))[:12]
-        filename = str(r.get("filename", ""))
-        line_start = str(r.get("line_start", ""))
-        line_end = str(r.get("line_end", ""))
-
+        from repair_pipeline.file_resolver import FileCoordinateResolver
+        
+        filename = FileCoordinateResolver.normalize_path(r.get("filename", ""))
+        line_start = str(r.get("line_start", "")).strip()
+        line_end = str(r.get("line_end", "")).strip()
+        
+        # Consistent normalization for all components
         summary = DiagnosticsExtractor.normalize_for_oid(r.get("summary", ""))
         detail = DiagnosticsExtractor.normalize_for_oid(r.get("detail", ""))
-
+        
         base = f"{filename}|{line_start}|{line_end}|{summary}|{detail}"
         return hashlib.sha1(base.encode("utf-8")).hexdigest()[:12]
