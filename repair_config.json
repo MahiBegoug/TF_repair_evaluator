@@ -14,7 +14,7 @@
     "debug_matching": true,
     "slurm": {
         "job_name": "tfrepair",
-        "time": "08:00:00",
+        "time": "02:00:00",
         "mem": "64G",
         "cpus_per_task": 64,
         "partition": null,

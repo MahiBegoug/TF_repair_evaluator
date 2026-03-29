@@ -9,7 +9,7 @@
 #SBATCH --job-name=tfrepair
 #SBATCH --cpus-per-task=64
 #SBATCH --mem=64G
-#SBATCH --time=08:00:00
+#SBATCH --time=02:00:00
 #SBATCH -o slurm-%j.out
 #SBATCH -e slurm-%j.err
 
