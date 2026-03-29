@@ -15,7 +15,8 @@ from terraform_validation.writer import DiagnosticsWriter
 class RepairEvaluator:
 
     def __init__(self, output_csv="repair_eval_diagnostics.csv", outcomes_csv="repair_outcomes.csv",
-                 clones_root="clones", repair_mode="auto", problems_dataset=None, clear_existing=False):
+                 clones_root="clones", repair_mode="auto", problems_dataset=None, clear_existing=False,
+                 debug_matching: bool | None = None):
         """
         This CSV will contain the diagnostics AFTER each LLM repair.
         And will follow the EXACT SAME format as DiagnosticsWriter.
@@ -31,11 +32,12 @@ class RepairEvaluator:
         self.output_csv = output_csv
         self.clones_root = clones_root
         self.repair_mode = repair_mode
+        self.debug_matching = debug_matching
         self.problems_dataset_path = problems_dataset  # Save path for parallel workers
         self.problems = pd.read_csv(problems_dataset) if problems_dataset and os.path.exists(problems_dataset) else None
         self.error_matcher = ErrorMatchingService(line_tolerance=3)
-        self.file_resolver = FileCoordinateResolver(clones_root=clones_root, problems_dataset=self.problems)
-        self.metrics_calculator = MetricsCalculator(clones_root=clones_root, error_matcher=self.error_matcher, problems_dataset=self.problems)
+        self.file_resolver = FileCoordinateResolver(clones_root=clones_root, problems_dataset=self.problems, debug_matching=debug_matching)
+        self.metrics_calculator = MetricsCalculator(clones_root=clones_root, error_matcher=self.error_matcher, problems_dataset=self.problems, debug_matching=debug_matching)
         self.validation_service = ValidationService(clones_root=clones_root, output_csv=output_csv)
         self.error_categorizer = ErrorCategorizer(clones_root=clones_root, problems_dataset=self.problems, output_csv=output_csv)
 

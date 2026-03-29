@@ -5,12 +5,13 @@ Handles calculation of error metrics and resolution evaluation for the repair pi
 """
 import os
 from repair_pipeline.file_resolver import FileCoordinateResolver
+from repair_pipeline.debug import dprint, is_debug_matching_enabled
 
 
 class MetricsCalculator:
     """Calculates error metrics and evaluates resolution status."""
     
-    def __init__(self, clones_root="clones", error_matcher=None, problems_dataset=None):
+    def __init__(self, clones_root="clones", error_matcher=None, problems_dataset=None, debug_matching: bool | None = None):
         """
         Initialize metrics calculator.
         
@@ -22,6 +23,7 @@ class MetricsCalculator:
         self.clones_root = clones_root
         self.error_matcher = error_matcher
         self.problems = problems_dataset
+        self.debug_matching = is_debug_matching_enabled(debug_matching)
         # Build lookup indices for both OID types
         self._problems_by_oid = {}          # Legacy location-based grouping
         self._problems_by_specific_oid = {} # High-fidelity matching key
@@ -58,6 +60,12 @@ class MetricsCalculator:
                 if line_start not in seen_physical_locations[count_key]:
                     seen_physical_locations[count_key].add(line_start)
                     self._original_error_counts[count_key] = self._original_error_counts.get(count_key, 0) + 1
+
+            dprint(
+                self.debug_matching,
+                f"[DEBUG_MATCH] Baseline indices built: "
+                f"by_specific_oid={len(self._problems_by_specific_oid)}, by_oid={len(self._problems_by_oid)}"
+            )
 
     
     def calculate_error_metrics(self, extracted_rows, original_file, baseline_errors=None, target_oid=None):
@@ -148,13 +156,28 @@ class MetricsCalculator:
             # Re-calculate specific_oid for the LLM response row to ensure parity
             from terraform_validation.extractor import DiagnosticsExtractor
             target_spec_oid = DiagnosticsExtractor.compute_specific_oid(row)
+            dprint(
+                self.debug_matching,
+                f"[DEBUG_MATCH] resolution lookup start oid={row.get('oid')} computed_specific_oid={target_spec_oid} "
+                f"project={row.get('project_name')} filename={FileCoordinateResolver.normalize_path(row.get('filename', ''))} "
+                f"lines={row.get('line_start')}-{row.get('line_end')}"
+            )
             
             p_row = self._problems_by_specific_oid.get(target_spec_oid)
+            dprint(
+                self.debug_matching,
+                f"[DEBUG_MATCH] resolution lookup hit=specific_oid {bool(p_row is not None)} "
+                f"computed_specific_oid={target_spec_oid}"
+            )
             
             # 2. Fallback Lookup (Legacy OID)
             if p_row is None and "oid" in row:
                 target_oid = str(row["oid"]).strip()
                 p_row = self._problems_by_oid.get(target_oid)
+                dprint(
+                    self.debug_matching,
+                    f"[DEBUG_MATCH] resolution lookup hit=oid {bool(p_row is not None)} oid={target_oid}"
+                )
 
             if p_row is not None:
                 # Prepare original error information
@@ -205,6 +228,11 @@ class MetricsCalculator:
                         extracted_rows,
                         fix_context
                     )
+            else:
+                dprint(
+                    self.debug_matching,
+                    f"[DEBUG_MATCH] resolution lookup miss=all oid={row.get('oid')} computed_specific_oid={target_spec_oid}"
+                )
         
         return {
             "line_is_clean": line_is_clean,
@@ -231,7 +259,22 @@ class MetricsCalculator:
         
         # Prioritize OIDs from the baseline problem dataset for consistent tracking
         final_oid = resolution_metrics.get("matched_oid") or row.get("oid", "")
-        final_spec_oid = resolution_metrics.get("matched_specific_oid") or row.get("specific_oid", "")
+        # Always emit a specific_oid when possible. Some LLM response CSVs don't include
+        # `specific_oid`, and some OIDs may be missing from the baseline problems dataset.
+        # In those cases we fall back to computing it from the row itself so downstream
+        # analysis doesn't end up with NaN/empty specific_oid values.
+        computed_spec_oid = ""
+        try:
+            from terraform_validation.extractor import DiagnosticsExtractor
+            computed_spec_oid = DiagnosticsExtractor.compute_specific_oid(row)
+        except Exception:
+            computed_spec_oid = ""
+
+        final_spec_oid = (
+            resolution_metrics.get("matched_specific_oid")
+            or row.get("specific_oid", "")
+            or computed_spec_oid
+        )
         
         return {
             "oid": final_oid,

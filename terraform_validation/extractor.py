@@ -303,11 +303,16 @@ class DiagnosticsExtractor:
 
     @staticmethod
     def normalize_for_oid(text: str) -> str:
-        """Normalize text for consistent hashing (lowercase, strip whitespace/quotes)."""
+        """
+        Normalize text for consistent hashing.
+
+        Important: This MUST match the baseline dataset's OID/specific_oid generation.
+        The benchmark/baseline hashes keep quotes/backticks as part of the diagnostic
+        message text, so we only lowercase + trim whitespace here.
+        """
         if not text:
             return ""
-        # Remove common HCL diagnostic noise (quotes, backticks)
-        return str(text).lower().strip().replace('"', '').replace("'", "").replace("`", "")
+        return str(text).lower().strip()
 
     @staticmethod
     def compute_oid(r: dict) -> str:

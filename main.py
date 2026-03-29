@@ -12,6 +12,16 @@ if __name__ == "__main__":
     parser.add_argument("--problems-dataset", default=None, help="Path to problems dataset for block coordinates")
     parser.add_argument("--parallel", action="store_true", help="Enable parallel evaluation")
     parser.add_argument("--parallel-workers", type=int, default=4, help="Number of parallel workers")
+    parser.add_argument(
+        "--clear-existing",
+        action="store_true",
+        help="Delete existing output/outcomes CSVs before writing (fresh run)"
+    )
+    parser.add_argument(
+        "--debug-matching",
+        action="store_true",
+        help="Print verbose diagnostics about OID/specific_oid matching and block coordinate lookups"
+    )
     
     args = parser.parse_args()
     
@@ -27,7 +37,9 @@ if __name__ == "__main__":
         outcomes_csv=args.outcomes_csv,
         clones_root=clones_dir,
         repair_mode=args.repair_mode,
-        problems_dataset=args.problems_dataset
+        problems_dataset=args.problems_dataset,
+        clear_existing=args.clear_existing,
+        debug_matching=args.debug_matching
     )
     
     evaluator.evaluate_repairs(

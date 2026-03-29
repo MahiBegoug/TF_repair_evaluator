@@ -8,6 +8,16 @@ import sys
 def main():
     parser = argparse.ArgumentParser(description="Run repair pipeline on raw LLM responses")
     parser.add_argument("--config", default="repair_config.json", help="Path to configuration file")
+    parser.add_argument(
+        "--clear-existing",
+        action="store_true",
+        help="Delete existing output/outcomes CSVs before writing (fresh run)"
+    )
+    parser.add_argument(
+        "--debug-matching",
+        action="store_true",
+        help="Print verbose diagnostics about OID/specific_oid matching and block coordinate lookups"
+    )
     args = parser.parse_args()
 
     import json
@@ -29,6 +39,7 @@ def main():
     problems_dataset = config.get("problems_dataset", None)
     use_parallel = config.get("use_parallel", False)
     parallel_workers = config.get("parallel_workers", 4)
+    config_debug_matching = bool(config.get("debug_matching", False))
 
     if not os.path.exists(input_dir):
         print(f"Error: Input directory '{input_dir}' does not exist.")
@@ -85,6 +96,11 @@ def main():
         if use_parallel:
             cmd.append("--parallel")
             cmd.extend(["--parallel-workers", str(parallel_workers)])
+
+        if args.clear_existing:
+            cmd.append("--clear-existing")
+        if args.debug_matching or config_debug_matching:
+            cmd.append("--debug-matching")
 
         try:
             subprocess.run(cmd, check=True)

@@ -6,20 +6,24 @@ Handles file path resolution and block coordinate lookups for the repair pipelin
 import os
 import pandas as pd
 
+from repair_pipeline.debug import dprint, is_debug_matching_enabled
+
 
 class FileCoordinateResolver:
     """Resolves file paths and block coordinates for repairs."""
     
-    def __init__(self, clones_root="clones", problems_dataset=None):
+    def __init__(self, clones_root="clones", problems_dataset=None, debug_matching: bool | None = None):
         """
         Initialize file coordinate resolver.
         
         Args:
             clones_root: Root directory for cloned repositories
             problems_dataset: DataFrame with problem information (optional)
+            debug_matching: If True, print verbose matching diagnostics.
         """
         self.clones_root = clones_root
         self.problems = problems_dataset
+        self.debug_matching = is_debug_matching_enabled(debug_matching)
         # Build a composite index keyed by (project_name, oid, filename) for O(1) lookup.
         # Falls back gracefully to an oid-only index when the extra columns are absent.
         self._coord_index = {}          # (project_name, oid, filename) -> (start, end)
@@ -50,6 +54,14 @@ class FileCoordinateResolver:
                 # OID-only fallback
                 if oid_key and oid_key not in self._coord_index_oid:
                     self._coord_index_oid[oid_key] = coords
+
+            dprint(
+                self.debug_matching,
+                f"[DEBUG_MATCH] Coordinate indices built: "
+                f"specific={len(self._coord_index_specific)}, "
+                f"composite={len(self._coord_index)}, "
+                f"oid_only={len(self._coord_index_oid)}"
+            )
     
     @staticmethod
     def normalize_path(path):
@@ -128,24 +140,55 @@ class FileCoordinateResolver:
             return None, None
 
         target_oid = str(oid)
+        norm_filename = self.normalize_path(filename) if filename else None
         
         # --- 0. Specific OID lookup (Highest Parity) ---
         if specific_oid and str(specific_oid) in self._coord_index_specific:
+            coords = self._coord_index_specific[str(specific_oid)]
+            dprint(
+                self.debug_matching,
+                f"[DEBUG_MATCH] coords hit=specific_oid oid={target_oid} specific_oid={specific_oid} "
+                f"project={project_name} filename={norm_filename} coords={coords}"
+            )
             return self._coord_index_specific[str(specific_oid)]
 
         # --- 1. Composite lookup (project_name + oid + filename) ---
-        if project_name and filename:
-            composite_key = (str(project_name), target_oid, str(filename))
+        if project_name and norm_filename:
+            composite_key = (str(project_name), target_oid, str(norm_filename))
             if composite_key in self._coord_index:
+                coords = self._coord_index[composite_key]
+                dprint(
+                    self.debug_matching,
+                    f"[DEBUG_MATCH] coords hit=composite oid={target_oid} specific_oid={specific_oid} "
+                    f"project={project_name} filename={norm_filename} coords={coords}"
+                )
                 return self._coord_index[composite_key]
             print(f"Warning: No composite match for project='{project_name}', "
-                  f"oid='{target_oid}', filename='{filename}'. Falling back to OID-only.")
+                  f"oid='{target_oid}', filename='{norm_filename}'. Falling back to OID-only.")
+            dprint(
+                self.debug_matching,
+                f"[DEBUG_MATCH] coords miss=composite oid={target_oid} specific_oid={specific_oid} "
+                f"project={project_name} filename={norm_filename} "
+                f"index_sizes(specific={len(self._coord_index_specific)}, composite={len(self._coord_index)}, oid_only={len(self._coord_index_oid)})"
+            )
 
         # --- 2. OID-only fallback ---
         if target_oid in self._coord_index_oid:
+            coords = self._coord_index_oid[target_oid]
+            dprint(
+                self.debug_matching,
+                f"[DEBUG_MATCH] coords hit=oid_only oid={target_oid} specific_oid={specific_oid} "
+                f"project={project_name} filename={norm_filename} coords={coords}"
+            )
             return self._coord_index_oid[target_oid]
 
         print(f"Warning: No match found in problems dataset for OID: {target_oid}")
+        dprint(
+            self.debug_matching,
+            f"[DEBUG_MATCH] coords miss=all oid={target_oid} specific_oid={specific_oid} "
+            f"project={project_name} filename={norm_filename} "
+            f"index_sizes(specific={len(self._coord_index_specific)}, composite={len(self._coord_index)}, oid_only={len(self._coord_index_oid)})"
+        )
         return None, None
     
     def get_fix_content_and_coordinates(self, row, repair_mode="auto"):
@@ -180,6 +223,12 @@ class FileCoordinateResolver:
                 # Calculate specific_oid for high-fidelity lookup
                 from terraform_validation.extractor import DiagnosticsExtractor
                 spec_oid = DiagnosticsExtractor.compute_specific_oid(row)
+                dprint(
+                    self.debug_matching,
+                    f"[DEBUG_MATCH] computed specific_oid for fix row oid={row.get('oid')} specific_oid={spec_oid} "
+                    f"project={row.get('project_name')} filename={self.normalize_path(row.get('filename', ''))} "
+                    f"lines={row.get('line_start')}-{row.get('line_end')}"
+                )
                 
                 project_name = row.get("project_name") if "project_name" in row else None
                 filename = row.get("filename") if "filename" in row else None
