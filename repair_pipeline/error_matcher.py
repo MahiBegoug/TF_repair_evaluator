@@ -124,6 +124,14 @@ class ErrorMatchingService:
         Mathematically handles line shifts and identical sibling errors without relying
         on exact line tracking across iterations.
         """
+        # Optional: include filename in the identity to avoid collisions where the same
+        # (block_type, block_identifiers, summary) appears in multiple files within the module.
+        try:
+            from repair_pipeline.file_resolver import FileCoordinateResolver
+            target_filename = FileCoordinateResolver.normalize_path(original_error_info.get("filename", ""))
+        except Exception:
+            target_filename = str(original_error_info.get("filename", "") or "").strip().replace("\\", "/")
+
         target_id = str(original_error_info.get("block_identifiers", "")).strip()
         target_type = str(original_error_info.get("block_type", "")).strip()
         target_summary = str(original_error_info.get("summary", "")).strip()
@@ -138,13 +146,25 @@ class ErrorMatchingService:
         unique_instances = set()
         
         for error in extracted_errors:
+            # If we know the original file, require the post-fix diagnostic to be in that same file.
+            if target_filename:
+                try:
+                    from repair_pipeline.file_resolver import FileCoordinateResolver
+                    err_filename = FileCoordinateResolver.normalize_path(error.get("filename", ""))
+                except Exception:
+                    err_filename = str(error.get("filename", "") or "").strip().replace("\\", "/")
+                if err_filename != target_filename:
+                    continue
+
             err_id = str(error.get("block_identifiers", "")).strip()
             err_type = str(error.get("block_type", "")).strip()
             err_summary = str(error.get("summary", "")).strip()
 
             if err_id == target_id and err_type == target_type and err_summary == target_summary:
                 line_start = error.get("line_start", -1)
-                unique_instances.add(line_start)
+                # Use (filename, line_start) so identical-looking errors in different files
+                # don't collapse into one instance.
+                unique_instances.add((target_filename, line_start))
                 
         new_count = len(unique_instances)
         

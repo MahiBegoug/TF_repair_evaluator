@@ -41,17 +41,22 @@ def main():
     # Check if this is an Outcome CSV by looking for the primary success flag
     is_outcome_csv = 'line_specific_error_fixed' in fixes_df.columns
 
-    # SAFEGUARD: Filter to valid benchmark OIDs
-    valid_oids = set(problems_df['oid'])
-    if 'oid' in fixes_df.columns:
+    # SAFEGUARD: Filter to valid benchmark OIDs (only safe for Outcome CSVs).
+    # Diagnostics CSVs often use a different `oid` scheme (e.g., location-based)
+    # and should be mapped via `specific_oid` or `original_problem_oid` instead.
+    valid_oids = set(problems_df['oid'].astype(str))
+    if is_outcome_csv and 'oid' in fixes_df.columns:
         original_count = len(fixes_df)
+        fixes_df['oid'] = fixes_df['oid'].astype(str)
         fixes_df = fixes_df[fixes_df['oid'].isin(valid_oids)]
         filtered_count = len(fixes_df)
         if filtered_count < original_count:
             print(f"SAFEGUARD: Filtered out {original_count - filtered_count} rows with OIDs not present in the problems benchmark.")
 
-    # HARDENING Improvement A: Enforce one row = one candidate attempt
-    if 'oid' in fixes_df.columns and 'iteration_id' in fixes_df.columns:
+    # HARDENING Improvement A: Enforce one row = one candidate attempt (Outcome CSV only).
+    # Diagnostics CSVs can legitimately contain multiple rows per iteration (many diagnostics per module),
+    # so deduplicating by (oid, iteration_id) would delete real signals.
+    if is_outcome_csv and 'oid' in fixes_df.columns and 'iteration_id' in fixes_df.columns:
         dups = fixes_df.duplicated(subset=['oid', 'iteration_id'], keep=False)
         if dups.any():
             print(f"WARNING: {dups.sum()} duplicate (oid, iteration_id) rows detected. Keeping only the first occurrence.")
@@ -105,12 +110,51 @@ def main():
         num_iterations = fixes_df['iteration_id'].max() if not fixes_df.empty else 0
         
         existing_diagnostic_set = set()
-        # Fallback uses 'original_problem_oid' to match against 'is_original_error'
-        if 'is_original_error' in fixes_df.columns and 'original_problem_oid' in fixes_df.columns:
-            for _, row in fixes_df[fixes_df['is_original_error'] == True].iterrows():
-                existing_diagnostic_set.add((row['original_problem_oid'], int(row['iteration_id'])))
+        # Prefer mapping via specific_oid -> benchmark oid when possible.
+        # This is necessary because diagnostics `oid` and `original_problem_oid` may be location-based
+        # and not equal to the benchmark problems `oid`.
+        problems_spec_to_oid = {}
+        if 'specific_oid' in problems_df.columns:
+            problems_spec_to_oid = dict(
+                zip(
+                    problems_df['specific_oid'].fillna("").astype(str),
+                    problems_df['oid'].fillna("").astype(str),
+                )
+            )
+
+        if 'is_original_error' in fixes_df.columns:
+            original_mask = fixes_df['is_original_error'].fillna(False).astype(bool)
+            orig_df = fixes_df[original_mask].copy()
+
+            mapped_ok = 0
+            mapped_total = 0
+
+            for _, row in orig_df.iterrows():
+                it = int(row.get('iteration_id', 0))
+
+                mapped_oid = None
+                spec = str(row.get('specific_oid', '') or '').strip()
+                if spec and spec in problems_spec_to_oid:
+                    mapped_oid = problems_spec_to_oid.get(spec)
+
+                # Fallback: if original_problem_oid already happens to be a benchmark oid, accept it.
+                if not mapped_oid:
+                    op = str(row.get('original_problem_oid', '') or '').strip()
+                    if op and op in valid_oids:
+                        mapped_oid = op
+
+                mapped_total += 1
+                if mapped_oid and mapped_oid in valid_oids:
+                    mapped_ok += 1
+                    existing_diagnostic_set.add((mapped_oid, it))
+
+            if mapped_total > 0 and mapped_ok < mapped_total:
+                print(
+                    f"NOTE: Mapped {mapped_ok}/{mapped_total} original-error diagnostic rows to benchmark OIDs. "
+                    f"Unmapped rows are ignored for pass@k (likely non-benchmark diagnostics)."
+                )
         else:
-            print("Error: Diagnostics CSV is missing 'is_original_error' or 'original_problem_oid'. Cannot perform fallback evaluation.")
+            print("Error: Diagnostics CSV is missing 'is_original_error'. Cannot perform fallback evaluation.")
             return
 
         rows = []

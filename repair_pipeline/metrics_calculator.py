@@ -104,17 +104,23 @@ class MetricsCalculator:
             p_row = self._problems_by_oid.get(str(target_oid))
             if p_row is not None:
                 block_scope = {
+                    "filename": FileCoordinateResolver.normalize_path(p_row.get("filename", "")),
                     "type": str(p_row.get("block_type", "")).strip(),
                     "idents": str(p_row.get("block_identifiers", "")).strip()
                 }
-
+        
         if block_scope and block_scope["type"]:
             for er in extracted_rows:
                 # Check if this remaining/new error matches the target block's identity
+                er_filename = FileCoordinateResolver.normalize_path(er.get("filename", ""))
                 er_type = str(er.get("block_type", "")).strip()
                 er_idents = str(er.get("block_identifiers", "")).strip()
                 
-                if er_type == block_scope["type"] and er_idents == block_scope["idents"]:
+                if (
+                    er_filename == block_scope["filename"]
+                    and er_type == block_scope["type"]
+                    and er_idents == block_scope["idents"]
+                ):
                     block_total += 1
                     if er.get('is_original_error', False):
                         block_original += 1
@@ -187,6 +193,8 @@ class MetricsCalculator:
                     original_line = -1
                 
                 original_error_info = {
+                    # Used for safe block-bounded matching when identical identifiers exist in multiple files.
+                    "filename": FileCoordinateResolver.normalize_path(p_row.get("filename", "")),
                     "summary": p_row.get("summary", ""),
                     "block_identifiers": str(p_row.get("block_identifiers", "")).strip(),
                     # block_type distinguishes resource vs data blocks with same identifiers

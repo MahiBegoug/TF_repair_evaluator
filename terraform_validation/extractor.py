@@ -319,15 +319,17 @@ class DiagnosticsExtractor:
     @staticmethod
     def compute_oid(r: dict) -> str:
         """
-        Location-based OID: groups all diagnostics at the same
-        physical file location (filename, start line, end line).
-        Matches original benchmark logic.
+        Location-based OID: groups all diagnostics at the same physical file
+        location (filename, start line, end line).
+
+        Note: This OID is used for "what terraform validate reported at a location"
+        and is not guaranteed to match the benchmark problems dataset's OID scheme.
         """
         from repair_pipeline.file_resolver import FileCoordinateResolver
         filename = FileCoordinateResolver.normalize_path(r.get('filename', ''))
         line_start = str(r.get('line_start', '')).strip()
         line_end = str(r.get('line_end', '')).strip()
-        
+
         base = f"{filename}|{line_start}|{line_end}"
         return hashlib.sha1(base.encode("utf-8")).hexdigest()[:12]
 
