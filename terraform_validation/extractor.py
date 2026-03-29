@@ -308,11 +308,13 @@ class DiagnosticsExtractor:
 
         Important: This MUST match the baseline dataset's OID/specific_oid generation.
         The benchmark/baseline hashes keep quotes/backticks as part of the diagnostic
-        message text, so we only lowercase + trim whitespace here.
+        message text. We lowercase + trim, and collapse all whitespace runs to a
+        single space to avoid spurious mismatches from formatting/newlines.
         """
+        import re
         if not text:
             return ""
-        return str(text).lower().strip()
+        return re.sub(r"\s+", " ", str(text).lower().strip())
 
     @staticmethod
     def compute_oid(r: dict) -> str:

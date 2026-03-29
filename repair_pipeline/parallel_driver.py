@@ -58,19 +58,22 @@ def process_module_repair_tasks(module_tasks, clones_root, repair_mode, evaluato
                 write_to_csv=False,  # main process does all I/O
             )
 
-            error_counts = evaluator._calculate_error_metrics(
-                extracted_rows,
-                original_file,
-                baseline_errors,
-                target_oid=oid,
-            )
-
             resolution_metrics = evaluator._evaluate_resolution_metrics(
                 row,
                 extracted_rows,
                 start_line,
                 end_line,
                 fixed_file_content,
+            )
+
+            # See RepairEvaluator.evaluate_repairs_serial: for block-scoped metrics we must
+            # use the benchmark problems OID when available.
+            target_oid = resolution_metrics.get("matched_oid") or oid
+            error_counts = evaluator._calculate_error_metrics(
+                extracted_rows,
+                original_file,
+                baseline_errors,
+                target_oid=target_oid,
             )
 
             outcome_row = evaluator._create_outcome_row(row, original_file, resolution_metrics, error_counts)
@@ -214,4 +217,3 @@ class ParallelRepairEvaluator:
             f"\n[PARALLEL] Completed in {total_time:.1f}s "
             f"(Average: {total_time / max(1, total_tasks):.2f}s per task)"
         )
-

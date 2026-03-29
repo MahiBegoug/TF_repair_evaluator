@@ -199,21 +199,26 @@ class RepairEvaluator:
                 original_problem_oid=row.get("oid")  # Link new errors to original problem
             )
 
-            # Calculate error counts with categorization and block scoping
-            error_counts = self._calculate_error_metrics(
-                extracted_rows, 
-                original_file, 
-                baseline_errors, 
-                target_oid=row.get("oid")
-            )
-            print(f'[Metrics] Total: {error_counts["total"]}, Original: {error_counts["original"]}, '
-                  f'New to Dataset: {error_counts["new_to_dataset"]}, '
-                  f'Introduced This Iteration: {error_counts["introduced_this_iteration"]}, File: {error_counts["in_file"]}')
-
             # Evaluate if error was resolved
             resolution_metrics = self._evaluate_resolution_metrics(
                 row, extracted_rows, start_line, end_line, fixed_file_content
             )
+
+            # Calculate error counts with categorization and block scoping.
+            #
+            # IMPORTANT: The LLM response CSV's `oid` often does NOT match the benchmark problems `oid`.
+            # Resolution evaluation can match via computed specific_oid and return a benchmark `matched_oid`.
+            # Block-scoped metrics must use that benchmark OID; otherwise block_* metrics remain all zeros.
+            target_oid = resolution_metrics.get("matched_oid") or row.get("oid")
+            error_counts = self._calculate_error_metrics(
+                extracted_rows,
+                original_file,
+                baseline_errors,
+                target_oid=target_oid,
+            )
+            print(f'[Metrics] Total: {error_counts["total"]}, Original: {error_counts["original"]}, '
+                  f'New to Dataset: {error_counts["new_to_dataset"]}, '
+                  f'Introduced This Iteration: {error_counts["introduced_this_iteration"]}, File: {error_counts["in_file"]}')
 
             # Create and save outcome row
             outcome_row = self._create_outcome_row(

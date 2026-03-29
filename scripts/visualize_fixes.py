@@ -43,11 +43,13 @@ def _normalize_text_for_oid(text: str) -> str:
     """
     Match terraform_validation.extractor.DiagnosticsExtractor.normalize_for_oid.
 
-    Important: baseline hashes keep quotes/backticks; we only lowercase + trim.
+    Important: baseline hashes keep quotes/backticks; we lowercase + trim and
+    collapse whitespace runs to a single space.
     """
+    import re
     if not text:
         return ""
-    return str(text).lower().strip()
+    return re.sub(r"\s+", " ", str(text).lower().strip())
 
 
 def compute_specific_oid(row: dict) -> str:
