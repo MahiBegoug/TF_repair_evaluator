@@ -7,9 +7,9 @@
 #   slurm-<jobid>.out / slurm-<jobid>.err in the submit directory.
 
 #SBATCH --job-name=tfrepair
-#SBATCH --cpus-per-task=12
-#SBATCH --mem=16G
-#SBATCH --time=02:00:00
+#SBATCH --cpus-per-task=64
+#SBATCH --mem=64G
+#SBATCH --time=08:00:00
 #SBATCH -o slurm-%j.out
 #SBATCH -e slurm-%j.err
 
