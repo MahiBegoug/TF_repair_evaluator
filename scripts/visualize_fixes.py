@@ -23,6 +23,43 @@ import subprocess
 import tempfile
 
 
+def _normalize_path_for_oid(path: str) -> str:
+    """
+    Match TFRepair path normalization used for oid/specific_oid hashing.
+
+    - Convert backslashes to forward slashes
+    - Strip whitespace
+    - Ensure we keep only the trailing `clones/...` portion if present
+    """
+    if not path:
+        return ""
+    p = str(path).strip().replace("\\", "/")
+    if "clones/" in p:
+        p = "clones/" + p.split("clones/")[-1]
+    return p
+
+
+def _normalize_text_for_oid(text: str) -> str:
+    """
+    Match terraform_validation.extractor.DiagnosticsExtractor.normalize_for_oid.
+
+    Important: baseline hashes keep quotes/backticks; we only lowercase + trim.
+    """
+    if not text:
+        return ""
+    return str(text).lower().strip()
+
+
+def compute_specific_oid(row: dict) -> str:
+    filename = _normalize_path_for_oid(row.get("filename", ""))
+    line_start = str(row.get("line_start", "")).strip()
+    line_end = str(row.get("line_end", "")).strip()
+    summary = _normalize_text_for_oid(row.get("summary", ""))
+    detail = _normalize_text_for_oid(row.get("detail", ""))
+    base = f"{filename}|{line_start}|{line_end}|{summary}|{detail}"
+    return hashlib.sha1(base.encode("utf-8")).hexdigest()[:12]
+
+
 def make_diff(original: str, modified: str) -> str:
     """Generate git-style diff between original and modified content."""
     if not isinstance(original, str):
@@ -114,6 +151,7 @@ def main():
     parser.add_argument("--new-diagnostics", help="Path to new diagnostics CSV (errors introduced by fixes)")
     parser.add_argument("--problems", default="problems/problems.csv", help="Path to problems CSV")
     parser.add_argument("--output", default="fix_report.html", help="Output HTML file")
+    parser.add_argument("--verbose", action="store_true", help="Print verbose processing/debug logs")
     args = parser.parse_args()
 
     # Load CSVs
@@ -140,11 +178,29 @@ def main():
         print("Warning: 'oid' column missing in problems.csv")
         return
 
-    # Merge llm_responses with repair_results (if available) on oid + iteration_id
+    # Merge llm_responses with repair_results (if available)
     if repair_results is not None:
+        # The repair pipeline may output `oid` as the matched baseline oid (for consistent tracking),
+        # which does not necessarily equal the original LLM-response `oid`. `specific_oid` is the
+        # stable join key when hash parity is maintained, so we prefer it when available.
+        if 'specific_oid' not in llm_responses.columns:
+            llm_responses = llm_responses.copy()
+            llm_responses['specific_oid'] = llm_responses.apply(
+                lambda r: compute_specific_oid(r.to_dict()),
+                axis=1
+            )
+
+        if 'specific_oid' in repair_results.columns and 'specific_oid' in llm_responses.columns:
+            join_keys = ['specific_oid', 'iteration_id']
+        else:
+            join_keys = ['oid', 'iteration_id']
+
+        if args.verbose:
+            print(f"Merging repair results on keys: {join_keys}")
+
         df_all = llm_responses.merge(
-            repair_results, 
-            on=['oid', 'iteration_id'], 
+            repair_results,
+            on=join_keys,
             how='left',
             suffixes=('', '_result')
         )
@@ -164,10 +220,12 @@ def main():
             """Get list of new errors introduced by this fix"""
             key = (row['oid'], row['iteration_id'])
             if key not in new_diag_df.groups:
-                print(f"  [DEBUG] Key {key} not found in new_diag groups. Available: {list(new_diag_df.groups.keys())[:3]}")
+                if args.verbose:
+                    print(f"  [DEBUG] Key {key} not found in new_diag groups. Available: {list(new_diag_df.groups.keys())[:3]}")
                 return []
             
-            print(f"  [DEBUG] Processing key {key}, found {len(new_diag_df.get_group(key))} errors")
+            if args.verbose:
+                print(f"  [DEBUG] Processing key {key}, found {len(new_diag_df.get_group(key))} errors")
             
             # Get original error details for filtering
             orig_line_start = row.get('line_start', None)
@@ -209,18 +267,20 @@ def main():
                 # SKIP ORIGINAL ERRORS - they're not "new" errors!
                 # Original errors existed in baseline and shouldn't be shown in "Issues Found After Fix"
                 if error_category == 'original':
-                    print(f"  [SKIP] Original error on line {err.get('line_start')}: {err.get('summary', '')[:50]}...")
+                    if args.verbose:
+                        print(f"  [SKIP] Original error on line {err.get('line_start')}: {err.get('summary', '')[:50]}...")
                     continue
                 
                 err_summary = err.get('summary', '')
                 err_severity = err.get('severity', '')
                 
                 # Debug logging
-                print(f"  [INCLUDE] {error_category.upper()} on line {err.get('line_start')}: {err_summary[:50]}...")
-                if error_category == 'introduced_this_iteration':
-                    print(f"    → This iteration introduced it (first_seen_in: {first_seen_in})")
-                elif error_category == 'exists_in_other_experiments':
-                    print(f"    → Also in iterations: {exists_in_iterations}")
+                if args.verbose:
+                    print(f"  [INCLUDE] {error_category.upper()} on line {err.get('line_start')}: {err_summary[:50]}...")
+                    if error_category == 'introduced_this_iteration':
+                        print(f"    → This iteration introduced it (first_seen_in: {first_seen_in})")
+                    elif error_category == 'exists_in_other_experiments':
+                        print(f"    → Also in iterations: {exists_in_iterations}")
                 
                 result.append({
                     'severity': err_severity if err_severity else 'unknown',
@@ -350,7 +410,7 @@ def main():
             md5=lambda d: hashlib.md5(pickle.dumps(d)).hexdigest()
         ))
     
-    print(f"✅ Done! Report saved to: {args.output}")
+    print(f"[OK] Done! Report saved to: {args.output}")
 
 
 if __name__ == "__main__":
