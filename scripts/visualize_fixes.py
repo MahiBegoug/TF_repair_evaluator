@@ -60,7 +60,15 @@ def compute_specific_oid(row: dict) -> str:
     return hashlib.sha1(base.encode("utf-8")).hexdigest()[:12]
 
 
-def make_diff(original: str, modified: str) -> str:
+def _normalize_for_ws_compare(text: str) -> str:
+    """Whitespace-insensitive comparison helper for 'did anything really change?'."""
+    if not isinstance(text, str):
+        text = "" if text is None else str(text)
+    # Strip all whitespace, keep punctuation/quotes/etc.
+    return "".join(text.split())
+
+
+def make_diff(original: str, modified: str, ignore_whitespace: bool = False) -> str:
     """Generate git-style diff between original and modified content."""
     if not isinstance(original, str):
         original = ""
@@ -80,8 +88,11 @@ def make_diff(original: str, modified: str) -> str:
 
     try:
         # Run git diff with more context to show full blocks
+        cmd = ['git', 'diff', '--no-index', '--unified=10', '--no-color', f_orig_path, f_mod_path]
+        if ignore_whitespace:
+            cmd.insert(3, '--ignore-all-space')
         result = subprocess.run(
-            ['git', 'diff', '--no-index', '--ignore-all-space', '--unified=10', '--no-color', f_orig_path, f_mod_path],
+            cmd,
             capture_output=True,
             text=True,
             encoding='utf-8'
@@ -152,11 +163,16 @@ def main():
     parser.add_argument("--problems", default="problems/problems.csv", help="Path to problems CSV")
     parser.add_argument("--output", default="fix_report.html", help="Output HTML file")
     parser.add_argument("--verbose", action="store_true", help="Print verbose processing/debug logs")
+    parser.add_argument("--ignore-whitespace", action="store_true", help="Ignore all whitespace in diff rendering (git --ignore-all-space)")
     args = parser.parse_args()
 
     # Load CSVs
     print(f"Loading {args.llm_responses}...")
     llm_responses = pd.read_csv(args.llm_responses)
+    # Avoid "nan" showing up in the HTML for free-text columns
+    for c in ["project_name", "filename", "llm_name", "summary", "detail", "fixed_block_content", "fixed_file", "explanation"]:
+        if c in llm_responses.columns:
+            llm_responses[c] = llm_responses[c].fillna("")
     
     repair_results = None
     if args.repair_results:
@@ -381,6 +397,16 @@ def main():
     df_all['original_content'] = diff_data.apply(lambda x: x[0])
     df_all['modified_content'] = diff_data.apply(lambda x: x[1])
     df_all['fix_type'] = diff_data.apply(lambda x: x[2])
+
+    # Flags to explain why a diff may look "empty" to a human reviewer
+    df_all['diff_same_exact'] = df_all.apply(
+        lambda r: (r.get('original_content', '') == r.get('modified_content', '')),
+        axis=1
+    )
+    df_all['diff_same_ignore_ws'] = df_all.apply(
+        lambda r: (_normalize_for_ws_compare(r.get('original_content', '')) == _normalize_for_ws_compare(r.get('modified_content', ''))),
+        axis=1
+    )
     
     # Add original problem detail and summary
     def get_problem_info(row, _problems_unused):
@@ -401,7 +427,7 @@ def main():
     # Generate diffs
     print("Generating diffs...")
     df_all['diff'] = df_all.apply(
-        lambda row: make_diff(row['original_content'], row['modified_content']), 
+        lambda row: make_diff(row['original_content'], row['modified_content'], ignore_whitespace=args.ignore_whitespace),
         axis=1
     )
 

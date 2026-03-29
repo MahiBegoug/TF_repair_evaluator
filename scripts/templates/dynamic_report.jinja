@@ -467,7 +467,7 @@
                                     {% set orig_detail = solution.original_problem_detail|default('') %}
                                     {% if orig_summary or orig_detail %}
                                         <div style="margin-top: 15px; padding: 10px; background-color: #f8f9fa; border-left: 4px solid #6c757d; border-radius: 4px;">
-                                            <strong style="color: #495057;">🐛 Original Problem:</strong>
+                                            <strong style="color: #495057;">Original Problem:</strong>
                                             {% if orig_summary %}
                                                 <div style="margin-top: 5px;">
                                                     <strong>Summary:</strong> {{ orig_summary }}
@@ -482,12 +482,34 @@
                                     {% endif %}
                                     
                                     {% set explanation = solution.explanation|default('') %}
-                                    {% if explanation %}
+                                    {% if explanation and (explanation|string)|lower != 'nan' %}
                                         <div style="margin-top: 15px;">
-                                            <strong>💡 Action:</strong>
+                                            <strong>Action:</strong>
                                             <blockquote>{{ explanation|e }}</blockquote>
                                         </div>
                                     {% endif %}
+
+                                    {% if 'diff_same_exact' in solution._fields and solution.diff_same_exact %}
+                                        <div style="margin-top: 10px; font-size: 0.9em; color: #666;">
+                                            Note: LLM output matches the original content (no change).
+                                        </div>
+                                    {% elif 'diff_same_ignore_ws' in solution._fields and solution.diff_same_ignore_ws %}
+                                        <div style="margin-top: 10px; font-size: 0.9em; color: #666;">
+                                            Note: Only whitespace changed; enable whitespace-sensitive diffs to see it.
+                                        </div>
+                                    {% endif %}
+
+                                    <details style="margin-top: 12px;">
+                                        <summary style="cursor: pointer; color: #0969da;">Show Original and Modified Content</summary>
+                                        <div style="margin-top: 10px;">
+                                            <div style="font-weight: 600; margin-bottom: 6px;">Original</div>
+                                            <pre><code class="language-hcl">{{ solution.original_content|e }}</code></pre>
+                                        </div>
+                                        <div style="margin-top: 10px;">
+                                            <div style="font-weight: 600; margin-bottom: 6px;">Modified</div>
+                                            <pre><code class="language-hcl">{{ solution.modified_content|e }}</code></pre>
+                                        </div>
+                                    </details>
                                 </td>
                             </tr>
                         {% endfor %}
