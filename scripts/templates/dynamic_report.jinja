@@ -276,7 +276,13 @@
                                     <strong>{{ solution.llm_name|e }}</strong><br>
                                     <span style="font-size: 0.85em; color: #666;">
                                         Iteration: {{ solution.iteration_id }}<br>
-                                        OID: {{ solution.oid[:12] }}...
+                                        OID (input): {{ solution.oid[:12] }}...<br>
+                                        {% if 'oid_result' in solution._fields and solution.oid_result %}
+                                            OID (baseline): {{ solution.oid_result[:12] }}...<br>
+                                        {% endif %}
+                                        {% if 'specific_oid' in solution._fields and solution.specific_oid %}
+                                            Specific OID: {{ solution.specific_oid[:12] }}...
+                                        {% endif %}
                                     </span>
                                     <br><br>
                                     <strong>Type:</strong> {{ solution.fix_type }}<br>

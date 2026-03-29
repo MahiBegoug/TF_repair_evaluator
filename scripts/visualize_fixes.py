@@ -170,13 +170,17 @@ def main():
     
     print(f"Loading {args.problems}...")
     problems = pd.read_csv(args.problems)
-    
-    # Set OID as index for problems for faster lookup
-    if 'oid' in problems.columns:
-        problems.set_index('oid', inplace=True)
-    else:
+
+    if 'oid' not in problems.columns:
         print("Warning: 'oid' column missing in problems.csv")
         return
+
+    # Build indices for lookups. In TFRepair, the LLM input `oid` is not always the same
+    # as the baseline dataset `oid`, so prefer joining/lookup by `specific_oid` when present.
+    problems_by_oid = problems.set_index('oid', drop=False)
+    problems_by_specific_oid = None
+    if 'specific_oid' in problems.columns:
+        problems_by_specific_oid = problems.set_index('specific_oid', drop=False)
 
     # Merge llm_responses with repair_results (if available)
     if repair_results is not None:
@@ -324,13 +328,38 @@ def main():
     # Add original content and generate diffs
     print("Preparing content for diffs...")
     
-    def get_diff_data(row, problems_df):
-        oid = row['oid']
-        if oid not in problems_df.index:
-            return "OID not found", "", "Error"
-            
+    def _select_problem_row(row):
+        """
+        Resolve the baseline problem row to use for original content.
+
+        Prefer specific_oid (stable) and then fall back to baseline oid (oid_result),
+        and finally to the input oid.
+        """
+        spec = row.get('specific_oid', None)
+        if problems_by_specific_oid is not None and spec is not None and spec in problems_by_specific_oid.index:
+            pr = problems_by_specific_oid.loc[spec]
+            # Handle any accidental duplicates by picking the first.
+            if isinstance(pr, pd.DataFrame):
+                return pr.iloc[0]
+            return pr
+
+        oid_result = row.get('oid_result', None)
+        if oid_result is not None and oid_result in problems_by_oid.index:
+            return problems_by_oid.loc[oid_result]
+
+        oid = row.get('oid', None)
+        if oid is not None and oid in problems_by_oid.index:
+            return problems_by_oid.loc[oid]
+
+        return None
+
+    def get_diff_data(row, _problems_unused):
+        p_row = _select_problem_row(row)
+        if p_row is None:
+            return "Problem not found", "", "Error"
+
         # Get original content from problems
-        original = str(problems_df.loc[oid, 'impacted_block_content']) if 'impacted_block_content' in problems_df.columns else ""
+        original = str(p_row.get('impacted_block_content', "")) if 'impacted_block_content' in p_row else ""
         
         # Get modified content from LLM responses
         if 'fixed_block_content' in row and pd.notna(row['fixed_block_content']):
@@ -339,7 +368,7 @@ def main():
         elif 'fixed_file' in row and pd.notna(row['fixed_file']):
             modified = str(row['fixed_file'])
             fix_type = "Full File"
-            original = str(problems_df.loc[oid, 'file_content']) if 'file_content' in problems_df.columns else ""
+            original = str(p_row.get('file_content', "")) if 'file_content' in p_row else ""
         else:
             modified = ""
             fix_type = "No Fix"
@@ -354,14 +383,14 @@ def main():
     df_all['fix_type'] = diff_data.apply(lambda x: x[2])
     
     # Add original problem detail and summary
-    def get_problem_info(row, problems_df):
+    def get_problem_info(row, _problems_unused):
         """Get original problem detail and summary"""
-        oid = row['oid']
-        if oid not in problems_df.index:
+        p_row = _select_problem_row(row)
+        if p_row is None:
             return "", ""
-        
-        detail = str(problems_df.loc[oid, 'detail']) if 'detail' in problems_df.columns and pd.notna(problems_df.loc[oid, 'detail']) else ""
-        summary = str(problems_df.loc[oid, 'summary']) if 'summary' in problems_df.columns and pd.notna(problems_df.loc[oid, 'summary']) else ""
+
+        detail = str(p_row.get('detail', '')) if 'detail' in p_row and pd.notna(p_row.get('detail', None)) else ""
+        summary = str(p_row.get('summary', '')) if 'summary' in p_row and pd.notna(p_row.get('summary', None)) else ""
         
         return detail, summary
     
