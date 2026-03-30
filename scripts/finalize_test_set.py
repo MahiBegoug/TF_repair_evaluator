@@ -38,5 +38,5 @@ print(f"Created {output_file} with {len(subset_df)} rows.")
 # Also update problems dataset to include THESE OIDs
 problems_df = pd.read_csv("problems/problems.csv")
 benchmark_df = problems_df[problems_df['oid'].isin(selected_oids)]
-benchmark_df.to_csv("problems/benchmark_unique_diagnostics.csv", index=False)
-print(f"Created problems/benchmark_unique_diagnostics.csv with {len(benchmark_df)} unique problems.")
+benchmark_df.to_csv("problems/sub_set_problems_evaluated_in_llms.csv", index=False)
+print(f"Created problems/sub_set_problems_evaluated_in_llms.csv with {len(benchmark_df)} unique problems.")
