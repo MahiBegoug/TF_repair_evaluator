@@ -234,13 +234,23 @@ def main():
     # Process new diagnostics if available
     if new_diagnostics is not None:
         print("Processing new diagnostics...")
-        # Group new diagnostics by original_problem_oid + iteration_id
-        # This links new errors back to the fix that caused them
-        new_diag_grouped = new_diagnostics.groupby(['original_problem_oid', 'iteration_id'])
+        # Group new diagnostics by the most specific key available.
+        # `original_problem_oid` is location-based and can collide when multiple diagnostics share
+        # the same file location. `original_problem_specific_oid` avoids those collisions.
+        if 'original_problem_specific_oid' in new_diagnostics.columns:
+            new_diag_group_cols = ['original_problem_specific_oid', 'iteration_id']
+        else:
+            new_diag_group_cols = ['original_problem_oid', 'iteration_id']
+
+        # This links new errors back to the fix attempt that caused them
+        new_diag_grouped = new_diagnostics.groupby(new_diag_group_cols)
         
         def get_new_errors(row, problems_df, new_diag_df):
             """Get list of new errors introduced by this fix"""
-            key = (row['oid'], row['iteration_id'])
+            if 'original_problem_specific_oid' in new_diagnostics.columns and 'specific_oid' in row:
+                key = (row['specific_oid'], row['iteration_id'])
+            else:
+                key = (row['oid'], row['iteration_id'])
             if key not in new_diag_df.groups:
                 if args.verbose:
                     print(f"  [DEBUG] Key {key} not found in new_diag groups. Available: {list(new_diag_df.groups.keys())[:3]}")

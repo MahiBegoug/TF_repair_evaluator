@@ -101,7 +101,19 @@ class RepairEvaluator:
         """Extract fix content and coordinates - delegates to file_resolver."""
         return self.file_resolver.get_fix_content_and_coordinates(row, self.repair_mode)
     
-    def _apply_and_validate(self, original_file, project, fixed_content, start_line, end_line, iteration_id, baseline_errors=None, original_problem_oid=None, write_to_csv=True):
+    def _apply_and_validate(
+        self,
+        original_file,
+        project,
+        fixed_content,
+        start_line,
+        end_line,
+        iteration_id,
+        baseline_errors=None,
+        original_problem_oid=None,
+        original_problem_specific_oid=None,
+        write_to_csv=True,
+    ):
         """Apply fix, run terraform validate, and extract diagnostics with error categorization."""
         
         # Use ValidationService to run validation and extract diagnostics
@@ -122,7 +134,8 @@ class RepairEvaluator:
                 iteration_id,
                 project=project,
                 baseline_errors=baseline_errors,
-                original_problem_oid=original_problem_oid
+                original_problem_oid=original_problem_oid,
+                original_problem_specific_oid=original_problem_specific_oid,
             )
         else:
             # No baseline provided - mark as unknown
@@ -140,7 +153,8 @@ class RepairEvaluator:
                 extracted_rows, 
                 self.output_csv, 
                 iteration_id=iteration_id, 
-                original_problem_oid=original_problem_oid
+                original_problem_oid=original_problem_oid,
+                original_problem_specific_oid=original_problem_specific_oid,
             )
 
         return extracted_rows
@@ -182,6 +196,11 @@ class RepairEvaluator:
     def evaluate_repairs_serial(self, df):
         """Original serial implementation of evaluate_repairs."""
         for _, row in df.iterrows():
+            # Diagnostic-granularity identifier for the input row (stable join key across datasets).
+            # Needed because location-based `oid` can collide for multiple distinct diagnostics.
+            from terraform_validation.extractor import DiagnosticsExtractor
+            input_specific_oid = row.get("specific_oid") or DiagnosticsExtractor.compute_specific_oid(row)
+
             # Extract project name
             project = self._extract_project_name(row)
             if not project:
@@ -215,7 +234,8 @@ class RepairEvaluator:
                 original_file, project, fixed_file_content, 
                 start_line, end_line, row.get("iteration_id"),
                 baseline_errors=baseline_errors,  # Pass baseline for categorization
-                original_problem_oid=row.get("oid")  # Link new errors to original problem
+                original_problem_oid=row.get("oid"),  # Link new errors to original problem (location oid)
+                original_problem_specific_oid=input_specific_oid,
             )
 
             # Evaluate if error was resolved

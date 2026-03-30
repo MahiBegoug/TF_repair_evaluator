@@ -14,6 +14,7 @@ class DiagnosticsWriter:
         "oid",
         "specific_oid",
         "original_problem_oid",
+        "original_problem_specific_oid",
         "iteration_id",
         "severity",
         "summary",
@@ -40,7 +41,13 @@ class DiagnosticsWriter:
     ]
 
     @staticmethod
-    def write_rows(rows, csv_path, iteration_id=None, original_problem_oid=None):
+    def write_rows(
+        rows,
+        csv_path,
+        iteration_id=None,
+        original_problem_oid=None,
+        original_problem_specific_oid=None,
+    ):
         """
         Appends diagnostic rows to a CSV file.
         
@@ -49,6 +56,7 @@ class DiagnosticsWriter:
             csv_path: Path to the output CSV
             iteration_id: Optional iteration identifier
             original_problem_oid: Optional OID of original problem
+            original_problem_specific_oid: Optional specific_oid of original problem
         """
         if not rows:
             return
@@ -62,6 +70,8 @@ class DiagnosticsWriter:
                 row_copy["iteration_id"] = iteration_id
             if original_problem_oid is not None:
                 row_copy["original_problem_oid"] = original_problem_oid
+            if original_problem_specific_oid is not None:
+                row_copy["original_problem_specific_oid"] = original_problem_specific_oid
                 
             enriched_rows.append(row_copy)
 

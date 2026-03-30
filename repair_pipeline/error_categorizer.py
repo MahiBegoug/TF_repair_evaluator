@@ -33,8 +33,16 @@ class ErrorCategorizer:
         # Structure: {filename|iteration: {error_signature: {'first_iteration': str, 'iterations': [str]}}}
         self.experiment_errors_cache = {}
     
-    def categorize_errors(self, extracted_rows, original_file, iteration_id, project=None,
-                          baseline_errors=None, original_problem_oid=None):
+    def categorize_errors(
+        self,
+        extracted_rows,
+        original_file,
+        iteration_id,
+        project=None,
+        baseline_errors=None,
+        original_problem_oid=None,
+        original_problem_specific_oid=None,
+    ):
         """
         Categorize errors as baseline, cross-experiment, or truly new.
         
@@ -44,6 +52,7 @@ class ErrorCategorizer:
             iteration_id: Current iteration identifier
             baseline_errors: Set of baseline error signatures (optional, will be computed if None)
             original_problem_oid: Filter cross-experiment checks by specific problem OID (optional)
+            original_problem_specific_oid: Filter cross-experiment checks by specific diagnostic (optional)
             project: Project name for tighter baseline scoping (optional)
             
         Returns:
@@ -60,7 +69,8 @@ class ErrorCategorizer:
         existing_experiment_errors = self.get_existing_experiment_errors(
             original_file, 
             iteration_id, 
-            original_problem_oid=original_problem_oid
+            original_problem_oid=original_problem_oid,
+            original_problem_specific_oid=original_problem_specific_oid,
         )
         for error in extracted_rows:
             from terraform_validation.extractor import DiagnosticsExtractor
@@ -211,7 +221,13 @@ class ErrorCategorizer:
         
         return error_signatures
     
-    def get_existing_experiment_errors(self, filename, current_iteration_id, original_problem_oid=None):
+    def get_existing_experiment_errors(
+        self,
+        filename,
+        current_iteration_id,
+        original_problem_oid=None,
+        original_problem_specific_oid=None,
+    ):
         """
         Get errors from previous iterations (cross-experiment tracking).
         
@@ -219,12 +235,13 @@ class ErrorCategorizer:
             filename: File to check
             current_iteration_id: Current iteration to exclude from check
             original_problem_oid: Filter by specific problem OID (optional, for tighter scoping)
+            original_problem_specific_oid: Filter by specific diagnostic (optional, highest fidelity)
             
         Returns:
             dict: {signature: {'first_iteration': str, 'iterations': [str]}}
         """
         # Check cache first
-        cache_key = f"{filename}|{current_iteration_id}|{original_problem_oid}"
+        cache_key = f"{filename}|{current_iteration_id}|{original_problem_oid}|{original_problem_specific_oid}"
         if cache_key in self.experiment_errors_cache:
             print(f"[CROSS-EXP] Using cached experiment errors for {os.path.basename(filename)}")
             return self.experiment_errors_cache[cache_key]
@@ -248,7 +265,14 @@ class ErrorCategorizer:
             )
             
             # If OID provided, filter by it to scope 'existing' errors to this problem only
-            if original_problem_oid:
+            # Prefer specific_oid scoping when available because location-oids can collide.
+            if original_problem_specific_oid and 'original_problem_specific_oid' in diagnostics_df.columns:
+                condition &= (
+                    diagnostics_df['original_problem_specific_oid'].astype(str)
+                    == str(original_problem_specific_oid)
+                )
+                print(f"[CROSS-EXP] Filtering errors for Problem specific_oid: {original_problem_specific_oid}")
+            elif original_problem_oid and 'original_problem_oid' in diagnostics_df.columns:
                 # Ensure we match string to string
                 condition &= (diagnostics_df['original_problem_oid'].astype(str) == str(original_problem_oid))
                 print(f"[CROSS-EXP] Filtering errors for Problem OID: {original_problem_oid}")

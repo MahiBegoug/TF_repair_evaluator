@@ -34,6 +34,9 @@ def process_module_repair_tasks(module_tasks, clones_root, repair_mode, evaluato
 
         iteration_id = row.get("iteration_id")
         oid = row.get("oid")
+        # Diagnostic-granularity identifier for the input row (stable join key across datasets).
+        from terraform_validation.extractor import DiagnosticsExtractor
+        original_problem_specific_oid = row.get("specific_oid") or DiagnosticsExtractor.compute_specific_oid(row)
 
         backup_path = None
         try:
@@ -55,6 +58,7 @@ def process_module_repair_tasks(module_tasks, clones_root, repair_mode, evaluato
                 iteration_id,
                 baseline_errors=baseline_errors,
                 original_problem_oid=oid,
+                original_problem_specific_oid=original_problem_specific_oid,
                 write_to_csv=False,  # main process does all I/O
             )
 
@@ -84,6 +88,7 @@ def process_module_repair_tasks(module_tasks, clones_root, repair_mode, evaluato
                     "outcome_row": outcome_row,
                     "extracted_rows": extracted_rows,
                     "oid": oid,
+                    "original_problem_specific_oid": original_problem_specific_oid,
                     "iteration": iteration_id,
                     "module": os.path.dirname(original_file) if original_file else None,
                 }
@@ -195,6 +200,7 @@ class ParallelRepairEvaluator:
                                 self.parent.output_csv,
                                 iteration_id=res.get("iteration"),
                                 original_problem_oid=res.get("oid"),
+                                original_problem_specific_oid=res.get("original_problem_specific_oid"),
                             )
 
                         pd.DataFrame(

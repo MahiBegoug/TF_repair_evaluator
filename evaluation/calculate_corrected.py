@@ -8,6 +8,9 @@ def pass_at_k(n, c, k):
     """
     Unbiased estimator for pass@k. 
     """
+    # No attempts observed for this problem.
+    if n <= 0:
+        return 0.0
     if n - c < k:
         return 1.0
 
@@ -23,6 +26,12 @@ def main():
     parser.add_argument("--problems-csv", required=True, help="Path to problems CSV")
     parser.add_argument("--fixes-csv", required=True, help="Path to fixes/outcomes CSV")
     parser.add_argument("--k-values", nargs="+", type=int, default=[1, 5, 10], help="Values of k")
+    parser.add_argument(
+        "--group-by",
+        choices=["auto", "oid", "benchmark_oid", "specific_oid"],
+        default="auto",
+        help="Which column to treat as the problem identifier for pass@k (default: auto).",
+    )
     parser.add_argument("--save-to", help="Path to save results")
     args = parser.parse_args()
 
@@ -62,17 +71,48 @@ def main():
                 best_col = col
         return best_col or "oid"
 
-    # SAFEGUARD: Filter to valid benchmark OIDs (only safe for Outcome CSVs).
-    # Diagnostics CSVs often use a different `oid` scheme (e.g., location-based)
-    # and should be mapped via `specific_oid` or `original_problem_oid` instead.
-    valid_oids = set(problems_df['oid'].astype(str))
-    eval_oid_col = _choose_eval_oid_col(fixes_df, valid_oids) if is_outcome_csv else "oid"
+    # Determine which key to evaluate on.
+    # - fixes_key_col is the column we read from the fixes/outcomes CSV.
+    # - problems_key_col is the column we read from the problems CSV to define the evaluation set.
+    if is_outcome_csv:
+        if args.group_by == "specific_oid":
+            fixes_key_col = "specific_oid"
+            problems_key_col = "specific_oid"
+        elif args.group_by == "benchmark_oid":
+            fixes_key_col = "benchmark_oid"
+            problems_key_col = "oid"
+        elif args.group_by == "oid":
+            fixes_key_col = "oid"
+            problems_key_col = "oid"
+        else:
+            fixes_key_col = None
+            problems_key_col = "oid"
+    else:
+        fixes_key_col = "oid"
+        problems_key_col = "oid"
+
+    if problems_key_col not in problems_df.columns:
+        raise ValueError(
+            f"Problems CSV is missing required column '{problems_key_col}'. "
+            f"Available: {list(problems_df.columns)}"
+        )
+
+    valid_keys = set(problems_df[problems_key_col].astype(str))
+    # Backwards-compat variable name used in diagnostics-mode code path.
+    valid_oids = valid_keys
+
+    # SAFEGUARD: Filter to valid keys (only safe for Outcome CSVs).
+    # Diagnostics CSVs often use a different scheme and should be mapped via specific_oid.
+    if is_outcome_csv:
+        eval_oid_col = fixes_key_col or _choose_eval_oid_col(fixes_df, valid_keys)
+    else:
+        eval_oid_col = fixes_key_col
     if is_outcome_csv:
         print(f"Using evaluation OID column: {eval_oid_col}")
     if is_outcome_csv and eval_oid_col in fixes_df.columns:
         original_count = len(fixes_df)
         fixes_df[eval_oid_col] = fixes_df[eval_oid_col].astype(str)
-        fixes_df = fixes_df[fixes_df[eval_oid_col].isin(valid_oids)]
+        fixes_df = fixes_df[fixes_df[eval_oid_col].isin(valid_keys)]
         filtered_count = len(fixes_df)
         if filtered_count < original_count:
             print(f"SAFEGUARD: Filtered out {original_count - filtered_count} rows with OIDs not present in the problems benchmark.")
@@ -116,7 +156,7 @@ def main():
         block_reg_rate = (fixes_df['block_fix_introduced_errors'] > 0).mean() if 'block_fix_introduced_errors' in fixes_df.columns else 0.0
         module_reg_rate = (fixes_df['module_fix_introduced_errors'] > 0).mean() if 'module_fix_introduced_errors' in fixes_df.columns else 0.0
         
-        # Group by benchmark OID to get n and c
+        # Group by key to get n and c
         stats = fixes_df.groupby(eval_oid_col)['line_specific_error_fixed'].agg(['count', 'sum']).reset_index()
         stats.rename(columns={'count': 'n', 'sum': 'c'}, inplace=True)
         
@@ -125,6 +165,21 @@ def main():
         
         module_strict_stats = fixes_df.groupby(eval_oid_col)['module_strict_success'].agg(['count', 'sum']).reset_index()
         module_strict_stats.rename(columns={'count': 'n', 'sum': 'c'}, inplace=True)
+
+        # Ensure we evaluate over the full problem set defined by problems_df (important when
+        # switching to diagnostic-granularity keys like specific_oid).
+        all_keys_df = pd.DataFrame({eval_oid_col: sorted(valid_keys)})
+        stats = all_keys_df.merge(stats, on=eval_oid_col, how="left").fillna({"n": 0, "c": 0})
+        block_strict_stats = all_keys_df.merge(block_strict_stats, on=eval_oid_col, how="left").fillna({"n": 0, "c": 0})
+        module_strict_stats = all_keys_df.merge(module_strict_stats, on=eval_oid_col, how="left").fillna({"n": 0, "c": 0})
+
+        # Coerce back to ints after fillna.
+        stats["n"] = stats["n"].astype(int)
+        stats["c"] = stats["c"].astype(int)
+        block_strict_stats["n"] = block_strict_stats["n"].astype(int)
+        block_strict_stats["c"] = block_strict_stats["c"].astype(int)
+        module_strict_stats["n"] = module_strict_stats["n"].astype(int)
+        module_strict_stats["c"] = module_strict_stats["c"].astype(int)
         
     else:
         print("Detected Diagnostics CSV (Raw Diagnostics). WARNING: Fallback logic (Absence-based inference).")
