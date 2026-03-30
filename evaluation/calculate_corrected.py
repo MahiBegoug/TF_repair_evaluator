@@ -40,14 +40,35 @@ def main():
     ]
     # Check if this is an Outcome CSV by looking for the primary success flag
     is_outcome_csv = 'line_specific_error_fixed' in fixes_df.columns
-    # If present, `benchmark_oid` is the canonical problems/problems.csv ID for evaluation.
-    # We keep `oid` as the story/location ID for end-to-end traceability.
-    eval_oid_col = 'benchmark_oid' if 'benchmark_oid' in fixes_df.columns else 'oid'
+
+    # Choose which column to treat as the evaluation OID for this run.
+    # - When evaluating against problems/problems.csv, prefer `benchmark_oid` (if it matches).
+    # - When evaluating against ALL_LABELED (location OIDs), prefer `oid` (location) even if
+    #   `benchmark_oid` exists in the file.
+    def _choose_eval_oid_col(df: pd.DataFrame, valid: set[str]) -> str:
+        best_col = None
+        best_rate = -1.0
+        for col in ("benchmark_oid", "oid"):
+            if col not in df.columns:
+                continue
+            s = df[col].fillna("").astype(str).str.strip()
+            nonempty = s != ""
+            if nonempty.any():
+                rate = float(s[nonempty].isin(valid).mean())
+            else:
+                rate = 0.0
+            if rate > best_rate:
+                best_rate = rate
+                best_col = col
+        return best_col or "oid"
 
     # SAFEGUARD: Filter to valid benchmark OIDs (only safe for Outcome CSVs).
     # Diagnostics CSVs often use a different `oid` scheme (e.g., location-based)
     # and should be mapped via `specific_oid` or `original_problem_oid` instead.
     valid_oids = set(problems_df['oid'].astype(str))
+    eval_oid_col = _choose_eval_oid_col(fixes_df, valid_oids) if is_outcome_csv else "oid"
+    if is_outcome_csv:
+        print(f"Using evaluation OID column: {eval_oid_col}")
     if is_outcome_csv and eval_oid_col in fixes_df.columns:
         original_count = len(fixes_df)
         fixes_df[eval_oid_col] = fixes_df[eval_oid_col].astype(str)
