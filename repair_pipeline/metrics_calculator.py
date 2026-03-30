@@ -265,8 +265,13 @@ class MetricsCalculator:
         # Use robust, systematic normalization instead of relative disk paths
         relative_filename = FileCoordinateResolver.normalize_path(original_file)
         
-        # Prioritize OIDs from the baseline problem dataset for consistent tracking
-        final_oid = resolution_metrics.get("matched_oid") or row.get("oid", "")
+        # Maintain the "story" OID across the whole pipeline:
+        # - `oid` is the location-based identifier coming from the subset/LLM input.
+        # - `benchmark_oid` is the problems/problems.csv identifier used for benchmark evaluation.
+        #
+        # This avoids confusing joins where outcomes.oid suddenly switches ID space.
+        location_oid = row.get("oid", "")
+        benchmark_oid = resolution_metrics.get("matched_oid") or ""
         # Always emit a specific_oid when possible. Some LLM response CSVs don't include
         # `specific_oid`, and some OIDs may be missing from the baseline problems dataset.
         # In those cases we fall back to computing it from the row itself so downstream
@@ -285,7 +290,8 @@ class MetricsCalculator:
         )
         
         return {
-            "oid": final_oid,
+            "oid": location_oid,
+            "benchmark_oid": benchmark_oid,
             "specific_oid": final_spec_oid,
             "iteration_id": row.get("iteration_id", ""),
             "llm_name": row.get("llm_name", ""),

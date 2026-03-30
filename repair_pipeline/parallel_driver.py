@@ -197,7 +197,10 @@ class ParallelRepairEvaluator:
                                 original_problem_oid=res.get("oid"),
                             )
 
-                        pd.DataFrame([res["outcome_row"]]).to_csv(
+                        pd.DataFrame(
+                            [res["outcome_row"]],
+                            columns=getattr(self.parent, "outcomes_columns", None),
+                        ).to_csv(
                             self.parent.outcomes_csv,
                             mode="a",
                             header=False,

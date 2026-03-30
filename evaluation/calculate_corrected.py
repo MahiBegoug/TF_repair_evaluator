@@ -40,15 +40,18 @@ def main():
     ]
     # Check if this is an Outcome CSV by looking for the primary success flag
     is_outcome_csv = 'line_specific_error_fixed' in fixes_df.columns
+    # If present, `benchmark_oid` is the canonical problems/problems.csv ID for evaluation.
+    # We keep `oid` as the story/location ID for end-to-end traceability.
+    eval_oid_col = 'benchmark_oid' if 'benchmark_oid' in fixes_df.columns else 'oid'
 
     # SAFEGUARD: Filter to valid benchmark OIDs (only safe for Outcome CSVs).
     # Diagnostics CSVs often use a different `oid` scheme (e.g., location-based)
     # and should be mapped via `specific_oid` or `original_problem_oid` instead.
     valid_oids = set(problems_df['oid'].astype(str))
-    if is_outcome_csv and 'oid' in fixes_df.columns:
+    if is_outcome_csv and eval_oid_col in fixes_df.columns:
         original_count = len(fixes_df)
-        fixes_df['oid'] = fixes_df['oid'].astype(str)
-        fixes_df = fixes_df[fixes_df['oid'].isin(valid_oids)]
+        fixes_df[eval_oid_col] = fixes_df[eval_oid_col].astype(str)
+        fixes_df = fixes_df[fixes_df[eval_oid_col].isin(valid_oids)]
         filtered_count = len(fixes_df)
         if filtered_count < original_count:
             print(f"SAFEGUARD: Filtered out {original_count - filtered_count} rows with OIDs not present in the problems benchmark.")
@@ -56,11 +59,11 @@ def main():
     # HARDENING Improvement A: Enforce one row = one candidate attempt (Outcome CSV only).
     # Diagnostics CSVs can legitimately contain multiple rows per iteration (many diagnostics per module),
     # so deduplicating by (oid, iteration_id) would delete real signals.
-    if is_outcome_csv and 'oid' in fixes_df.columns and 'iteration_id' in fixes_df.columns:
-        dups = fixes_df.duplicated(subset=['oid', 'iteration_id'], keep=False)
+    if is_outcome_csv and eval_oid_col in fixes_df.columns and 'iteration_id' in fixes_df.columns:
+        dups = fixes_df.duplicated(subset=[eval_oid_col, 'iteration_id'], keep=False)
         if dups.any():
-            print(f"WARNING: {dups.sum()} duplicate (oid, iteration_id) rows detected. Keeping only the first occurrence.")
-            fixes_df = fixes_df.drop_duplicates(subset=['oid', 'iteration_id'], keep='first')
+            print(f"WARNING: {dups.sum()} duplicate ({eval_oid_col}, iteration_id) rows detected. Keeping only the first occurrence.")
+            fixes_df = fixes_df.drop_duplicates(subset=[eval_oid_col, 'iteration_id'], keep='first')
 
     if is_outcome_csv:
         print("Detected Outcome CSV (Ground Truth). Validating schema and applying coercion.")
@@ -92,14 +95,14 @@ def main():
         block_reg_rate = (fixes_df['block_fix_introduced_errors'] > 0).mean() if 'block_fix_introduced_errors' in fixes_df.columns else 0.0
         module_reg_rate = (fixes_df['module_fix_introduced_errors'] > 0).mean() if 'module_fix_introduced_errors' in fixes_df.columns else 0.0
         
-        # Group by OID to get n and c
-        stats = fixes_df.groupby('oid')['line_specific_error_fixed'].agg(['count', 'sum']).reset_index()
+        # Group by benchmark OID to get n and c
+        stats = fixes_df.groupby(eval_oid_col)['line_specific_error_fixed'].agg(['count', 'sum']).reset_index()
         stats.rename(columns={'count': 'n', 'sum': 'c'}, inplace=True)
         
-        block_strict_stats = fixes_df.groupby('oid')['block_strict_success'].agg(['count', 'sum']).reset_index()
+        block_strict_stats = fixes_df.groupby(eval_oid_col)['block_strict_success'].agg(['count', 'sum']).reset_index()
         block_strict_stats.rename(columns={'count': 'n', 'sum': 'c'}, inplace=True)
         
-        module_strict_stats = fixes_df.groupby('oid')['module_strict_success'].agg(['count', 'sum']).reset_index()
+        module_strict_stats = fixes_df.groupby(eval_oid_col)['module_strict_success'].agg(['count', 'sum']).reset_index()
         module_strict_stats.rename(columns={'count': 'n', 'sum': 'c'}, inplace=True)
         
     else:

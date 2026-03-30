@@ -122,7 +122,7 @@ def main():
         # 3. Calculate pass@k
         pass_at_k_csv = os.path.join(results_dir, f"{model_name}_pass_at_k.csv")
         cmd_calc = [
-            "python", "evaluation/calculate_pass_at_k.py",
+            "python", "evaluation/calculate_corrected.py",
             "--problems-csv", problems_csv,
             "--fixes-csv", outcomes_csv,
             "--k-values", *[str(k) for k in k_values],

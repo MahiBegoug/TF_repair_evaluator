@@ -56,14 +56,33 @@ class RepairEvaluator:
                 .to_csv(output_csv, index=False)
 
         self.outcomes_csv = outcomes_csv
-        if not os.path.exists(self.outcomes_csv):
-            pd.DataFrame([], columns=[
-                "oid", "specific_oid", "iteration_id", "llm_name", "filename",
-                "is_fixed", "line_is_clean", "line_specific_error_fixed", 
-                "module_total_errors", "file_errors", "module_errors",
-                "module_original_errors_remaining", "module_fix_introduced_errors",
-                "block_total_errors", "block_original_errors_remaining", "block_fix_introduced_errors"
-            ]).to_csv(self.outcomes_csv, index=False)
+        self.outcomes_columns = [
+            # `oid` stays consistent with the subset/LLM input (location OID).
+            # `benchmark_oid` is the problems/problems.csv identifier used for pass@k.
+            "oid", "benchmark_oid", "specific_oid", "iteration_id", "llm_name", "filename",
+            "is_fixed", "line_is_clean", "line_specific_error_fixed",
+            "module_total_errors", "file_errors", "module_errors",
+            "module_original_errors_remaining", "module_fix_introduced_errors",
+            "block_total_errors", "block_original_errors_remaining", "block_fix_introduced_errors"
+        ]
+
+        if os.path.exists(self.outcomes_csv):
+            # Guard against silently appending a new schema to an existing outcomes file.
+            try:
+                existing = pd.read_csv(self.outcomes_csv, nrows=0)
+                existing_cols = list(existing.columns)
+            except Exception:
+                existing_cols = []
+
+            missing = [c for c in self.outcomes_columns if c not in existing_cols]
+            if missing:
+                raise ValueError(
+                    f"Existing outcomes CSV has an incompatible schema: {self.outcomes_csv}\n"
+                    f"Missing columns: {missing}\n"
+                    f"Re-run with --clear-existing or write to a new outcomes CSV path."
+                )
+        else:
+            pd.DataFrame([], columns=self.outcomes_columns).to_csv(self.outcomes_csv, index=False)
 
     
     def _extract_project_name(self, row):
@@ -224,7 +243,12 @@ class RepairEvaluator:
             outcome_row = self._create_outcome_row(
                 row, original_file, resolution_metrics, error_counts
             )
-            pd.DataFrame([outcome_row]).to_csv(self.outcomes_csv, mode='a', header=False, index=False)
+            pd.DataFrame([outcome_row], columns=self.outcomes_columns).to_csv(
+                self.outcomes_csv,
+                mode="a",
+                header=False,
+                index=False,
+            )
 
             # Restore original file
             FixApplier.restore_original(original_file, backup_path)
