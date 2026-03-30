@@ -32,6 +32,12 @@ def main():
         default="auto",
         help="Which column to treat as the problem identifier for pass@k (default: auto).",
     )
+    parser.add_argument(
+        "--require-samples-per-problem",
+        type=int,
+        default=0,
+        help="If >0, abort unless every problem has exactly this many samples (n).",
+    )
     parser.add_argument("--save-to", help="Path to save results")
     args = parser.parse_args()
 
@@ -180,6 +186,15 @@ def main():
         block_strict_stats["c"] = block_strict_stats["c"].astype(int)
         module_strict_stats["n"] = module_strict_stats["n"].astype(int)
         module_strict_stats["c"] = module_strict_stats["c"].astype(int)
+
+        if args.require_samples_per_problem and args.require_samples_per_problem > 0:
+            bad = stats[stats["n"] != args.require_samples_per_problem]
+            if not bad.empty:
+                examples = bad.head(10)
+                raise SystemExit(
+                    f"ERROR: Incomplete coverage: {len(bad)}/{len(stats)} problems have n != {args.require_samples_per_problem}.\n"
+                    f"First examples:\n{examples.to_string(index=False)}"
+                )
         
     else:
         print("Detected Diagnostics CSV (Raw Diagnostics). WARNING: Fallback logic (Absence-based inference).")
