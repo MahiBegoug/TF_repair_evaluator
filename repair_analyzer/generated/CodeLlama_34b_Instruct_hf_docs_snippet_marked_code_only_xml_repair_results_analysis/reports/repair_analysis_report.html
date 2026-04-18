@@ -1,0 +1,969 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TFRepair Analysis for CodeLlama 34b</title>
+  <style>
+    :root {
+      --bg: #f7f4ee;
+      --panel: #fffdf9;
+      --ink: #1f2937;
+      --muted: #6b7280;
+      --line: #d6d3d1;
+    }
+    body {
+      margin: 0;
+      font-family: Georgia, "Times New Roman", serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at top left, #fde68a 0, transparent 28%),
+        radial-gradient(circle at bottom right, #bfdbfe 0, transparent 26%),
+        var(--bg);
+    }
+    .page { max-width: 1400px; margin: 0 auto; padding: 32px 20px 48px; }
+    .hero {
+      background: linear-gradient(135deg, rgba(15,118,110,0.96), rgba(30,41,59,0.94));
+      color: white;
+      border-radius: 22px;
+      padding: 28px;
+      box-shadow: 0 18px 50px rgba(15, 23, 42, 0.18);
+    }
+    .hero h1 { margin: 0 0 8px; font-size: clamp(28px, 4vw, 42px); line-height: 1.05; }
+    .hero p { margin: 0; max-width: 780px; color: rgba(255,255,255,0.9); font-size: 16px; }
+    .metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin-top: 22px; }
+    .metric-card {
+      background: rgba(255,255,255,0.14);
+      border: 1px solid rgba(255,255,255,0.18);
+      border-radius: 16px;
+      padding: 16px 18px;
+    }
+    .metric-title { font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: rgba(255,255,255,0.78); }
+    .metric-value { font-size: 34px; font-weight: 700; margin-top: 6px; }
+    .metric-subtitle { margin-top: 4px; color: rgba(255,255,255,0.82); font-size: 14px; }
+    .charts { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; margin-top: 18px; }
+    .chart-card, .table-card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 18px;
+      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+    }
+    .chart-card-wide { grid-column: 1 / -1; }
+    .chart-card h3, .table-card h3 { margin: 0 0 14px; font-size: 18px; }
+    .chart-row { display: grid; grid-template-columns: minmax(100px, 1.1fr) minmax(120px, 2.4fr) 84px; gap: 10px; align-items: center; margin-bottom: 10px; }
+    .chart-label { font-size: 14px; line-height: 1.3; }
+    .chart-track { height: 12px; background: #ece8df; border-radius: 999px; overflow: hidden; }
+    .chart-bar { height: 100%; border-radius: 999px; }
+    .chart-value { text-align: right; font-size: 13px; font-weight: 600; color: var(--muted); }
+    .tables { display: grid; grid-template-columns: 1fr; gap: 16px; margin-top: 16px; }
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: "Segoe UI", sans-serif;
+      font-size: 13px;
+    }
+    .data-table th, .data-table td { text-align: left; padding: 10px 8px; border-bottom: 1px solid #e7e5e4; vertical-align: top; }
+    .data-table th { background: #fafaf9; font-weight: 600; }
+    .empty-state { color: var(--muted); font-style: italic; margin: 0; }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <section class="hero">
+      <h1>TFRepair Analysis for CodeLlama 34b</h1>
+      <p>Iteration-aware analysis of what TFRepair fixed, what it introduced, and how those behaviors changed across repeated attempts.</p>
+      <div class="metrics"><div class="metric-card"><div class="metric-title">Repair Attempts</div><div class="metric-value">3808</div><div class="metric-subtitle">All evaluated iterations</div></div><div class="metric-card"><div class="metric-title">Fixed Attempts</div><div class="metric-value">1890</div><div class="metric-subtitle">Original diagnostic resolved</div></div><div class="metric-card"><div class="metric-title">Strict Fixes</div><div class="metric-value">1239</div><div class="metric-subtitle">Resolved with no introduced diagnostics</div></div><div class="metric-card"><div class="metric-title">Introduced Diagnostics</div><div class="metric-value">1666</div><div class="metric-subtitle">New diagnostics created by repairs</div></div></div>
+    </section>
+    <section class="charts"><section class="chart-card chart-card-wide"><h3>Figure 1. Solved and Unresolved Problems Across Iterations</h3>
+<svg viewBox="0 0 760 360" role="img" aria-label="Solved and unresolved problems by iteration">
+  <rect x="68" y="24" width="672" height="294" fill="#fda4af"/>
+  <line x1="68" y1="318.00" x2="740" y2="318.00" stroke="#e7e5e4" stroke-width="1"/><text x="58" y="322.00" text-anchor="end" font-size="12" fill="#6b7280">0</text><line x1="68" y1="245.12" x2="740" y2="245.12" stroke="#e7e5e4" stroke-width="1"/><text x="58" y="249.12" text-anchor="end" font-size="12" fill="#6b7280">59</text><line x1="68" y1="171.00" x2="740" y2="171.00" stroke="#e7e5e4" stroke-width="1"/><text x="58" y="175.00" text-anchor="end" font-size="12" fill="#6b7280">119</text><line x1="68" y1="98.12" x2="740" y2="98.12" stroke="#e7e5e4" stroke-width="1"/><text x="58" y="102.12" text-anchor="end" font-size="12" fill="#6b7280">178</text><line x1="68" y1="24.00" x2="740" y2="24.00" stroke="#e7e5e4" stroke-width="1"/><text x="58" y="28.00" text-anchor="end" font-size="12" fill="#6b7280">238</text>
+  <polygon points="68.00,318.00 68.00,169.76 112.80,146.29 157.60,135.18 202.40,129.00 247.20,126.53 292.00,121.59 336.80,112.94 381.60,111.71 426.40,110.47 471.20,105.53 516.00,105.53 560.80,104.29 605.60,101.82 650.40,101.82 695.20,101.82 740.00,101.82 740.00,318.00" fill="#9bd7c2" opacity="0.98"/>
+  <polyline points="68.00,169.76 112.80,146.29 157.60,135.18 202.40,129.00 247.20,126.53 292.00,121.59 336.80,112.94 381.60,111.71 426.40,110.47 471.20,105.53 516.00,105.53 560.80,104.29 605.60,101.82 650.40,101.82 695.20,101.82 740.00,101.82" fill="none" stroke="#1f2937" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
+  <line x1="68" y1="318" x2="740" y2="318" stroke="#374151" stroke-width="1.5"/>
+  <line x1="68" y1="24" x2="68" y2="318" stroke="#374151" stroke-width="1.5"/>
+  <line x1="68.00" y1="318" x2="68.00" y2="324" stroke="#6b7280" stroke-width="1"/><text x="68.00" y="340" text-anchor="middle" font-size="12" fill="#6b7280">1</text><line x1="112.80" y1="318" x2="112.80" y2="324" stroke="#6b7280" stroke-width="1"/><text x="112.80" y="340" text-anchor="middle" font-size="12" fill="#6b7280">2</text><line x1="157.60" y1="318" x2="157.60" y2="324" stroke="#6b7280" stroke-width="1"/><text x="157.60" y="340" text-anchor="middle" font-size="12" fill="#6b7280">3</text><line x1="202.40" y1="318" x2="202.40" y2="324" stroke="#6b7280" stroke-width="1"/><text x="202.40" y="340" text-anchor="middle" font-size="12" fill="#6b7280">4</text><line x1="247.20" y1="318" x2="247.20" y2="324" stroke="#6b7280" stroke-width="1"/><text x="247.20" y="340" text-anchor="middle" font-size="12" fill="#6b7280">5</text><line x1="292.00" y1="318" x2="292.00" y2="324" stroke="#6b7280" stroke-width="1"/><text x="292.00" y="340" text-anchor="middle" font-size="12" fill="#6b7280">6</text><line x1="336.80" y1="318" x2="336.80" y2="324" stroke="#6b7280" stroke-width="1"/><text x="336.80" y="340" text-anchor="middle" font-size="12" fill="#6b7280">7</text><line x1="381.60" y1="318" x2="381.60" y2="324" stroke="#6b7280" stroke-width="1"/><text x="381.60" y="340" text-anchor="middle" font-size="12" fill="#6b7280">8</text><line x1="426.40" y1="318" x2="426.40" y2="324" stroke="#6b7280" stroke-width="1"/><text x="426.40" y="340" text-anchor="middle" font-size="12" fill="#6b7280">9</text><line x1="471.20" y1="318" x2="471.20" y2="324" stroke="#6b7280" stroke-width="1"/><text x="471.20" y="340" text-anchor="middle" font-size="12" fill="#6b7280">10</text><line x1="516.00" y1="318" x2="516.00" y2="324" stroke="#6b7280" stroke-width="1"/><text x="516.00" y="340" text-anchor="middle" font-size="12" fill="#6b7280">11</text><line x1="560.80" y1="318" x2="560.80" y2="324" stroke="#6b7280" stroke-width="1"/><text x="560.80" y="340" text-anchor="middle" font-size="12" fill="#6b7280">12</text><line x1="605.60" y1="318" x2="605.60" y2="324" stroke="#6b7280" stroke-width="1"/><text x="605.60" y="340" text-anchor="middle" font-size="12" fill="#6b7280">13</text><line x1="650.40" y1="318" x2="650.40" y2="324" stroke="#6b7280" stroke-width="1"/><text x="650.40" y="340" text-anchor="middle" font-size="12" fill="#6b7280">14</text><line x1="695.20" y1="318" x2="695.20" y2="324" stroke="#6b7280" stroke-width="1"/><text x="695.20" y="340" text-anchor="middle" font-size="12" fill="#6b7280">15</text><line x1="740.00" y1="318" x2="740.00" y2="324" stroke="#6b7280" stroke-width="1"/><text x="740.00" y="340" text-anchor="middle" font-size="12" fill="#6b7280">16</text>
+  <text x="380.00" y="354" text-anchor="middle" font-size="13" fill="#374151">Iteration</text>
+  <text x="18" y="180.00" text-anchor="middle" font-size="13" fill="#374151" transform="rotate(-90 18 180.00)">Number of Problems</text>
+  <text x="440.80" y="62.91" text-anchor="middle" font-size="18" fill="#111827">Unresolved</text>
+  <text x="425.60" y="209.91" text-anchor="middle" font-size="18" fill="#111827">Solved</text>
+</svg>
+</section><section class="chart-card"><h3>Figure 2. Fix Rate by Iteration</h3><div class="chart-row"><div class="chart-label">1</div><div class="chart-track"><div class="chart-bar" style="width: 96.00%; background: #0f766e;"></div></div><div class="chart-value">50.4%</div></div><div class="chart-row"><div class="chart-label">2</div><div class="chart-track"><div class="chart-bar" style="width: 96.80%; background: #0f766e;"></div></div><div class="chart-value">50.8%</div></div><div class="chart-row"><div class="chart-label">3</div><div class="chart-track"><div class="chart-bar" style="width: 100.00%; background: #0f766e;"></div></div><div class="chart-value">52.5%</div></div><div class="chart-row"><div class="chart-label">4</div><div class="chart-track"><div class="chart-bar" style="width: 91.20%; background: #0f766e;"></div></div><div class="chart-value">47.9%</div></div><div class="chart-row"><div class="chart-label">5</div><div class="chart-track"><div class="chart-bar" style="width: 88.00%; background: #0f766e;"></div></div><div class="chart-value">46.2%</div></div><div class="chart-row"><div class="chart-label">6</div><div class="chart-track"><div class="chart-bar" style="width: 86.40%; background: #0f766e;"></div></div><div class="chart-value">45.4%</div></div><div class="chart-row"><div class="chart-label">7</div><div class="chart-track"><div class="chart-bar" style="width: 99.20%; background: #0f766e;"></div></div><div class="chart-value">52.1%</div></div><div class="chart-row"><div class="chart-label">8</div><div class="chart-track"><div class="chart-bar" style="width: 95.20%; background: #0f766e;"></div></div><div class="chart-value">50.0%</div></div><div class="chart-row"><div class="chart-label">9</div><div class="chart-track"><div class="chart-bar" style="width: 94.40%; background: #0f766e;"></div></div><div class="chart-value">49.6%</div></div><div class="chart-row"><div class="chart-label">10</div><div class="chart-track"><div class="chart-bar" style="width: 96.80%; background: #0f766e;"></div></div><div class="chart-value">50.8%</div></div><div class="chart-row"><div class="chart-label">11</div><div class="chart-track"><div class="chart-bar" style="width: 95.20%; background: #0f766e;"></div></div><div class="chart-value">50.0%</div></div><div class="chart-row"><div class="chart-label">12</div><div class="chart-track"><div class="chart-bar" style="width: 92.80%; background: #0f766e;"></div></div><div class="chart-value">48.7%</div></div><div class="chart-row"><div class="chart-label">13</div><div class="chart-track"><div class="chart-bar" style="width: 94.40%; background: #0f766e;"></div></div><div class="chart-value">49.6%</div></div><div class="chart-row"><div class="chart-label">14</div><div class="chart-track"><div class="chart-bar" style="width: 97.60%; background: #0f766e;"></div></div><div class="chart-value">51.3%</div></div><div class="chart-row"><div class="chart-label">15</div><div class="chart-track"><div class="chart-bar" style="width: 93.60%; background: #0f766e;"></div></div><div class="chart-value">49.2%</div></div><div class="chart-row"><div class="chart-label">16</div><div class="chart-track"><div class="chart-bar" style="width: 94.40%; background: #0f766e;"></div></div><div class="chart-value">49.6%</div></div></section><section class="chart-card"><h3>Figure 3. Introduced Diagnostics by Iteration</h3><div class="chart-row"><div class="chart-label">1</div><div class="chart-track"><div class="chart-bar" style="width: 26.79%; background: #b91c1c;"></div></div><div class="chart-value">86</div></div><div class="chart-row"><div class="chart-label">2</div><div class="chart-track"><div class="chart-bar" style="width: 100.00%; background: #b91c1c;"></div></div><div class="chart-value">321</div></div><div class="chart-row"><div class="chart-label">3</div><div class="chart-track"><div class="chart-bar" style="width: 26.79%; background: #b91c1c;"></div></div><div class="chart-value">86</div></div><div class="chart-row"><div class="chart-label">4</div><div class="chart-track"><div class="chart-bar" style="width: 26.17%; background: #b91c1c;"></div></div><div class="chart-value">84</div></div><div class="chart-row"><div class="chart-label">5</div><div class="chart-track"><div class="chart-bar" style="width: 21.18%; background: #b91c1c;"></div></div><div class="chart-value">68</div></div><div class="chart-row"><div class="chart-label">6</div><div class="chart-track"><div class="chart-bar" style="width: 27.41%; background: #b91c1c;"></div></div><div class="chart-value">88</div></div><div class="chart-row"><div class="chart-label">7</div><div class="chart-track"><div class="chart-bar" style="width: 31.46%; background: #b91c1c;"></div></div><div class="chart-value">101</div></div><div class="chart-row"><div class="chart-label">8</div><div class="chart-track"><div class="chart-bar" style="width: 32.09%; background: #b91c1c;"></div></div><div class="chart-value">103</div></div><div class="chart-row"><div class="chart-label">9</div><div class="chart-track"><div class="chart-bar" style="width: 24.92%; background: #b91c1c;"></div></div><div class="chart-value">80</div></div><div class="chart-row"><div class="chart-label">10</div><div class="chart-track"><div class="chart-bar" style="width: 36.14%; background: #b91c1c;"></div></div><div class="chart-value">116</div></div><div class="chart-row"><div class="chart-label">11</div><div class="chart-track"><div class="chart-bar" style="width: 27.10%; background: #b91c1c;"></div></div><div class="chart-value">87</div></div><div class="chart-row"><div class="chart-label">12</div><div class="chart-track"><div class="chart-bar" style="width: 26.17%; background: #b91c1c;"></div></div><div class="chart-value">84</div></div><div class="chart-row"><div class="chart-label">13</div><div class="chart-track"><div class="chart-bar" style="width: 26.17%; background: #b91c1c;"></div></div><div class="chart-value">84</div></div><div class="chart-row"><div class="chart-label">14</div><div class="chart-track"><div class="chart-bar" style="width: 30.22%; background: #b91c1c;"></div></div><div class="chart-value">97</div></div><div class="chart-row"><div class="chart-label">15</div><div class="chart-track"><div class="chart-bar" style="width: 28.04%; background: #b91c1c;"></div></div><div class="chart-value">90</div></div><div class="chart-row"><div class="chart-label">16</div><div class="chart-track"><div class="chart-bar" style="width: 28.35%; background: #b91c1c;"></div></div><div class="chart-value">91</div></div></section><section class="chart-card chart-card-wide"><h3>Figure 4. Introduced Diagnostics by Scope Across Iterations (%)</h3>
+<svg viewBox="0 0 760 380" role="img" aria-label="Normalized introduced diagnostics by scope and iteration">
+  <line x1="68" y1="332.00" x2="740" y2="332.00" stroke="#e7e5e4" stroke-width="1"/><text x="58" y="336.00" text-anchor="end" font-size="12" fill="#6b7280">0%</text><line x1="68" y1="255.00" x2="740" y2="255.00" stroke="#e7e5e4" stroke-width="1"/><text x="58" y="259.00" text-anchor="end" font-size="12" fill="#6b7280">25%</text><line x1="68" y1="178.00" x2="740" y2="178.00" stroke="#e7e5e4" stroke-width="1"/><text x="58" y="182.00" text-anchor="end" font-size="12" fill="#6b7280">50%</text><line x1="68" y1="101.00" x2="740" y2="101.00" stroke="#e7e5e4" stroke-width="1"/><text x="58" y="105.00" text-anchor="end" font-size="12" fill="#6b7280">75%</text><line x1="68" y1="24.00" x2="740" y2="24.00" stroke="#e7e5e4" stroke-width="1"/><text x="58" y="28.00" text-anchor="end" font-size="12" fill="#6b7280">100%</text>
+  <line x1="68" y1="332" x2="740" y2="332" stroke="#374151" stroke-width="1.5"/>
+  <line x1="68" y1="24" x2="68" y2="332" stroke="#374151" stroke-width="1.5"/>
+  <rect x="74.72" y="131.44" width="28.56" height="200.56" fill="#0f766e"/><rect x="74.72" y="52.65" width="28.56" height="78.79" fill="#eab308"/><rect x="74.72" y="24.00" width="28.56" height="28.65" fill="#f97316"/><text x="89.00" y="354.00" text-anchor="middle" font-size="12" fill="#6b7280">1</text><rect x="116.72" y="228.37" width="28.56" height="103.63" fill="#0f766e"/><rect x="116.72" y="40.31" width="28.56" height="188.06" fill="#eab308"/><rect x="116.72" y="24.00" width="28.56" height="16.31" fill="#f97316"/><text x="131.00" y="354.00" text-anchor="middle" font-size="12" fill="#6b7280">2</text><rect x="158.72" y="167.26" width="28.56" height="164.74" fill="#0f766e"/><rect x="158.72" y="70.56" width="28.56" height="96.70" fill="#eab308"/><rect x="158.72" y="24.00" width="28.56" height="46.56" fill="#f97316"/><text x="173.00" y="354.00" text-anchor="middle" font-size="12" fill="#6b7280">3</text><rect x="200.72" y="148.67" width="28.56" height="183.33" fill="#0f766e"/><rect x="200.72" y="82.67" width="28.56" height="66.00" fill="#eab308"/><rect x="200.72" y="24.00" width="28.56" height="58.67" fill="#f97316"/><text x="215.00" y="354.00" text-anchor="middle" font-size="12" fill="#6b7280">4</text><rect x="242.72" y="168.94" width="28.56" height="163.06" fill="#0f766e"/><rect x="242.72" y="73.82" width="28.56" height="95.12" fill="#eab308"/><rect x="242.72" y="24.00" width="28.56" height="49.82" fill="#f97316"/><text x="257.00" y="354.00" text-anchor="middle" font-size="12" fill="#6b7280">5</text><rect x="284.72" y="157.00" width="28.56" height="175.00" fill="#0f766e"/><rect x="284.72" y="69.50" width="28.56" height="87.50" fill="#eab308"/><rect x="284.72" y="24.00" width="28.56" height="45.50" fill="#f97316"/><text x="299.00" y="354.00" text-anchor="middle" font-size="12" fill="#6b7280">6</text><rect x="326.72" y="170.38" width="28.56" height="161.62" fill="#0f766e"/><rect x="326.72" y="75.84" width="28.56" height="94.53" fill="#eab308"/><rect x="326.72" y="24.00" width="28.56" height="51.84" fill="#f97316"/><text x="341.00" y="354.00" text-anchor="middle" font-size="12" fill="#6b7280">7</text><rect x="368.72" y="143.61" width="28.56" height="188.39" fill="#0f766e"/><rect x="368.72" y="68.85" width="28.56" height="74.76" fill="#eab308"/><rect x="368.72" y="24.00" width="28.56" height="44.85" fill="#f97316"/><text x="383.00" y="354.00" text-anchor="middle" font-size="12" fill="#6b7280">8</text><rect x="410.72" y="158.75" width="28.56" height="173.25" fill="#0f766e"/><rect x="410.72" y="62.50" width="28.56" height="96.25" fill="#eab308"/><rect x="410.72" y="24.00" width="28.56" height="38.50" fill="#f97316"/><text x="425.00" y="354.00" text-anchor="middle" font-size="12" fill="#6b7280">9</text><rect x="452.72" y="124.90" width="28.56" height="207.10" fill="#0f766e"/><rect x="452.72" y="63.83" width="28.56" height="61.07" fill="#eab308"/><rect x="452.72" y="24.00" width="28.56" height="39.83" fill="#f97316"/><text x="467.00" y="354.00" text-anchor="middle" font-size="12" fill="#6b7280">10</text><rect x="494.72" y="154.99" width="28.56" height="177.01" fill="#0f766e"/><rect x="494.72" y="77.10" width="28.56" height="77.89" fill="#eab308"/><rect x="494.72" y="24.00" width="28.56" height="53.10" fill="#f97316"/><text x="509.00" y="354.00" text-anchor="middle" font-size="12" fill="#6b7280">11</text><rect x="536.72" y="159.67" width="28.56" height="172.33" fill="#0f766e"/><rect x="536.72" y="71.67" width="28.56" height="88.00" fill="#eab308"/><rect x="536.72" y="24.00" width="28.56" height="47.67" fill="#f97316"/><text x="551.00" y="354.00" text-anchor="middle" font-size="12" fill="#6b7280">12</text><rect x="578.72" y="126.67" width="28.56" height="205.33" fill="#0f766e"/><rect x="578.72" y="46.00" width="28.56" height="80.67" fill="#eab308"/><rect x="578.72" y="24.00" width="28.56" height="22.00" fill="#f97316"/><text x="593.00" y="354.00" text-anchor="middle" font-size="12" fill="#6b7280">13</text><rect x="620.72" y="151.01" width="28.56" height="180.99" fill="#0f766e"/><rect x="620.72" y="74.80" width="28.56" height="76.21" fill="#eab308"/><rect x="620.72" y="24.00" width="28.56" height="50.80" fill="#f97316"/><text x="635.00" y="354.00" text-anchor="middle" font-size="12" fill="#6b7280">14</text><rect x="662.72" y="157.47" width="28.56" height="174.53" fill="#0f766e"/><rect x="662.72" y="78.76" width="28.56" height="78.71" fill="#eab308"/><rect x="662.72" y="24.00" width="28.56" height="54.76" fill="#f97316"/><text x="677.00" y="354.00" text-anchor="middle" font-size="12" fill="#6b7280">15</text><rect x="704.72" y="166.15" width="28.56" height="165.85" fill="#0f766e"/><rect x="704.72" y="71.38" width="28.56" height="94.77" fill="#eab308"/><rect x="704.72" y="24.00" width="28.56" height="47.38" fill="#f97316"/><text x="719.00" y="354.00" text-anchor="middle" font-size="12" fill="#6b7280">16</text>
+  <text x="380.00" y="354" text-anchor="middle" font-size="13" fill="#374151">Iteration</text>
+  <text x="18" y="190.00" text-anchor="middle" font-size="13" fill="#374151" transform="rotate(-90 18 190.00)">Share of Introduced Diagnostics (%)</text>
+  <rect x="68" y="356" width="12" height="12" fill="#0f766e"/><text x="86" y="366.00" font-size="12" fill="#374151">Same block</text><rect x="233" y="356" width="12" height="12" fill="#eab308"/><text x="251" y="366.00" font-size="12" fill="#374151">Same file, other block</text><rect x="398" y="356" width="12" height="12" fill="#f97316"/><text x="416" y="366.00" font-size="12" fill="#374151">Same module, other file</text><rect x="563" y="356" width="12" height="12" fill="#b91c1c"/><text x="581" y="366.00" font-size="12" fill="#374151">Outside module</text>
+</svg>
+</section><section class="chart-card chart-card-wide"><h3>Figure 5. Most Often Strictly Fixed Problem Types (%)</h3>
+<svg viewBox="0 0 760 392" role="img" aria-label="Most Often Strictly Fixed Problem Types (%)">
+  <rect x="12" y="12" width="736" height="368" fill="white" stroke="#6b7280" stroke-width="1"/>
+  <rect x="20" y="30.00" width="675.00" height="18" rx="0" fill="#1d4ed8"/><text x="28.00" y="39.00" text-anchor="start" dominant-baseline="middle" font-size="12" font-style="italic" fill="#ffffff">Invalid backend configuration</text><text x="687.00" y="39.00" text-anchor="end" dominant-baseline="middle" font-size="12" fill="#111827">93.8%</text><rect x="20" y="66.00" width="540.00" height="18" rx="0" fill="#1d4ed8"/><text x="28.00" y="75.00" text-anchor="start" dominant-baseline="middle" font-size="12" font-style="italic" fill="#ffffff">Cannot index a set value</text><text x="552.00" y="75.00" text-anchor="end" dominant-baseline="middle" font-size="12" fill="#111827">75.0%</text><rect x="20" y="102.00" width="522.00" height="18" rx="0" fill="#1d4ed8"/><text x="28.00" y="111.00" text-anchor="start" dominant-baseline="middle" font-size="12" font-style="italic" fill="#ffffff">Missing resource instance key</text><text x="534.00" y="111.00" text-anchor="end" dominant-baseline="middle" font-size="12" fill="#111827">72.5%</text><rect x="20" y="138.00" width="450.00" height="18" rx="0" fill="#1d4ed8"/><text x="28.00" y="147.00" text-anchor="start" dominant-baseline="middle" font-size="12" font-style="italic" fill="#ffffff">Missing required argument</text><text x="462.00" y="147.00" text-anchor="end" dominant-baseline="middle" font-size="12" fill="#111827">62.5%</text><rect x="20" y="174.00" width="443.25" height="18" rx="0" fill="#1d4ed8"/><text x="28.00" y="183.00" text-anchor="start" dominant-baseline="middle" font-size="12" font-style="italic" fill="#ffffff">Quoted references are deprecated</text><text x="455.25" y="183.00" text-anchor="end" dominant-baseline="middle" font-size="12" fill="#111827">61.6%</text><rect x="20" y="210.00" width="420.81" height="18" rx="0" fill="#1d4ed8"/><text x="28.00" y="219.00" text-anchor="start" dominant-baseline="middle" font-size="12" font-style="italic" fill="#ffffff">Unsupported argument</text><text x="432.81" y="219.00" text-anchor="end" dominant-baseline="middle" font-size="12" fill="#111827">58.4%</text><rect x="20" y="246.00" width="379.29" height="18" rx="0" fill="#1d4ed8"/><text x="28.00" y="255.00" text-anchor="start" dominant-baseline="middle" font-size="12" font-style="italic" fill="#ffffff">Unsupported attribute</text><text x="391.29" y="255.00" text-anchor="end" dominant-baseline="middle" font-size="12" fill="#111827">52.7%</text><rect x="20" y="282.00" width="360.00" height="18" rx="0" fill="#1d4ed8"/><text x="28.00" y="291.00" text-anchor="start" dominant-baseline="middle" font-size="12" font-style="italic" fill="#ffffff">Attribute Deprecated</text><text x="372.00" y="291.00" text-anchor="end" dominant-baseline="middle" font-size="12" fill="#111827">50.0%</text><rect x="20" y="318.00" width="360.00" height="18" rx="0" fill="#1d4ed8"/><text x="28.00" y="327.00" text-anchor="start" dominant-baseline="middle" font-size="12" font-style="italic" fill="#ffffff">Invalid Attribute Combination</text><text x="372.00" y="327.00" text-anchor="end" dominant-baseline="middle" font-size="12" fill="#111827">50.0%</text><rect x="20" y="354.00" width="360.00" height="18" rx="0" fill="#1d4ed8"/><text x="28.00" y="363.00" text-anchor="start" dominant-baseline="middle" font-size="12" font-style="italic" fill="#ffffff">Deprecated Parameter</text><text x="372.00" y="363.00" text-anchor="end" dominant-baseline="middle" font-size="12" fill="#111827">50.0%</text>
+</svg>
+</section><section class="chart-card chart-card-wide"><h3>Figure 6. Most Common Introduced Diagnostic Types (%)</h3>
+<svg viewBox="0 0 760 392" role="img" aria-label="Most Common Introduced Diagnostic Types (%)">
+  <rect x="12" y="12" width="736" height="368" fill="white" stroke="#6b7280" stroke-width="1"/>
+  <rect x="20" y="30.00" width="104.59" height="18" rx="0" fill="#d97706"/><text x="132.59" y="39.00" text-anchor="start" dominant-baseline="middle" font-size="12" font-style="italic" fill="#111827">Reference to undeclared resource</text><text x="116.59" y="39.00" text-anchor="end" dominant-baseline="middle" font-size="12" fill="#111827">14.5%</text><rect x="20" y="66.00" width="97.24" height="18" rx="0" fill="#d97706"/><text x="125.24" y="75.00" text-anchor="start" dominant-baseline="middle" font-size="12" font-style="italic" fill="#111827">Unsupported block type</text><text x="109.24" y="75.00" text-anchor="end" dominant-baseline="middle" font-size="12" fill="#111827">13.5%</text><rect x="20" y="102.00" width="95.51" height="18" rx="0" fill="#d97706"/><text x="123.51" y="111.00" text-anchor="start" dominant-baseline="middle" font-size="12" font-style="italic" fill="#111827">Invalid multi-line string</text><text x="107.51" y="111.00" text-anchor="end" dominant-baseline="middle" font-size="12" fill="#111827">13.3%</text><rect x="20" y="138.00" width="79.95" height="18" rx="0" fill="#d97706"/><text x="107.95" y="147.00" text-anchor="start" dominant-baseline="middle" font-size="12" font-style="italic" fill="#111827">Invalid character</text><text x="91.95" y="147.00" text-anchor="end" dominant-baseline="middle" font-size="12" fill="#111827">11.1%</text><rect x="20" y="174.00" width="75.63" height="18" rx="0" fill="#d97706"/><text x="103.63" y="183.00" text-anchor="start" dominant-baseline="middle" font-size="12" font-style="italic" fill="#111827">Unsupported argument</text><text x="87.63" y="183.00" text-anchor="end" dominant-baseline="middle" font-size="12" fill="#111827">10.5%</text><rect x="20" y="210.00" width="53.16" height="18" rx="0" fill="#d97706"/><text x="81.16" y="219.00" text-anchor="start" dominant-baseline="middle" font-size="12" font-style="italic" fill="#111827">Reference to undeclared input variable</text><text x="65.16" y="219.00" text-anchor="end" dominant-baseline="middle" font-size="12" fill="#111827">7.4%</text><rect x="20" y="246.00" width="35.44" height="18" rx="0" fill="#d97706"/><text x="93.44" y="255.00" text-anchor="start" dominant-baseline="middle" font-size="12" font-style="italic" fill="#111827">Error in function call</text><text x="63.44" y="255.00" text-anchor="start" dominant-baseline="middle" font-size="12" fill="#111827">4.9%</text><rect x="20" y="282.00" width="17.72" height="18" rx="0" fill="#d97706"/><text x="75.72" y="291.00" text-anchor="start" dominant-baseline="middle" font-size="12" font-style="italic" fill="#111827">Unsupported attribute</text><text x="45.72" y="291.00" text-anchor="start" dominant-baseline="middle" font-size="12" fill="#111827">2.5%</text><rect x="20" y="318.00" width="16.85" height="18" rx="0" fill="#d97706"/><text x="74.85" y="327.00" text-anchor="start" dominant-baseline="middle" font-size="12" font-style="italic" fill="#111827">Missing required argument</text><text x="44.85" y="327.00" text-anchor="start" dominant-baseline="middle" font-size="12" fill="#111827">2.3%</text><rect x="20" y="354.00" width="14.26" height="18" rx="0" fill="#d97706"/><text x="72.26" y="363.00" text-anchor="start" dominant-baseline="middle" font-size="12" font-style="italic" fill="#111827">Missing item separator</text><text x="42.26" y="363.00" text-anchor="start" dominant-baseline="middle" font-size="12" fill="#111827">2.0%</text>
+</svg>
+</section><section class="chart-card chart-card-wide"><h3>Figure 7. Summary-Level Strict Resolution Profile (%)</h3>
+<svg viewBox="0 0 760 520" role="img" aria-label="Summary-Level Strict Resolution Profile (%)">
+  <rect x="12" y="12" width="736" height="496" fill="white" stroke="#6b7280" stroke-width="1"/>
+  <text x="380.00" y="36" text-anchor="middle" font-size="16" fill="#111827">Summary-Level Strict Resolution Profile (%)</text>
+  <polygon points="380.00,229.60 405.74,240.26 416.40,266.00 405.74,291.74 380.00,302.40 354.26,291.74 343.60,266.00 354.26,240.26" fill="none" stroke="#d6d3d1" stroke-width="1"/><text x="388.00" y="225.60" font-size="11" fill="#6b7280">25%</text><polygon points="380.00,193.20 431.48,214.52 452.80,266.00 431.48,317.48 380.00,338.80 328.52,317.48 307.20,266.00 328.52,214.52" fill="none" stroke="#d6d3d1" stroke-width="1"/><text x="388.00" y="189.20" font-size="11" fill="#6b7280">50%</text><polygon points="380.00,156.80 457.22,188.78 489.20,266.00 457.22,343.22 380.00,375.20 302.78,343.22 270.80,266.00 302.78,188.78" fill="none" stroke="#d6d3d1" stroke-width="1"/><text x="388.00" y="152.80" font-size="11" fill="#6b7280">75%</text><polygon points="380.00,120.40 482.95,163.05 525.60,266.00 482.95,368.95 380.00,411.60 277.05,368.95 234.40,266.00 277.05,163.05" fill="none" stroke="#d6d3d1" stroke-width="1"/><text x="388.00" y="116.40" font-size="11" fill="#6b7280">100%</text><line x1="380.00" y1="266.00" x2="380.00" y2="120.40" stroke="#d6d3d1" stroke-width="1"/><line x1="380.00" y1="266.00" x2="482.95" y2="163.05" stroke="#d6d3d1" stroke-width="1"/><line x1="380.00" y1="266.00" x2="525.60" y2="266.00" stroke="#d6d3d1" stroke-width="1"/><line x1="380.00" y1="266.00" x2="482.95" y2="368.95" stroke="#d6d3d1" stroke-width="1"/><line x1="380.00" y1="266.00" x2="380.00" y2="411.60" stroke="#d6d3d1" stroke-width="1"/><line x1="380.00" y1="266.00" x2="277.05" y2="368.95" stroke="#d6d3d1" stroke-width="1"/><line x1="380.00" y1="266.00" x2="234.40" y2="266.00" stroke="#d6d3d1" stroke-width="1"/><line x1="380.00" y1="266.00" x2="277.05" y2="163.05" stroke="#d6d3d1" stroke-width="1"/>
+  <polygon points="380.00,180.90 420.11,225.89 392.60,266.00 383.08,269.08 380.00,276.34 316.62,329.38 339.70,266.00 351.50,237.50" fill="#2563eb" opacity="0.22"/>
+  <polyline points="380.00,180.90 420.11,225.89 392.60,266.00 383.08,269.08 380.00,276.34 316.62,329.38 339.70,266.00 351.50,237.50 380.00,180.90" fill="none" stroke="#2563eb" stroke-width="3" stroke-linejoin="round"/>
+  <text x="380.00" y="78.40" text-anchor="middle" font-size="12" fill="#111827"><tspan x="380.00" dy="0">Unsupported</tspan><tspan x="380.00" dy="1.15em">argument</tspan></text><text x="512.65" y="133.35" text-anchor="start" font-size="12" fill="#111827"><tspan x="512.65" dy="0">Argument is</tspan><tspan x="512.65" dy="1.15em">deprecated</tspan></text><text x="567.60" y="266.00" text-anchor="start" font-size="12" fill="#111827"><tspan x="567.60" dy="0">Deprecated</tspan><tspan x="567.60" dy="1.15em">Resource</tspan></text><text x="512.65" y="398.65" text-anchor="start" font-size="12" fill="#111827"><tspan x="512.65" dy="0">Deprecated</tspan><tspan x="512.65" dy="1.15em">attribute</tspan></text><text x="380.00" y="453.60" text-anchor="middle" font-size="12" fill="#111827"><tspan x="380.00" dy="0">Reference to</tspan><tspan x="380.00" dy="1.15em">undeclared...</tspan></text><text x="247.35" y="398.65" text-anchor="end" font-size="12" fill="#111827"><tspan x="247.35" dy="0">Quoted references</tspan><tspan x="247.35" dy="1.15em">are deprecated</tspan></text><text x="192.40" y="266.00" text-anchor="end" font-size="12" fill="#111827"><tspan x="192.40" dy="0">Reference to</tspan><tspan x="192.40" dy="1.15em">undeclared...</tspan></text><text x="247.35" y="133.35" text-anchor="end" font-size="12" fill="#111827"><tspan x="247.35" dy="0">Unsupported block</tspan><tspan x="247.35" dy="1.15em">type</tspan></text>
+</svg>
+</section><section class="chart-card"><h3>Figure 8. Introduced Diagnostics by Scope</h3><div class="chart-row"><div class="chart-label">same_block</div><div class="chart-track"><div class="chart-bar" style="width: 100.00%; background: #7c3aed;"></div></div><div class="chart-value">895</div></div><div class="chart-row"><div class="chart-label">same_file_other_block</div><div class="chart-track"><div class="chart-bar" style="width: 62.12%; background: #7c3aed;"></div></div><div class="chart-value">556</div></div><div class="chart-row"><div class="chart-label">same_module_other_file</div><div class="chart-track"><div class="chart-bar" style="width: 24.02%; background: #7c3aed;"></div></div><div class="chart-value">215</div></div></section></section>
+    <section class="tables">
+      <div class="table-card"><h3>Iteration Summary</h3><table border="1" class="dataframe data-table">
+  <thead>
+    <tr style="text-align: right;">
+      <th>iteration_id</th>
+      <th>repairs_attempted</th>
+      <th>fixed_repairs</th>
+      <th>fix_rate</th>
+      <th>strict_fixed_repairs</th>
+      <th>strict_fix_rate</th>
+      <th>repairs_with_introduced_diagnostics</th>
+      <th>introduced_diagnostics</th>
+      <th>new_problems_fixed</th>
+      <th>cumulative_fix_coverage</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>1</td>
+      <td>238</td>
+      <td>120</td>
+      <td>50.4%</td>
+      <td>81</td>
+      <td>34.0%</td>
+      <td>42</td>
+      <td>86</td>
+      <td>120</td>
+      <td>50.4%</td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td>238</td>
+      <td>121</td>
+      <td>50.8%</td>
+      <td>76</td>
+      <td>31.9%</td>
+      <td>49</td>
+      <td>321</td>
+      <td>19</td>
+      <td>58.4%</td>
+    </tr>
+    <tr>
+      <td>3</td>
+      <td>238</td>
+      <td>125</td>
+      <td>52.5%</td>
+      <td>84</td>
+      <td>35.3%</td>
+      <td>41</td>
+      <td>86</td>
+      <td>9</td>
+      <td>62.2%</td>
+    </tr>
+    <tr>
+      <td>4</td>
+      <td>238</td>
+      <td>114</td>
+      <td>47.9%</td>
+      <td>79</td>
+      <td>33.2%</td>
+      <td>36</td>
+      <td>84</td>
+      <td>5</td>
+      <td>64.3%</td>
+    </tr>
+    <tr>
+      <td>5</td>
+      <td>238</td>
+      <td>110</td>
+      <td>46.2%</td>
+      <td>79</td>
+      <td>33.2%</td>
+      <td>33</td>
+      <td>68</td>
+      <td>2</td>
+      <td>65.1%</td>
+    </tr>
+    <tr>
+      <td>6</td>
+      <td>238</td>
+      <td>108</td>
+      <td>45.4%</td>
+      <td>67</td>
+      <td>28.2%</td>
+      <td>43</td>
+      <td>88</td>
+      <td>4</td>
+      <td>66.8%</td>
+    </tr>
+    <tr>
+      <td>7</td>
+      <td>238</td>
+      <td>124</td>
+      <td>52.1%</td>
+      <td>79</td>
+      <td>33.2%</td>
+      <td>49</td>
+      <td>101</td>
+      <td>7</td>
+      <td>69.7%</td>
+    </tr>
+    <tr>
+      <td>8</td>
+      <td>238</td>
+      <td>119</td>
+      <td>50.0%</td>
+      <td>77</td>
+      <td>32.4%</td>
+      <td>45</td>
+      <td>103</td>
+      <td>1</td>
+      <td>70.2%</td>
+    </tr>
+    <tr>
+      <td>9</td>
+      <td>238</td>
+      <td>118</td>
+      <td>49.6%</td>
+      <td>79</td>
+      <td>33.2%</td>
+      <td>41</td>
+      <td>80</td>
+      <td>1</td>
+      <td>70.6%</td>
+    </tr>
+    <tr>
+      <td>10</td>
+      <td>238</td>
+      <td>121</td>
+      <td>50.8%</td>
+      <td>81</td>
+      <td>34.0%</td>
+      <td>42</td>
+      <td>116</td>
+      <td>4</td>
+      <td>72.3%</td>
+    </tr>
+    <tr>
+      <td>11</td>
+      <td>238</td>
+      <td>119</td>
+      <td>50.0%</td>
+      <td>75</td>
+      <td>31.5%</td>
+      <td>46</td>
+      <td>87</td>
+      <td>0</td>
+      <td>72.3%</td>
+    </tr>
+    <tr>
+      <td>12</td>
+      <td>238</td>
+      <td>116</td>
+      <td>48.7%</td>
+      <td>77</td>
+      <td>32.4%</td>
+      <td>41</td>
+      <td>84</td>
+      <td>1</td>
+      <td>72.7%</td>
+    </tr>
+    <tr>
+      <td>13</td>
+      <td>238</td>
+      <td>118</td>
+      <td>49.6%</td>
+      <td>77</td>
+      <td>32.4%</td>
+      <td>43</td>
+      <td>84</td>
+      <td>2</td>
+      <td>73.5%</td>
+    </tr>
+    <tr>
+      <td>14</td>
+      <td>238</td>
+      <td>122</td>
+      <td>51.3%</td>
+      <td>77</td>
+      <td>32.4%</td>
+      <td>47</td>
+      <td>97</td>
+      <td>0</td>
+      <td>73.5%</td>
+    </tr>
+    <tr>
+      <td>15</td>
+      <td>238</td>
+      <td>117</td>
+      <td>49.2%</td>
+      <td>79</td>
+      <td>33.2%</td>
+      <td>43</td>
+      <td>90</td>
+      <td>0</td>
+      <td>73.5%</td>
+    </tr>
+  </tbody>
+</table></div>
+      <div class="table-card"><h3>Fixed Problem Types</h3><table border="1" class="dataframe data-table">
+  <thead>
+    <tr style="text-align: right;">
+      <th>problem_type_label</th>
+      <th>repairs_attempted</th>
+      <th>fixed_repairs</th>
+      <th>fix_rate</th>
+      <th>strict_fixed_repairs</th>
+      <th>strict_fix_rate</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Unsupported argument [resource, error]</td>
+      <td>544</td>
+      <td>390</td>
+      <td>71.7%</td>
+      <td>324</td>
+      <td>59.6%</td>
+    </tr>
+    <tr>
+      <td>Argument is deprecated [resource, warning]</td>
+      <td>480</td>
+      <td>239</td>
+      <td>49.8%</td>
+      <td>187</td>
+      <td>39.0%</td>
+    </tr>
+    <tr>
+      <td>Quoted references are deprecated [resource, warning]</td>
+      <td>272</td>
+      <td>191</td>
+      <td>70.2%</td>
+      <td>174</td>
+      <td>64.0%</td>
+    </tr>
+    <tr>
+      <td>Missing required argument [resource, error]</td>
+      <td>112</td>
+      <td>90</td>
+      <td>80.4%</td>
+      <td>70</td>
+      <td>62.5%</td>
+    </tr>
+    <tr>
+      <td>Reference to undeclared resource [resource, error]</td>
+      <td>224</td>
+      <td>91</td>
+      <td>40.6%</td>
+      <td>62</td>
+      <td>27.7%</td>
+    </tr>
+    <tr>
+      <td>Unsupported attribute [resource, error]</td>
+      <td>112</td>
+      <td>80</td>
+      <td>71.4%</td>
+      <td>59</td>
+      <td>52.7%</td>
+    </tr>
+    <tr>
+      <td>Missing resource instance key [resource, error]</td>
+      <td>80</td>
+      <td>75</td>
+      <td>93.8%</td>
+      <td>58</td>
+      <td>72.5%</td>
+    </tr>
+    <tr>
+      <td>Unsupported block type [resource, error]</td>
+      <td>192</td>
+      <td>100</td>
+      <td>52.1%</td>
+      <td>43</td>
+      <td>22.4%</td>
+    </tr>
+    <tr>
+      <td>Deprecated Resource [resource, warning]</td>
+      <td>352</td>
+      <td>213</td>
+      <td>60.5%</td>
+      <td>36</td>
+      <td>10.2%</td>
+    </tr>
+    <tr>
+      <td>Invalid backend configuration [data, error]</td>
+      <td>32</td>
+      <td>31</td>
+      <td>96.9%</td>
+      <td>30</td>
+      <td>93.8%</td>
+    </tr>
+    <tr>
+      <td>Reference to undeclared input variable [resource, error]</td>
+      <td>208</td>
+      <td>27</td>
+      <td>13.0%</td>
+      <td>24</td>
+      <td>11.5%</td>
+    </tr>
+    <tr>
+      <td>Quoted references are deprecated [data, warning]</td>
+      <td>48</td>
+      <td>28</td>
+      <td>58.3%</td>
+      <td>23</td>
+      <td>47.9%</td>
+    </tr>
+    <tr>
+      <td>Unsupported argument [data, error]</td>
+      <td>48</td>
+      <td>41</td>
+      <td>85.4%</td>
+      <td>22</td>
+      <td>45.8%</td>
+    </tr>
+    <tr>
+      <td>Unsupported block type [data, error]</td>
+      <td>32</td>
+      <td>19</td>
+      <td>59.4%</td>
+      <td>19</td>
+      <td>59.4%</td>
+    </tr>
+    <tr>
+      <td>Attribute Deprecated [resource, warning]</td>
+      <td>32</td>
+      <td>32</td>
+      <td>100.0%</td>
+      <td>16</td>
+      <td>50.0%</td>
+    </tr>
+  </tbody>
+</table></div>
+      <div class="table-card"><h3>Introduced Diagnostic Types</h3><table border="1" class="dataframe data-table">
+  <thead>
+    <tr style="text-align: right;">
+      <th>introduced_type_label</th>
+      <th>introduced_diagnostics</th>
+      <th>affected_repairs</th>
+      <th>same_block_diagnostics</th>
+      <th>same_file_other_block_diagnostics</th>
+      <th>same_module_other_file_diagnostics</th>
+      <th>outside_original_module_diagnostics</th>
+      <th>truly_new_diagnostics</th>
+      <th>cross_iteration_repeats</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Unsupported block type [resource, error]</td>
+      <td>225</td>
+      <td>71</td>
+      <td>65</td>
+      <td>112</td>
+      <td>48</td>
+      <td>0</td>
+      <td>225</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td>Invalid multi-line string [resource, error]</td>
+      <td>212</td>
+      <td>33</td>
+      <td>89</td>
+      <td>123</td>
+      <td>0</td>
+      <td>0</td>
+      <td>212</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td>Invalid character [resource, error]</td>
+      <td>183</td>
+      <td>38</td>
+      <td>145</td>
+      <td>38</td>
+      <td>0</td>
+      <td>0</td>
+      <td>183</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td>Unsupported argument [resource, error]</td>
+      <td>167</td>
+      <td>114</td>
+      <td>132</td>
+      <td>35</td>
+      <td>0</td>
+      <td>0</td>
+      <td>167</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td>Reference to undeclared resource [resource, error]</td>
+      <td>122</td>
+      <td>97</td>
+      <td>29</td>
+      <td>93</td>
+      <td>0</td>
+      <td>0</td>
+      <td>122</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td>Reference to undeclared input variable [resource, error]</td>
+      <td>111</td>
+      <td>60</td>
+      <td>111</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>111</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td>Error in function call [output, error]</td>
+      <td>78</td>
+      <td>13</td>
+      <td>0</td>
+      <td>0</td>
+      <td>78</td>
+      <td>0</td>
+      <td>78</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td>Reference to undeclared resource [output, error]</td>
+      <td>51</td>
+      <td>31</td>
+      <td>0</td>
+      <td>12</td>
+      <td>39</td>
+      <td>0</td>
+      <td>51</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td>Missing required argument [resource, error]</td>
+      <td>39</td>
+      <td>36</td>
+      <td>39</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>39</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td>Unsupported attribute [resource, error]</td>
+      <td>36</td>
+      <td>36</td>
+      <td>5</td>
+      <td>31</td>
+      <td>0</td>
+      <td>0</td>
+      <td>36</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td>Missing item separator [resource, error]</td>
+      <td>33</td>
+      <td>33</td>
+      <td>33</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>33</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td>Unterminated template string [resource, error]</td>
+      <td>32</td>
+      <td>32</td>
+      <td>32</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>32</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td>Reference to undeclared resource [provider, error]</td>
+      <td>32</td>
+      <td>16</td>
+      <td>0</td>
+      <td>32</td>
+      <td>0</td>
+      <td>0</td>
+      <td>32</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td>Missing required provider [Unknown, error]</td>
+      <td>30</td>
+      <td>30</td>
+      <td>0</td>
+      <td>0</td>
+      <td>30</td>
+      <td>0</td>
+      <td>30</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td>Missing newline after argument [resource, error]</td>
+      <td>27</td>
+      <td>27</td>
+      <td>27</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>27</td>
+      <td>0</td>
+    </tr>
+  </tbody>
+</table></div>
+      <div class="table-card"><h3>Problem Type to Introduced Type Transitions</h3><table border="1" class="dataframe data-table">
+  <thead>
+    <tr style="text-align: right;">
+      <th>iteration_id</th>
+      <th>problem_type_label</th>
+      <th>introduced_type_label</th>
+      <th>scope_granularity</th>
+      <th>transition_count</th>
+      <th>affected_repairs</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>1</td>
+      <td>Unsupported block type [resource, error]</td>
+      <td>Unsupported block type [resource, error]</td>
+      <td>same_file_other_block</td>
+      <td>7</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <td>1</td>
+      <td>Argument is deprecated [resource, warning]</td>
+      <td>Unsupported block type [resource, error]</td>
+      <td>same_block</td>
+      <td>6</td>
+      <td>3</td>
+    </tr>
+    <tr>
+      <td>1</td>
+      <td>Deprecated Resource [resource, warning]</td>
+      <td>Reference to undeclared resource [resource, error]</td>
+      <td>same_file_other_block</td>
+      <td>4</td>
+      <td>4</td>
+    </tr>
+    <tr>
+      <td>1</td>
+      <td>Deprecated Resource [resource, warning]</td>
+      <td>Unsupported argument [resource, error]</td>
+      <td>same_block</td>
+      <td>4</td>
+      <td>2</td>
+    </tr>
+    <tr>
+      <td>1</td>
+      <td>Argument is deprecated [resource, warning]</td>
+      <td>Unsupported argument [resource, error]</td>
+      <td>same_block</td>
+      <td>4</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <td>1</td>
+      <td>Missing resource instance key [resource, error]</td>
+      <td>Invalid character [resource, error]</td>
+      <td>same_block</td>
+      <td>4</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <td>1</td>
+      <td>Reference to undeclared resource [resource, error]</td>
+      <td>Reference to undeclared input variable [resource, error]</td>
+      <td>same_block</td>
+      <td>4</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <td>1</td>
+      <td>Unsupported block type [resource, error]</td>
+      <td>Invalid character [resource, error]</td>
+      <td>same_block</td>
+      <td>4</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <td>1</td>
+      <td>Unsupported block type [resource, error]</td>
+      <td>Unsupported block type [resource, error]</td>
+      <td>same_module_other_file</td>
+      <td>3</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <td>1</td>
+      <td>Deprecated Resource [resource, warning]</td>
+      <td>Missing required provider [Unknown, error]</td>
+      <td>same_module_other_file</td>
+      <td>2</td>
+      <td>2</td>
+    </tr>
+    <tr>
+      <td>1</td>
+      <td>Deprecated Resource [data, warning]</td>
+      <td>Reference to undeclared input variable [data, error]</td>
+      <td>same_block</td>
+      <td>2</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <td>1</td>
+      <td>Deprecated Resource [data, warning]</td>
+      <td>Reference to undeclared resource [provider, error]</td>
+      <td>same_file_other_block</td>
+      <td>2</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <td>1</td>
+      <td>Deprecated attribute [resource, warning]</td>
+      <td>Invalid multi-line string [resource, error]</td>
+      <td>same_block</td>
+      <td>2</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <td>1</td>
+      <td>Quoted references are deprecated [resource, warning]</td>
+      <td>Attribute name required [resource, error]</td>
+      <td>same_block</td>
+      <td>2</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <td>1</td>
+      <td>Unsupported argument [resource, error]</td>
+      <td>Deprecated Resource [resource, warning]</td>
+      <td>same_module_other_file</td>
+      <td>2</td>
+      <td>1</td>
+    </tr>
+  </tbody>
+</table></div>
+      <div class="table-card"><h3>Problem Lifecycle Across Iterations</h3><table border="1" class="dataframe data-table">
+  <thead>
+    <tr style="text-align: right;">
+      <th>problem_type_label</th>
+      <th>attempts</th>
+      <th>fixes</th>
+      <th>strict_fixes</th>
+      <th>introduced_diagnostics</th>
+      <th>first_fixed_iteration</th>
+      <th>first_strict_fixed_iteration</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Argument is deprecated [resource, warning]</td>
+      <td>16</td>
+      <td>0</td>
+      <td>0</td>
+      <td>8</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <td>Invalid Attribute Combination [resource, warning]</td>
+      <td>16</td>
+      <td>0</td>
+      <td>0</td>
+      <td>6</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <td>Quoted references are deprecated [resource, warning]</td>
+      <td>16</td>
+      <td>0</td>
+      <td>0</td>
+      <td>6</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <td>Deprecated Resource [resource, warning]</td>
+      <td>16</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <td>Deprecated attribute [resource, warning]</td>
+      <td>16</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <td>Deprecated attribute [resource, warning]</td>
+      <td>16</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <td>Deprecated attribute [resource, warning]</td>
+      <td>16</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <td>Argument is deprecated [resource, warning]</td>
+      <td>16</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <td>Argument is deprecated [resource, warning]</td>
+      <td>16</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <td>Argument is deprecated [resource, warning]</td>
+      <td>16</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <td>Argument is deprecated [resource, warning]</td>
+      <td>16</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <td>Argument is deprecated [resource, warning]</td>
+      <td>16</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <td>Argument is deprecated [resource, warning]</td>
+      <td>16</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <td>Argument is deprecated [resource, warning]</td>
+      <td>16</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <td>Argument is deprecated [resource, warning]</td>
+      <td>16</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <td>Deprecated attribute [data, warning]</td>
+      <td>16</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <td>Deprecated attribute [data, warning]</td>
+      <td>16</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <td>Deprecated attribute [resource, warning]</td>
+      <td>16</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <td>Deprecated attribute [resource, warning]</td>
+      <td>16</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <td>Deprecated attribute [resource, warning]</td>
+      <td>16</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+  </tbody>
+</table></div>
+    </section>
+  </div>
+</body>
+</html>

@@ -1,0 +1,4 @@
+scope_granularity,introduced_diagnostics,affected_repairs
+same_block,895,451
+same_file_other_block,556,215
+same_module_other_file,215,97

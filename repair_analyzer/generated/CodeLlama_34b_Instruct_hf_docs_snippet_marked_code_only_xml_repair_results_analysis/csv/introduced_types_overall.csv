@@ -1,0 +1,58 @@
+introduced_summary,introduced_severity,introduced_block_type,introduced_type_label,introduced_diagnostics,affected_repairs,truly_new_diagnostics,cross_iteration_repeats,same_block_diagnostics,same_file_other_block_diagnostics,same_module_other_file_diagnostics,outside_original_module_diagnostics
+Unsupported block type,error,resource,"Unsupported block type [resource, error]",225,71,225,0,65,112,48,0
+Invalid multi-line string,error,resource,"Invalid multi-line string [resource, error]",212,33,212,0,89,123,0,0
+Invalid character,error,resource,"Invalid character [resource, error]",183,38,183,0,145,38,0,0
+Unsupported argument,error,resource,"Unsupported argument [resource, error]",167,114,167,0,132,35,0,0
+Reference to undeclared resource,error,resource,"Reference to undeclared resource [resource, error]",122,97,122,0,29,93,0,0
+Reference to undeclared input variable,error,resource,"Reference to undeclared input variable [resource, error]",111,60,111,0,111,0,0,0
+Error in function call,error,output,"Error in function call [output, error]",78,13,78,0,0,0,78,0
+Reference to undeclared resource,error,output,"Reference to undeclared resource [output, error]",51,31,51,0,0,12,39,0
+Missing required argument,error,resource,"Missing required argument [resource, error]",39,36,39,0,39,0,0,0
+Unsupported attribute,error,resource,"Unsupported attribute [resource, error]",36,36,36,0,5,31,0,0
+Missing item separator,error,resource,"Missing item separator [resource, error]",33,33,33,0,33,0,0,0
+Unterminated template string,error,resource,"Unterminated template string [resource, error]",32,32,32,0,32,0,0,0
+Reference to undeclared resource,error,provider,"Reference to undeclared resource [provider, error]",32,16,32,0,0,32,0,0
+Missing required provider,error,Unknown,"Missing required provider [Unknown, error]",30,30,30,0,0,0,30,0
+Missing newline after argument,error,resource,"Missing newline after argument [resource, error]",27,27,27,0,27,0,0,0
+Deprecated Resource,warning,resource,"Deprecated Resource [resource, warning]",25,15,25,0,1,4,20,0
+Invalid resource type,error,resource,"Invalid resource type [resource, error]",24,24,24,0,24,0,0,0
+Reference to undeclared resource,error,locals,"Reference to undeclared resource [locals, error]",21,16,21,0,0,21,0,0
+Attribute redefined,error,resource,"Attribute redefined [resource, error]",18,1,18,0,18,0,0,0
+Argument or block definition required,error,data,"Argument or block definition required [data, error]",16,16,16,0,16,0,0,0
+Missing resource instance key,error,resource,"Missing resource instance key [resource, error]",15,15,15,0,2,13,0,0
+Deprecated attribute,warning,data,"Deprecated attribute [data, warning]",14,14,14,0,0,14,0,0
+Reference to undeclared resource,error,module,"Reference to undeclared resource [module, error]",12,12,12,0,0,12,0,0
+Reference to undeclared input variable,error,data,"Reference to undeclared input variable [data, error]",12,5,12,0,12,0,0,0
+Incorrect attribute value type,error,resource,"Incorrect attribute value type [resource, error]",11,11,11,0,11,0,0,0
+Invalid depends_on reference,error,resource,"Invalid depends_on reference [resource, error]",10,5,10,0,10,0,0,0
+Invalid expression,error,resource,"Invalid expression [resource, error]",9,9,9,0,9,0,0,0
+Invalid multi-line string,error,provider,"Invalid multi-line string [provider, error]",9,1,9,0,0,9,0,0
+Unsupported argument,error,data,"Unsupported argument [data, error]",8,8,8,0,8,0,0,0
+"expected object_lock_enabled to be one of [""Enabled""], got true",error,resource,"expected object_lock_enabled to be one of [""Enabled""], got true [resource, error]",8,8,8,0,8,0,0,0
+Invalid String Enum Value,error,resource,"Invalid String Enum Value [resource, error]",6,6,6,0,6,0,0,0
+Invalid or unknown key,error,data,"Invalid or unknown key [data, error]",6,6,6,0,6,0,0,0
+"expected private_endpoint_network_policies to be one of [""Disabled"" ""Enabled"" ""NetworkSecurityGroupEnabled"" ""RouteTableEnabled""], got false",error,resource,"expected private_endpoint_network_policies to be one of [""Disabled"" ""Enabled"" ""NetworkSecurityGroupEnabled"" ""RouteTableEnabled""], got false [resource, error]",6,6,6,0,6,0,0,0
+Value for unconfigurable attribute,error,data,"Value for unconfigurable attribute [data, error]",6,4,6,0,6,0,0,0
+Unsupported attribute,error,output,"Unsupported attribute [output, error]",5,5,5,0,0,5,0,0
+Duplicate lifecycle block,error,resource,"Duplicate lifecycle block [resource, error]",4,4,4,0,4,0,0,0
+Error in function call,error,resource,"Error in function call [resource, error]",4,4,4,0,4,0,0,0
+Invalid expression,error,data,"Invalid expression [data, error]",4,4,4,0,4,0,0,0
+Reference to undeclared resource,error,data,"Reference to undeclared resource [data, error]",4,4,4,0,4,0,0,0
+"expected domain to be one of [vpc standard], got true",error,resource,"expected domain to be one of [vpc standard], got true [resource, error]",4,4,4,0,4,0,0,0
+Invalid index,error,resource,"Invalid index [resource, error]",4,2,4,0,4,0,0,0
+"""arn"" (aws_lambda_function.example_lambda.arn) is an invalid ARN: arn: invalid prefix",error,resource,"""arn"" (aws_lambda_function.example_lambda.arn) is an invalid ARN: arn: invalid prefix [resource, error]",3,3,3,0,3,0,0,0
+Argument is deprecated,warning,resource,"Argument is deprecated [resource, warning]",2,2,2,0,2,0,0,0
+Value for unconfigurable attribute,error,resource,"Value for unconfigurable attribute [resource, error]",2,2,2,0,2,0,0,0
+Attribute name required,error,resource,"Attribute name required [resource, error]",2,1,2,0,2,0,0,0
+Conflicting configuration arguments,error,resource,"Conflicting configuration arguments [resource, error]",2,1,2,0,2,0,0,0
+Invalid character,error,provider,"Invalid character [provider, error]",2,1,2,0,0,2,0,0
+"""event_pattern"" contains an invalid JSON: invalid character '.' looking for beginning of value",error,resource,"""event_pattern"" contains an invalid JSON: invalid character '.' looking for beginning of value [resource, error]",1,1,1,0,1,0,0,0
+"""rule"" doesn't comply with restrictions (""^[\\.\\-_A-Za-z0-9]+$""): ""example event target""",error,resource,"""rule"" doesn't comply with restrictions (""^[\\.\\-_A-Za-z0-9]+$""): ""example event target"" [resource, error]",1,1,1,0,1,0,0,0
+"""target_id"" doesn't comply with restrictions (""^[\\.\\-_A-Za-z0-9]+$""): ""example event target""",error,resource,"""target_id"" doesn't comply with restrictions (""^[\\.\\-_A-Za-z0-9]+$""): ""example event target"" [resource, error]",1,1,1,0,1,0,0,0
+Invalid backend configuration,error,data,"Invalid backend configuration [data, error]",1,1,1,0,1,0,0,0
+Invalid depends_on reference,error,data,"Invalid depends_on reference [data, error]",1,1,1,0,1,0,0,0
+Invalid function argument,error,resource,"Invalid function argument [resource, error]",1,1,1,0,1,0,0,0
+Missing attribute value,error,data,"Missing attribute value [data, error]",1,1,1,0,1,0,0,0
+Missing attribute value,error,resource,"Missing attribute value [resource, error]",1,1,1,0,1,0,0,0
+"expected private_endpoint_network_policies to be one of [""Disabled"" ""Enabled"" ""NetworkSecurityGroupEnabled"" ""RouteTableEnabled""], got disabled",error,resource,"expected private_endpoint_network_policies to be one of [""Disabled"" ""Enabled"" ""NetworkSecurityGroupEnabled"" ""RouteTableEnabled""], got disabled [resource, error]",1,1,1,0,1,0,0,0
+"parsing Azure ID: parse """": empty url",error,resource,"parsing Azure ID: parse """": empty url [resource, error]",1,1,1,0,1,0,0,0

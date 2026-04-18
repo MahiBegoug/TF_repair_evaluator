@@ -1,0 +1,441 @@
+iteration_id,iteration_order,introduced_summary,introduced_severity,introduced_block_type,introduced_type_label,introduced_diagnostics,affected_repairs,truly_new_diagnostics,cross_iteration_repeats,same_block_diagnostics,same_file_other_block_diagnostics,same_module_other_file_diagnostics,outside_original_module_diagnostics
+1,1,Unsupported block type,error,resource,"Unsupported block type [resource, error]",18,6,18,0,8,7,3,0
+1,1,Unsupported argument,error,resource,"Unsupported argument [resource, error]",13,8,13,0,10,3,0,0
+1,1,Invalid character,error,resource,"Invalid character [resource, error]",8,2,8,0,8,0,0,0
+1,1,Reference to undeclared input variable,error,resource,"Reference to undeclared input variable [resource, error]",5,2,5,0,5,0,0,0
+1,1,Reference to undeclared resource,error,resource,"Reference to undeclared resource [resource, error]",4,4,4,0,0,4,0,0
+1,1,Missing newline after argument,error,resource,"Missing newline after argument [resource, error]",3,3,3,0,3,0,0,0
+1,1,Deprecated Resource,warning,resource,"Deprecated Resource [resource, warning]",3,2,3,0,1,0,2,0
+1,1,Invalid multi-line string,error,resource,"Invalid multi-line string [resource, error]",3,2,3,0,3,0,0,0
+1,1,Missing item separator,error,resource,"Missing item separator [resource, error]",2,2,2,0,2,0,0,0
+1,1,Missing required argument,error,resource,"Missing required argument [resource, error]",2,2,2,0,2,0,0,0
+1,1,Missing required provider,error,Unknown,"Missing required provider [Unknown, error]",2,2,2,0,0,0,2,0
+1,1,Unsupported attribute,error,resource,"Unsupported attribute [resource, error]",2,2,2,0,0,2,0,0
+1,1,Unterminated template string,error,resource,"Unterminated template string [resource, error]",2,2,2,0,2,0,0,0
+1,1,Attribute name required,error,resource,"Attribute name required [resource, error]",2,1,2,0,2,0,0,0
+1,1,Reference to undeclared input variable,error,data,"Reference to undeclared input variable [data, error]",2,1,2,0,2,0,0,0
+1,1,Reference to undeclared resource,error,provider,"Reference to undeclared resource [provider, error]",2,1,2,0,0,2,0,0
+1,1,Argument or block definition required,error,data,"Argument or block definition required [data, error]",1,1,1,0,1,0,0,0
+1,1,Deprecated attribute,warning,data,"Deprecated attribute [data, warning]",1,1,1,0,0,1,0,0
+1,1,Duplicate lifecycle block,error,resource,"Duplicate lifecycle block [resource, error]",1,1,1,0,1,0,0,0
+1,1,Incorrect attribute value type,error,resource,"Incorrect attribute value type [resource, error]",1,1,1,0,1,0,0,0
+1,1,Invalid expression,error,data,"Invalid expression [data, error]",1,1,1,0,1,0,0,0
+1,1,Invalid resource type,error,resource,"Invalid resource type [resource, error]",1,1,1,0,1,0,0,0
+1,1,Missing attribute value,error,resource,"Missing attribute value [resource, error]",1,1,1,0,1,0,0,0
+1,1,Reference to undeclared resource,error,locals,"Reference to undeclared resource [locals, error]",1,1,1,0,0,1,0,0
+1,1,Reference to undeclared resource,error,module,"Reference to undeclared resource [module, error]",1,1,1,0,0,1,0,0
+1,1,Reference to undeclared resource,error,output,"Reference to undeclared resource [output, error]",1,1,1,0,0,0,1,0
+1,1,Unsupported argument,error,data,"Unsupported argument [data, error]",1,1,1,0,1,0,0,0
+1,1,Unsupported attribute,error,output,"Unsupported attribute [output, error]",1,1,1,0,0,1,0,0
+1,1,Value for unconfigurable attribute,error,resource,"Value for unconfigurable attribute [resource, error]",1,1,1,0,1,0,0,0
+2,2,Invalid multi-line string,error,resource,"Invalid multi-line string [resource, error]",167,3,167,0,44,123,0,0
+2,2,Invalid character,error,resource,"Invalid character [resource, error]",58,3,58,0,20,38,0,0
+2,2,Unsupported block type,error,resource,"Unsupported block type [resource, error]",14,5,14,0,4,7,3,0
+2,2,Unsupported argument,error,resource,"Unsupported argument [resource, error]",9,7,9,0,7,2,0,0
+2,2,Invalid multi-line string,error,provider,"Invalid multi-line string [provider, error]",9,1,9,0,0,9,0,0
+2,2,Reference to undeclared input variable,error,resource,"Reference to undeclared input variable [resource, error]",8,4,8,0,8,0,0,0
+2,2,Reference to undeclared resource,error,resource,"Reference to undeclared resource [resource, error]",6,4,6,0,2,4,0,0
+2,2,Error in function call,error,output,"Error in function call [output, error]",6,1,6,0,0,0,6,0
+2,2,Reference to undeclared resource,error,output,"Reference to undeclared resource [output, error]",4,3,4,0,0,0,4,0
+2,2,Missing newline after argument,error,resource,"Missing newline after argument [resource, error]",3,3,3,0,3,0,0,0
+2,2,Unsupported attribute,error,resource,"Unsupported attribute [resource, error]",3,3,3,0,1,2,0,0
+2,2,Deprecated Resource,warning,resource,"Deprecated Resource [resource, warning]",3,2,3,0,0,1,2,0
+2,2,Reference to undeclared resource,error,locals,"Reference to undeclared resource [locals, error]",3,2,3,0,0,3,0,0
+2,2,Incorrect attribute value type,error,resource,"Incorrect attribute value type [resource, error]",2,2,2,0,2,0,0,0
+2,2,Missing item separator,error,resource,"Missing item separator [resource, error]",2,2,2,0,2,0,0,0
+2,2,Missing required argument,error,resource,"Missing required argument [resource, error]",2,2,2,0,2,0,0,0
+2,2,Missing required provider,error,Unknown,"Missing required provider [Unknown, error]",2,2,2,0,0,0,2,0
+2,2,Unterminated template string,error,resource,"Unterminated template string [resource, error]",2,2,2,0,2,0,0,0
+2,2,Invalid character,error,provider,"Invalid character [provider, error]",2,1,2,0,0,2,0,0
+2,2,Invalid depends_on reference,error,resource,"Invalid depends_on reference [resource, error]",2,1,2,0,2,0,0,0
+2,2,Reference to undeclared resource,error,provider,"Reference to undeclared resource [provider, error]",2,1,2,0,0,2,0,0
+2,2,Argument is deprecated,warning,resource,"Argument is deprecated [resource, warning]",1,1,1,0,1,0,0,0
+2,2,Argument or block definition required,error,data,"Argument or block definition required [data, error]",1,1,1,0,1,0,0,0
+2,2,Deprecated attribute,warning,data,"Deprecated attribute [data, warning]",1,1,1,0,0,1,0,0
+2,2,Invalid String Enum Value,error,resource,"Invalid String Enum Value [resource, error]",1,1,1,0,1,0,0,0
+2,2,Invalid or unknown key,error,data,"Invalid or unknown key [data, error]",1,1,1,0,1,0,0,0
+2,2,Invalid resource type,error,resource,"Invalid resource type [resource, error]",1,1,1,0,1,0,0,0
+2,2,Missing resource instance key,error,resource,"Missing resource instance key [resource, error]",1,1,1,0,0,1,0,0
+2,2,Unsupported argument,error,data,"Unsupported argument [data, error]",1,1,1,0,1,0,0,0
+2,2,Unsupported attribute,error,output,"Unsupported attribute [output, error]",1,1,1,0,0,1,0,0
+2,2,Value for unconfigurable attribute,error,data,"Value for unconfigurable attribute [data, error]",1,1,1,0,1,0,0,0
+2,2,"expected private_endpoint_network_policies to be one of [""Disabled"" ""Enabled"" ""NetworkSecurityGroupEnabled"" ""RouteTableEnabled""], got false",error,resource,"expected private_endpoint_network_policies to be one of [""Disabled"" ""Enabled"" ""NetworkSecurityGroupEnabled"" ""RouteTableEnabled""], got false [resource, error]",1,1,1,0,1,0,0,0
+2,2,"parsing Azure ID: parse """": empty url",error,resource,"parsing Azure ID: parse """": empty url [resource, error]",1,1,1,0,1,0,0,0
+3,3,Unsupported block type,error,resource,"Unsupported block type [resource, error]",13,4,13,0,3,7,3,0
+3,3,Reference to undeclared resource,error,resource,"Reference to undeclared resource [resource, error]",8,7,8,0,0,8,0,0
+3,3,Reference to undeclared input variable,error,resource,"Reference to undeclared input variable [resource, error]",8,4,8,0,8,0,0,0
+3,3,Invalid character,error,resource,"Invalid character [resource, error]",8,2,8,0,8,0,0,0
+3,3,Unsupported argument,error,resource,"Unsupported argument [resource, error]",7,5,7,0,5,2,0,0
+3,3,Error in function call,error,output,"Error in function call [output, error]",6,1,6,0,0,0,6,0
+3,3,Invalid multi-line string,error,resource,"Invalid multi-line string [resource, error]",3,2,3,0,3,0,0,0
+3,3,Reference to undeclared resource,error,output,"Reference to undeclared resource [output, error]",3,2,3,0,0,0,3,0
+3,3,Reference to undeclared input variable,error,data,"Reference to undeclared input variable [data, error]",3,1,3,0,3,0,0,0
+3,3,Invalid resource type,error,resource,"Invalid resource type [resource, error]",2,2,2,0,2,0,0,0
+3,3,Missing item separator,error,resource,"Missing item separator [resource, error]",2,2,2,0,2,0,0,0
+3,3,Missing required argument,error,resource,"Missing required argument [resource, error]",2,2,2,0,2,0,0,0
+3,3,Unsupported attribute,error,resource,"Unsupported attribute [resource, error]",2,2,2,0,0,2,0,0
+3,3,Unterminated template string,error,resource,"Unterminated template string [resource, error]",2,2,2,0,2,0,0,0
+3,3,Invalid depends_on reference,error,resource,"Invalid depends_on reference [resource, error]",2,1,2,0,2,0,0,0
+3,3,Reference to undeclared resource,error,provider,"Reference to undeclared resource [provider, error]",2,1,2,0,0,2,0,0
+3,3,"""event_pattern"" contains an invalid JSON: invalid character '.' looking for beginning of value",error,resource,"""event_pattern"" contains an invalid JSON: invalid character '.' looking for beginning of value [resource, error]",1,1,1,0,1,0,0,0
+3,3,Argument or block definition required,error,data,"Argument or block definition required [data, error]",1,1,1,0,1,0,0,0
+3,3,Deprecated Resource,warning,resource,"Deprecated Resource [resource, warning]",1,1,1,0,0,1,0,0
+3,3,Deprecated attribute,warning,data,"Deprecated attribute [data, warning]",1,1,1,0,0,1,0,0
+3,3,Error in function call,error,resource,"Error in function call [resource, error]",1,1,1,0,1,0,0,0
+3,3,Invalid or unknown key,error,data,"Invalid or unknown key [data, error]",1,1,1,0,1,0,0,0
+3,3,Missing required provider,error,Unknown,"Missing required provider [Unknown, error]",1,1,1,0,0,0,1,0
+3,3,Missing resource instance key,error,resource,"Missing resource instance key [resource, error]",1,1,1,0,0,1,0,0
+3,3,Reference to undeclared resource,error,data,"Reference to undeclared resource [data, error]",1,1,1,0,1,0,0,0
+3,3,Reference to undeclared resource,error,locals,"Reference to undeclared resource [locals, error]",1,1,1,0,0,1,0,0
+3,3,Reference to undeclared resource,error,module,"Reference to undeclared resource [module, error]",1,1,1,0,0,1,0,0
+3,3,Unsupported argument,error,data,"Unsupported argument [data, error]",1,1,1,0,1,0,0,0
+3,3,Unsupported attribute,error,output,"Unsupported attribute [output, error]",1,1,1,0,0,1,0,0
+4,4,Unsupported block type,error,resource,"Unsupported block type [resource, error]",17,5,17,0,7,7,3,0
+4,4,Unsupported argument,error,resource,"Unsupported argument [resource, error]",12,7,12,0,9,3,0,0
+4,4,Invalid character,error,resource,"Invalid character [resource, error]",9,3,9,0,9,0,0,0
+4,4,Reference to undeclared input variable,error,resource,"Reference to undeclared input variable [resource, error]",7,3,7,0,7,0,0,0
+4,4,Error in function call,error,output,"Error in function call [output, error]",6,1,6,0,0,0,6,0
+4,4,Missing newline after argument,error,resource,"Missing newline after argument [resource, error]",3,3,3,0,3,0,0,0
+4,4,Invalid multi-line string,error,resource,"Invalid multi-line string [resource, error]",3,2,3,0,3,0,0,0
+4,4,Reference to undeclared resource,error,output,"Reference to undeclared resource [output, error]",3,2,3,0,0,0,3,0
+4,4,Missing item separator,error,resource,"Missing item separator [resource, error]",2,2,2,0,2,0,0,0
+4,4,Missing required argument,error,resource,"Missing required argument [resource, error]",2,2,2,0,2,0,0,0
+4,4,Missing required provider,error,Unknown,"Missing required provider [Unknown, error]",2,2,2,0,0,0,2,0
+4,4,Missing resource instance key,error,resource,"Missing resource instance key [resource, error]",2,2,2,0,1,1,0,0
+4,4,Reference to undeclared resource,error,resource,"Reference to undeclared resource [resource, error]",2,2,2,0,0,2,0,0
+4,4,Unsupported attribute,error,resource,"Unsupported attribute [resource, error]",2,2,2,0,0,2,0,0
+4,4,Unterminated template string,error,resource,"Unterminated template string [resource, error]",2,2,2,0,2,0,0,0
+4,4,Deprecated Resource,warning,resource,"Deprecated Resource [resource, warning]",2,1,2,0,0,0,2,0
+4,4,Reference to undeclared input variable,error,data,"Reference to undeclared input variable [data, error]",2,1,2,0,2,0,0,0
+4,4,Reference to undeclared resource,error,provider,"Reference to undeclared resource [provider, error]",2,1,2,0,0,2,0,0
+4,4,Argument or block definition required,error,data,"Argument or block definition required [data, error]",1,1,1,0,1,0,0,0
+4,4,Duplicate lifecycle block,error,resource,"Duplicate lifecycle block [resource, error]",1,1,1,0,1,0,0,0
+4,4,Incorrect attribute value type,error,resource,"Incorrect attribute value type [resource, error]",1,1,1,0,1,0,0,0
+4,4,Reference to undeclared resource,error,locals,"Reference to undeclared resource [locals, error]",1,1,1,0,0,1,0,0
+5,5,Unsupported block type,error,resource,"Unsupported block type [resource, error]",12,3,12,0,2,7,3,0
+5,5,Unsupported argument,error,resource,"Unsupported argument [resource, error]",8,6,8,0,7,1,0,0
+5,5,Invalid character,error,resource,"Invalid character [resource, error]",8,2,8,0,8,0,0,0
+5,5,Reference to undeclared resource,error,resource,"Reference to undeclared resource [resource, error]",6,5,6,0,0,6,0,0
+5,5,Error in function call,error,output,"Error in function call [output, error]",6,1,6,0,0,0,6,0
+5,5,Invalid multi-line string,error,resource,"Invalid multi-line string [resource, error]",3,2,3,0,3,0,0,0
+5,5,Invalid expression,error,resource,"Invalid expression [resource, error]",2,2,2,0,2,0,0,0
+5,5,Missing item separator,error,resource,"Missing item separator [resource, error]",2,2,2,0,2,0,0,0
+5,5,Missing required provider,error,Unknown,"Missing required provider [Unknown, error]",2,2,2,0,0,0,2,0
+5,5,Reference to undeclared input variable,error,resource,"Reference to undeclared input variable [resource, error]",2,2,2,0,2,0,0,0
+5,5,Unsupported attribute,error,resource,"Unsupported attribute [resource, error]",2,2,2,0,1,1,0,0
+5,5,Unterminated template string,error,resource,"Unterminated template string [resource, error]",2,2,2,0,2,0,0,0
+5,5,Reference to undeclared resource,error,provider,"Reference to undeclared resource [provider, error]",2,1,2,0,0,2,0,0
+5,5,Argument or block definition required,error,data,"Argument or block definition required [data, error]",1,1,1,0,1,0,0,0
+5,5,Deprecated attribute,warning,data,"Deprecated attribute [data, warning]",1,1,1,0,0,1,0,0
+5,5,Incorrect attribute value type,error,resource,"Incorrect attribute value type [resource, error]",1,1,1,0,1,0,0,0
+5,5,Invalid String Enum Value,error,resource,"Invalid String Enum Value [resource, error]",1,1,1,0,1,0,0,0
+5,5,Invalid function argument,error,resource,"Invalid function argument [resource, error]",1,1,1,0,1,0,0,0
+5,5,Invalid resource type,error,resource,"Invalid resource type [resource, error]",1,1,1,0,1,0,0,0
+5,5,Missing newline after argument,error,resource,"Missing newline after argument [resource, error]",1,1,1,0,1,0,0,0
+5,5,Missing required argument,error,resource,"Missing required argument [resource, error]",1,1,1,0,1,0,0,0
+5,5,Missing resource instance key,error,resource,"Missing resource instance key [resource, error]",1,1,1,0,0,1,0,0
+5,5,Reference to undeclared resource,error,locals,"Reference to undeclared resource [locals, error]",1,1,1,0,0,1,0,0
+5,5,Reference to undeclared resource,error,module,"Reference to undeclared resource [module, error]",1,1,1,0,0,1,0,0
+6,6,Unsupported block type,error,resource,"Unsupported block type [resource, error]",14,5,14,0,4,7,3,0
+6,6,Reference to undeclared resource,error,resource,"Reference to undeclared resource [resource, error]",11,9,11,0,3,8,0,0
+6,6,Unsupported argument,error,resource,"Unsupported argument [resource, error]",8,6,8,0,6,2,0,0
+6,6,Invalid character,error,resource,"Invalid character [resource, error]",8,2,8,0,8,0,0,0
+6,6,Reference to undeclared input variable,error,resource,"Reference to undeclared input variable [resource, error]",7,3,7,0,7,0,0,0
+6,6,Error in function call,error,output,"Error in function call [output, error]",6,1,6,0,0,0,6,0
+6,6,Invalid multi-line string,error,resource,"Invalid multi-line string [resource, error]",3,2,3,0,3,0,0,0
+6,6,Reference to undeclared input variable,error,data,"Reference to undeclared input variable [data, error]",3,1,3,0,3,0,0,0
+6,6,Invalid resource type,error,resource,"Invalid resource type [resource, error]",2,2,2,0,2,0,0,0
+6,6,Missing item separator,error,resource,"Missing item separator [resource, error]",2,2,2,0,2,0,0,0
+6,6,Missing newline after argument,error,resource,"Missing newline after argument [resource, error]",2,2,2,0,2,0,0,0
+6,6,Missing required argument,error,resource,"Missing required argument [resource, error]",2,2,2,0,2,0,0,0
+6,6,Missing required provider,error,Unknown,"Missing required provider [Unknown, error]",2,2,2,0,0,0,2,0
+6,6,Unsupported attribute,error,resource,"Unsupported attribute [resource, error]",2,2,2,0,0,2,0,0
+6,6,Unterminated template string,error,resource,"Unterminated template string [resource, error]",2,2,2,0,2,0,0,0
+6,6,Invalid depends_on reference,error,resource,"Invalid depends_on reference [resource, error]",2,1,2,0,2,0,0,0
+6,6,Reference to undeclared resource,error,output,"Reference to undeclared resource [output, error]",2,1,2,0,0,0,2,0
+6,6,Reference to undeclared resource,error,provider,"Reference to undeclared resource [provider, error]",2,1,2,0,0,2,0,0
+6,6,Argument or block definition required,error,data,"Argument or block definition required [data, error]",1,1,1,0,1,0,0,0
+6,6,Deprecated attribute,warning,data,"Deprecated attribute [data, warning]",1,1,1,0,0,1,0,0
+6,6,Incorrect attribute value type,error,resource,"Incorrect attribute value type [resource, error]",1,1,1,0,1,0,0,0
+6,6,Invalid expression,error,resource,"Invalid expression [resource, error]",1,1,1,0,1,0,0,0
+6,6,Missing resource instance key,error,resource,"Missing resource instance key [resource, error]",1,1,1,0,0,1,0,0
+6,6,Reference to undeclared resource,error,locals,"Reference to undeclared resource [locals, error]",1,1,1,0,0,1,0,0
+6,6,Reference to undeclared resource,error,module,"Reference to undeclared resource [module, error]",1,1,1,0,0,1,0,0
+6,6,"expected private_endpoint_network_policies to be one of [""Disabled"" ""Enabled"" ""NetworkSecurityGroupEnabled"" ""RouteTableEnabled""], got disabled",error,resource,"expected private_endpoint_network_policies to be one of [""Disabled"" ""Enabled"" ""NetworkSecurityGroupEnabled"" ""RouteTableEnabled""], got disabled [resource, error]",1,1,1,0,1,0,0,0
+7,7,Unsupported block type,error,resource,"Unsupported block type [resource, error]",14,5,14,0,4,7,3,0
+7,7,Reference to undeclared resource,error,resource,"Reference to undeclared resource [resource, error]",10,8,10,0,2,8,0,0
+7,7,Reference to undeclared input variable,error,resource,"Reference to undeclared input variable [resource, error]",9,5,9,0,9,0,0,0
+7,7,Invalid character,error,resource,"Invalid character [resource, error]",9,3,9,0,9,0,0,0
+7,7,Unsupported argument,error,resource,"Unsupported argument [resource, error]",8,6,8,0,6,2,0,0
+7,7,Reference to undeclared resource,error,output,"Reference to undeclared resource [output, error]",8,4,8,0,0,4,4,0
+7,7,Error in function call,error,output,"Error in function call [output, error]",6,1,6,0,0,0,6,0
+7,7,Invalid resource type,error,resource,"Invalid resource type [resource, error]",3,3,3,0,3,0,0,0
+7,7,Invalid multi-line string,error,resource,"Invalid multi-line string [resource, error]",3,2,3,0,3,0,0,0
+7,7,Reference to undeclared resource,error,locals,"Reference to undeclared resource [locals, error]",3,2,3,0,0,3,0,0
+7,7,Missing item separator,error,resource,"Missing item separator [resource, error]",2,2,2,0,2,0,0,0
+7,7,Missing newline after argument,error,resource,"Missing newline after argument [resource, error]",2,2,2,0,2,0,0,0
+7,7,Missing required provider,error,Unknown,"Missing required provider [Unknown, error]",2,2,2,0,0,0,2,0
+7,7,Unsupported attribute,error,resource,"Unsupported attribute [resource, error]",2,2,2,0,0,2,0,0
+7,7,Unterminated template string,error,resource,"Unterminated template string [resource, error]",2,2,2,0,2,0,0,0
+7,7,Deprecated Resource,warning,resource,"Deprecated Resource [resource, warning]",2,1,2,0,0,0,2,0
+7,7,Invalid index,error,resource,"Invalid index [resource, error]",2,1,2,0,2,0,0,0
+7,7,Reference to undeclared resource,error,provider,"Reference to undeclared resource [provider, error]",2,1,2,0,0,2,0,0
+7,7,Value for unconfigurable attribute,error,data,"Value for unconfigurable attribute [data, error]",2,1,2,0,2,0,0,0
+7,7,"""arn"" (aws_lambda_function.example_lambda.arn) is an invalid ARN: arn: invalid prefix",error,resource,"""arn"" (aws_lambda_function.example_lambda.arn) is an invalid ARN: arn: invalid prefix [resource, error]",1,1,1,0,1,0,0,0
+7,7,Argument or block definition required,error,data,"Argument or block definition required [data, error]",1,1,1,0,1,0,0,0
+7,7,Deprecated attribute,warning,data,"Deprecated attribute [data, warning]",1,1,1,0,0,1,0,0
+7,7,Invalid String Enum Value,error,resource,"Invalid String Enum Value [resource, error]",1,1,1,0,1,0,0,0
+7,7,Invalid expression,error,resource,"Invalid expression [resource, error]",1,1,1,0,1,0,0,0
+7,7,Missing required argument,error,resource,"Missing required argument [resource, error]",1,1,1,0,1,0,0,0
+7,7,Missing resource instance key,error,resource,"Missing resource instance key [resource, error]",1,1,1,0,0,1,0,0
+7,7,Reference to undeclared resource,error,module,"Reference to undeclared resource [module, error]",1,1,1,0,0,1,0,0
+7,7,"expected object_lock_enabled to be one of [""Enabled""], got true",error,resource,"expected object_lock_enabled to be one of [""Enabled""], got true [resource, error]",1,1,1,0,1,0,0,0
+7,7,"expected private_endpoint_network_policies to be one of [""Disabled"" ""Enabled"" ""NetworkSecurityGroupEnabled"" ""RouteTableEnabled""], got false",error,resource,"expected private_endpoint_network_policies to be one of [""Disabled"" ""Enabled"" ""NetworkSecurityGroupEnabled"" ""RouteTableEnabled""], got false [resource, error]",1,1,1,0,1,0,0,0
+8,8,Unsupported block type,error,resource,"Unsupported block type [resource, error]",16,5,16,0,6,7,3,0
+8,8,Unsupported argument,error,resource,"Unsupported argument [resource, error]",14,7,14,0,12,2,0,0
+8,8,Reference to undeclared resource,error,resource,"Reference to undeclared resource [resource, error]",12,8,12,0,6,6,0,0
+8,8,Invalid character,error,resource,"Invalid character [resource, error]",9,3,9,0,9,0,0,0
+8,8,Error in function call,error,output,"Error in function call [output, error]",6,1,6,0,0,0,6,0
+8,8,Reference to undeclared input variable,error,resource,"Reference to undeclared input variable [resource, error]",5,2,5,0,5,0,0,0
+8,8,Missing required argument,error,resource,"Missing required argument [resource, error]",4,3,4,0,4,0,0,0
+8,8,Deprecated Resource,warning,resource,"Deprecated Resource [resource, warning]",3,2,3,0,0,1,2,0
+8,8,Invalid multi-line string,error,resource,"Invalid multi-line string [resource, error]",3,2,3,0,3,0,0,0
+8,8,Missing item separator,error,resource,"Missing item separator [resource, error]",2,2,2,0,2,0,0,0
+8,8,Missing newline after argument,error,resource,"Missing newline after argument [resource, error]",2,2,2,0,2,0,0,0
+8,8,Missing required provider,error,Unknown,"Missing required provider [Unknown, error]",2,2,2,0,0,0,2,0
+8,8,Missing resource instance key,error,resource,"Missing resource instance key [resource, error]",2,2,2,0,1,1,0,0
+8,8,Reference to undeclared resource,error,output,"Reference to undeclared resource [output, error]",2,2,2,0,0,0,2,0
+8,8,Unsupported attribute,error,resource,"Unsupported attribute [resource, error]",2,2,2,0,0,2,0,0
+8,8,Unterminated template string,error,resource,"Unterminated template string [resource, error]",2,2,2,0,2,0,0,0
+8,8,Invalid depends_on reference,error,resource,"Invalid depends_on reference [resource, error]",2,1,2,0,2,0,0,0
+8,8,Reference to undeclared resource,error,locals,"Reference to undeclared resource [locals, error]",2,1,2,0,0,2,0,0
+8,8,Reference to undeclared resource,error,provider,"Reference to undeclared resource [provider, error]",2,1,2,0,0,2,0,0
+8,8,Value for unconfigurable attribute,error,data,"Value for unconfigurable attribute [data, error]",2,1,2,0,2,0,0,0
+8,8,Argument or block definition required,error,data,"Argument or block definition required [data, error]",1,1,1,0,1,0,0,0
+8,8,Deprecated attribute,warning,data,"Deprecated attribute [data, warning]",1,1,1,0,0,1,0,0
+8,8,Duplicate lifecycle block,error,resource,"Duplicate lifecycle block [resource, error]",1,1,1,0,1,0,0,0
+8,8,Error in function call,error,resource,"Error in function call [resource, error]",1,1,1,0,1,0,0,0
+8,8,Incorrect attribute value type,error,resource,"Incorrect attribute value type [resource, error]",1,1,1,0,1,0,0,0
+8,8,Invalid backend configuration,error,data,"Invalid backend configuration [data, error]",1,1,1,0,1,0,0,0
+8,8,Invalid expression,error,data,"Invalid expression [data, error]",1,1,1,0,1,0,0,0
+8,8,Invalid expression,error,resource,"Invalid expression [resource, error]",1,1,1,0,1,0,0,0
+8,8,Unsupported attribute,error,output,"Unsupported attribute [output, error]",1,1,1,0,0,1,0,0
+9,9,Unsupported block type,error,resource,"Unsupported block type [resource, error]",12,3,12,0,2,7,3,0
+9,9,Unsupported argument,error,resource,"Unsupported argument [resource, error]",9,7,9,0,7,2,0,0
+9,9,Reference to undeclared input variable,error,resource,"Reference to undeclared input variable [resource, error]",8,4,8,0,8,0,0,0
+9,9,Invalid character,error,resource,"Invalid character [resource, error]",8,2,8,0,8,0,0,0
+9,9,Reference to undeclared resource,error,output,"Reference to undeclared resource [output, error]",7,3,7,0,0,4,3,0
+9,9,Reference to undeclared resource,error,resource,"Reference to undeclared resource [resource, error]",5,4,5,0,0,5,0,0
+9,9,Deprecated Resource,warning,resource,"Deprecated Resource [resource, warning]",3,2,3,0,0,1,2,0
+9,9,Invalid multi-line string,error,resource,"Invalid multi-line string [resource, error]",3,2,3,0,3,0,0,0
+9,9,Invalid or unknown key,error,data,"Invalid or unknown key [data, error]",2,2,2,0,2,0,0,0
+9,9,Missing item separator,error,resource,"Missing item separator [resource, error]",2,2,2,0,2,0,0,0
+9,9,Missing required provider,error,Unknown,"Missing required provider [Unknown, error]",2,2,2,0,0,0,2,0
+9,9,Unsupported attribute,error,resource,"Unsupported attribute [resource, error]",2,2,2,0,0,2,0,0
+9,9,Unterminated template string,error,resource,"Unterminated template string [resource, error]",2,2,2,0,2,0,0,0
+9,9,Reference to undeclared resource,error,provider,"Reference to undeclared resource [provider, error]",2,1,2,0,0,2,0,0
+9,9,Argument or block definition required,error,data,"Argument or block definition required [data, error]",1,1,1,0,1,0,0,0
+9,9,Invalid expression,error,data,"Invalid expression [data, error]",1,1,1,0,1,0,0,0
+9,9,Invalid expression,error,resource,"Invalid expression [resource, error]",1,1,1,0,1,0,0,0
+9,9,Invalid resource type,error,resource,"Invalid resource type [resource, error]",1,1,1,0,1,0,0,0
+9,9,Missing attribute value,error,data,"Missing attribute value [data, error]",1,1,1,0,1,0,0,0
+9,9,Missing newline after argument,error,resource,"Missing newline after argument [resource, error]",1,1,1,0,1,0,0,0
+9,9,Missing required argument,error,resource,"Missing required argument [resource, error]",1,1,1,0,1,0,0,0
+9,9,Reference to undeclared resource,error,locals,"Reference to undeclared resource [locals, error]",1,1,1,0,0,1,0,0
+9,9,Unsupported argument,error,data,"Unsupported argument [data, error]",1,1,1,0,1,0,0,0
+9,9,Unsupported attribute,error,output,"Unsupported attribute [output, error]",1,1,1,0,0,1,0,0
+9,9,Value for unconfigurable attribute,error,data,"Value for unconfigurable attribute [data, error]",1,1,1,0,1,0,0,0
+9,9,"expected domain to be one of [vpc standard], got true",error,resource,"expected domain to be one of [vpc standard], got true [resource, error]",1,1,1,0,1,0,0,0
+9,9,"expected object_lock_enabled to be one of [""Enabled""], got true",error,resource,"expected object_lock_enabled to be one of [""Enabled""], got true [resource, error]",1,1,1,0,1,0,0,0
+10,10,Attribute redefined,error,resource,"Attribute redefined [resource, error]",18,1,18,0,18,0,0,0
+10,10,Unsupported block type,error,resource,"Unsupported block type [resource, error]",16,5,16,0,6,7,3,0
+10,10,Unsupported argument,error,resource,"Unsupported argument [resource, error]",14,8,14,0,12,2,0,0
+10,10,Reference to undeclared resource,error,resource,"Reference to undeclared resource [resource, error]",10,7,10,0,4,6,0,0
+10,10,Invalid character,error,resource,"Invalid character [resource, error]",8,2,8,0,8,0,0,0
+10,10,Missing required argument,error,resource,"Missing required argument [resource, error]",6,4,6,0,6,0,0,0
+10,10,Error in function call,error,output,"Error in function call [output, error]",6,1,6,0,0,0,6,0
+10,10,Reference to undeclared input variable,error,resource,"Reference to undeclared input variable [resource, error]",5,2,5,0,5,0,0,0
+10,10,Missing item separator,error,resource,"Missing item separator [resource, error]",3,3,3,0,3,0,0,0
+10,10,Invalid multi-line string,error,resource,"Invalid multi-line string [resource, error]",3,2,3,0,3,0,0,0
+10,10,Invalid resource type,error,resource,"Invalid resource type [resource, error]",2,2,2,0,2,0,0,0
+10,10,Missing required provider,error,Unknown,"Missing required provider [Unknown, error]",2,2,2,0,0,0,2,0
+10,10,Unsupported attribute,error,resource,"Unsupported attribute [resource, error]",2,2,2,0,0,2,0,0
+10,10,Unterminated template string,error,resource,"Unterminated template string [resource, error]",2,2,2,0,2,0,0,0
+10,10,Deprecated Resource,warning,resource,"Deprecated Resource [resource, warning]",2,1,2,0,0,0,2,0
+10,10,Invalid depends_on reference,error,resource,"Invalid depends_on reference [resource, error]",2,1,2,0,2,0,0,0
+10,10,Reference to undeclared resource,error,output,"Reference to undeclared resource [output, error]",2,1,2,0,0,0,2,0
+10,10,Reference to undeclared resource,error,provider,"Reference to undeclared resource [provider, error]",2,1,2,0,0,2,0,0
+10,10,"""arn"" (aws_lambda_function.example_lambda.arn) is an invalid ARN: arn: invalid prefix",error,resource,"""arn"" (aws_lambda_function.example_lambda.arn) is an invalid ARN: arn: invalid prefix [resource, error]",1,1,1,0,1,0,0,0
+10,10,Argument or block definition required,error,data,"Argument or block definition required [data, error]",1,1,1,0,1,0,0,0
+10,10,Deprecated attribute,warning,data,"Deprecated attribute [data, warning]",1,1,1,0,0,1,0,0
+10,10,Duplicate lifecycle block,error,resource,"Duplicate lifecycle block [resource, error]",1,1,1,0,1,0,0,0
+10,10,Invalid depends_on reference,error,data,"Invalid depends_on reference [data, error]",1,1,1,0,1,0,0,0
+10,10,Invalid or unknown key,error,data,"Invalid or unknown key [data, error]",1,1,1,0,1,0,0,0
+10,10,Missing resource instance key,error,resource,"Missing resource instance key [resource, error]",1,1,1,0,0,1,0,0
+10,10,Reference to undeclared resource,error,data,"Reference to undeclared resource [data, error]",1,1,1,0,1,0,0,0
+10,10,Reference to undeclared resource,error,locals,"Reference to undeclared resource [locals, error]",1,1,1,0,0,1,0,0
+10,10,Reference to undeclared resource,error,module,"Reference to undeclared resource [module, error]",1,1,1,0,0,1,0,0
+10,10,"expected object_lock_enabled to be one of [""Enabled""], got true",error,resource,"expected object_lock_enabled to be one of [""Enabled""], got true [resource, error]",1,1,1,0,1,0,0,0
+11,11,Unsupported block type,error,resource,"Unsupported block type [resource, error]",12,3,12,0,2,7,3,0
+11,11,Unsupported argument,error,resource,"Unsupported argument [resource, error]",10,7,10,0,8,2,0,0
+11,11,Invalid character,error,resource,"Invalid character [resource, error]",8,2,8,0,8,0,0,0
+11,11,Reference to undeclared resource,error,resource,"Reference to undeclared resource [resource, error]",7,6,7,0,3,4,0,0
+11,11,Error in function call,error,output,"Error in function call [output, error]",6,1,6,0,0,0,6,0
+11,11,Reference to undeclared input variable,error,resource,"Reference to undeclared input variable [resource, error]",4,4,4,0,4,0,0,0
+11,11,Reference to undeclared resource,error,output,"Reference to undeclared resource [output, error]",4,3,4,0,0,0,4,0
+11,11,Invalid resource type,error,resource,"Invalid resource type [resource, error]",3,3,3,0,3,0,0,0
+11,11,Invalid multi-line string,error,resource,"Invalid multi-line string [resource, error]",3,2,3,0,3,0,0,0
+11,11,Missing item separator,error,resource,"Missing item separator [resource, error]",2,2,2,0,2,0,0,0
+11,11,Missing newline after argument,error,resource,"Missing newline after argument [resource, error]",2,2,2,0,2,0,0,0
+11,11,Missing required argument,error,resource,"Missing required argument [resource, error]",2,2,2,0,2,0,0,0
+11,11,Missing required provider,error,Unknown,"Missing required provider [Unknown, error]",2,2,2,0,0,0,2,0
+11,11,Unsupported attribute,error,resource,"Unsupported attribute [resource, error]",2,2,2,0,0,2,0,0
+11,11,Unterminated template string,error,resource,"Unterminated template string [resource, error]",2,2,2,0,2,0,0,0
+11,11,Reference to undeclared resource,error,locals,"Reference to undeclared resource [locals, error]",2,1,2,0,0,2,0,0
+11,11,Reference to undeclared resource,error,provider,"Reference to undeclared resource [provider, error]",2,1,2,0,0,2,0,0
+11,11,Argument is deprecated,warning,resource,"Argument is deprecated [resource, warning]",1,1,1,0,1,0,0,0
+11,11,Argument or block definition required,error,data,"Argument or block definition required [data, error]",1,1,1,0,1,0,0,0
+11,11,Deprecated attribute,warning,data,"Deprecated attribute [data, warning]",1,1,1,0,0,1,0,0
+11,11,Incorrect attribute value type,error,resource,"Incorrect attribute value type [resource, error]",1,1,1,0,1,0,0,0
+11,11,Invalid String Enum Value,error,resource,"Invalid String Enum Value [resource, error]",1,1,1,0,1,0,0,0
+11,11,Invalid expression,error,data,"Invalid expression [data, error]",1,1,1,0,1,0,0,0
+11,11,Invalid expression,error,resource,"Invalid expression [resource, error]",1,1,1,0,1,0,0,0
+11,11,Invalid or unknown key,error,data,"Invalid or unknown key [data, error]",1,1,1,0,1,0,0,0
+11,11,Missing resource instance key,error,resource,"Missing resource instance key [resource, error]",1,1,1,0,0,1,0,0
+11,11,Reference to undeclared resource,error,data,"Reference to undeclared resource [data, error]",1,1,1,0,1,0,0,0
+11,11,Reference to undeclared resource,error,module,"Reference to undeclared resource [module, error]",1,1,1,0,0,1,0,0
+11,11,Unsupported argument,error,data,"Unsupported argument [data, error]",1,1,1,0,1,0,0,0
+11,11,"expected domain to be one of [vpc standard], got true",error,resource,"expected domain to be one of [vpc standard], got true [resource, error]",1,1,1,0,1,0,0,0
+11,11,"expected private_endpoint_network_policies to be one of [""Disabled"" ""Enabled"" ""NetworkSecurityGroupEnabled"" ""RouteTableEnabled""], got false",error,resource,"expected private_endpoint_network_policies to be one of [""Disabled"" ""Enabled"" ""NetworkSecurityGroupEnabled"" ""RouteTableEnabled""], got false [resource, error]",1,1,1,0,1,0,0,0
+12,12,Unsupported block type,error,resource,"Unsupported block type [resource, error]",14,5,14,0,4,7,3,0
+12,12,Reference to undeclared input variable,error,resource,"Reference to undeclared input variable [resource, error]",10,6,10,0,10,0,0,0
+12,12,Invalid character,error,resource,"Invalid character [resource, error]",9,3,9,0,9,0,0,0
+12,12,Unsupported argument,error,resource,"Unsupported argument [resource, error]",8,6,8,0,6,2,0,0
+12,12,Reference to undeclared resource,error,resource,"Reference to undeclared resource [resource, error]",7,6,7,0,0,7,0,0
+12,12,Error in function call,error,output,"Error in function call [output, error]",6,1,6,0,0,0,6,0
+12,12,Unsupported attribute,error,resource,"Unsupported attribute [resource, error]",4,4,4,0,2,2,0,0
+12,12,Invalid multi-line string,error,resource,"Invalid multi-line string [resource, error]",3,2,3,0,3,0,0,0
+12,12,Invalid resource type,error,resource,"Invalid resource type [resource, error]",2,2,2,0,2,0,0,0
+12,12,Missing item separator,error,resource,"Missing item separator [resource, error]",2,2,2,0,2,0,0,0
+12,12,Missing required argument,error,resource,"Missing required argument [resource, error]",2,2,2,0,2,0,0,0
+12,12,Missing required provider,error,Unknown,"Missing required provider [Unknown, error]",2,2,2,0,0,0,2,0
+12,12,Unterminated template string,error,resource,"Unterminated template string [resource, error]",2,2,2,0,2,0,0,0
+12,12,Reference to undeclared resource,error,output,"Reference to undeclared resource [output, error]",2,1,2,0,0,0,2,0
+12,12,Reference to undeclared resource,error,provider,"Reference to undeclared resource [provider, error]",2,1,2,0,0,2,0,0
+12,12,Argument or block definition required,error,data,"Argument or block definition required [data, error]",1,1,1,0,1,0,0,0
+12,12,Deprecated attribute,warning,data,"Deprecated attribute [data, warning]",1,1,1,0,0,1,0,0
+12,12,Missing newline after argument,error,resource,"Missing newline after argument [resource, error]",1,1,1,0,1,0,0,0
+12,12,Missing resource instance key,error,resource,"Missing resource instance key [resource, error]",1,1,1,0,0,1,0,0
+12,12,Reference to undeclared resource,error,locals,"Reference to undeclared resource [locals, error]",1,1,1,0,0,1,0,0
+12,12,Reference to undeclared resource,error,module,"Reference to undeclared resource [module, error]",1,1,1,0,0,1,0,0
+12,12,Value for unconfigurable attribute,error,resource,"Value for unconfigurable attribute [resource, error]",1,1,1,0,1,0,0,0
+12,12,"expected object_lock_enabled to be one of [""Enabled""], got true",error,resource,"expected object_lock_enabled to be one of [""Enabled""], got true [resource, error]",1,1,1,0,1,0,0,0
+12,12,"expected private_endpoint_network_policies to be one of [""Disabled"" ""Enabled"" ""NetworkSecurityGroupEnabled"" ""RouteTableEnabled""], got false",error,resource,"expected private_endpoint_network_policies to be one of [""Disabled"" ""Enabled"" ""NetworkSecurityGroupEnabled"" ""RouteTableEnabled""], got false [resource, error]",1,1,1,0,1,0,0,0
+13,13,Unsupported block type,error,resource,"Unsupported block type [resource, error]",12,3,12,0,2,7,3,0
+13,13,Unsupported argument,error,resource,"Unsupported argument [resource, error]",11,8,11,0,8,3,0,0
+13,13,Reference to undeclared resource,error,resource,"Reference to undeclared resource [resource, error]",11,7,11,0,5,6,0,0
+13,13,Reference to undeclared input variable,error,resource,"Reference to undeclared input variable [resource, error]",10,6,10,0,10,0,0,0
+13,13,Invalid character,error,resource,"Invalid character [resource, error]",8,2,8,0,8,0,0,0
+13,13,Missing required argument,error,resource,"Missing required argument [resource, error]",3,3,3,0,3,0,0,0
+13,13,Invalid multi-line string,error,resource,"Invalid multi-line string [resource, error]",3,2,3,0,3,0,0,0
+13,13,Incorrect attribute value type,error,resource,"Incorrect attribute value type [resource, error]",2,2,2,0,2,0,0,0
+13,13,Invalid resource type,error,resource,"Invalid resource type [resource, error]",2,2,2,0,2,0,0,0
+13,13,Missing item separator,error,resource,"Missing item separator [resource, error]",2,2,2,0,2,0,0,0
+13,13,Missing newline after argument,error,resource,"Missing newline after argument [resource, error]",2,2,2,0,2,0,0,0
+13,13,Missing required provider,error,Unknown,"Missing required provider [Unknown, error]",2,2,2,0,0,0,2,0
+13,13,Unsupported attribute,error,resource,"Unsupported attribute [resource, error]",2,2,2,0,0,2,0,0
+13,13,Unterminated template string,error,resource,"Unterminated template string [resource, error]",2,2,2,0,2,0,0,0
+13,13,Reference to undeclared resource,error,provider,"Reference to undeclared resource [provider, error]",2,1,2,0,0,2,0,0
+13,13,"""arn"" (aws_lambda_function.example_lambda.arn) is an invalid ARN: arn: invalid prefix",error,resource,"""arn"" (aws_lambda_function.example_lambda.arn) is an invalid ARN: arn: invalid prefix [resource, error]",1,1,1,0,1,0,0,0
+13,13,"""rule"" doesn't comply with restrictions (""^[\\.\\-_A-Za-z0-9]+$""): ""example event target""",error,resource,"""rule"" doesn't comply with restrictions (""^[\\.\\-_A-Za-z0-9]+$""): ""example event target"" [resource, error]",1,1,1,0,1,0,0,0
+13,13,"""target_id"" doesn't comply with restrictions (""^[\\.\\-_A-Za-z0-9]+$""): ""example event target""",error,resource,"""target_id"" doesn't comply with restrictions (""^[\\.\\-_A-Za-z0-9]+$""): ""example event target"" [resource, error]",1,1,1,0,1,0,0,0
+13,13,Argument or block definition required,error,data,"Argument or block definition required [data, error]",1,1,1,0,1,0,0,0
+13,13,Deprecated attribute,warning,data,"Deprecated attribute [data, warning]",1,1,1,0,0,1,0,0
+13,13,Invalid expression,error,resource,"Invalid expression [resource, error]",1,1,1,0,1,0,0,0
+13,13,Reference to undeclared resource,error,module,"Reference to undeclared resource [module, error]",1,1,1,0,0,1,0,0
+13,13,Reference to undeclared resource,error,output,"Reference to undeclared resource [output, error]",1,1,1,0,0,0,1,0
+13,13,Unsupported argument,error,data,"Unsupported argument [data, error]",1,1,1,0,1,0,0,0
+13,13,"expected object_lock_enabled to be one of [""Enabled""], got true",error,resource,"expected object_lock_enabled to be one of [""Enabled""], got true [resource, error]",1,1,1,0,1,0,0,0
+14,14,Unsupported argument,error,resource,"Unsupported argument [resource, error]",14,10,14,0,11,3,0,0
+14,14,Unsupported block type,error,resource,"Unsupported block type [resource, error]",13,4,13,0,3,7,3,0
+14,14,Reference to undeclared input variable,error,resource,"Reference to undeclared input variable [resource, error]",11,5,11,0,11,0,0,0
+14,14,Invalid character,error,resource,"Invalid character [resource, error]",8,2,8,0,8,0,0,0
+14,14,Reference to undeclared resource,error,resource,"Reference to undeclared resource [resource, error]",6,6,6,0,1,5,0,0
+14,14,Error in function call,error,output,"Error in function call [output, error]",6,1,6,0,0,0,6,0
+14,14,Missing required argument,error,resource,"Missing required argument [resource, error]",4,4,4,0,4,0,0,0
+14,14,Reference to undeclared resource,error,output,"Reference to undeclared resource [output, error]",4,3,4,0,0,0,4,0
+14,14,Invalid multi-line string,error,resource,"Invalid multi-line string [resource, error]",3,2,3,0,3,0,0,0
+14,14,Invalid resource type,error,resource,"Invalid resource type [resource, error]",2,2,2,0,2,0,0,0
+14,14,Missing item separator,error,resource,"Missing item separator [resource, error]",2,2,2,0,2,0,0,0
+14,14,Missing newline after argument,error,resource,"Missing newline after argument [resource, error]",2,2,2,0,2,0,0,0
+14,14,Unsupported attribute,error,resource,"Unsupported attribute [resource, error]",2,2,2,0,0,2,0,0
+14,14,Unterminated template string,error,resource,"Unterminated template string [resource, error]",2,2,2,0,2,0,0,0
+14,14,Deprecated Resource,warning,resource,"Deprecated Resource [resource, warning]",2,1,2,0,0,0,2,0
+14,14,Reference to undeclared resource,error,locals,"Reference to undeclared resource [locals, error]",2,1,2,0,0,2,0,0
+14,14,Reference to undeclared resource,error,provider,"Reference to undeclared resource [provider, error]",2,1,2,0,0,2,0,0
+14,14,Argument or block definition required,error,data,"Argument or block definition required [data, error]",1,1,1,0,1,0,0,0
+14,14,Deprecated attribute,warning,data,"Deprecated attribute [data, warning]",1,1,1,0,0,1,0,0
+14,14,Error in function call,error,resource,"Error in function call [resource, error]",1,1,1,0,1,0,0,0
+14,14,Incorrect attribute value type,error,resource,"Incorrect attribute value type [resource, error]",1,1,1,0,1,0,0,0
+14,14,Invalid String Enum Value,error,resource,"Invalid String Enum Value [resource, error]",1,1,1,0,1,0,0,0
+14,14,Missing required provider,error,Unknown,"Missing required provider [Unknown, error]",1,1,1,0,0,0,1,0
+14,14,Missing resource instance key,error,resource,"Missing resource instance key [resource, error]",1,1,1,0,0,1,0,0
+14,14,Reference to undeclared resource,error,data,"Reference to undeclared resource [data, error]",1,1,1,0,1,0,0,0
+14,14,Reference to undeclared resource,error,module,"Reference to undeclared resource [module, error]",1,1,1,0,0,1,0,0
+14,14,Unsupported argument,error,data,"Unsupported argument [data, error]",1,1,1,0,1,0,0,0
+14,14,"expected domain to be one of [vpc standard], got true",error,resource,"expected domain to be one of [vpc standard], got true [resource, error]",1,1,1,0,1,0,0,0
+14,14,"expected object_lock_enabled to be one of [""Enabled""], got true",error,resource,"expected object_lock_enabled to be one of [""Enabled""], got true [resource, error]",1,1,1,0,1,0,0,0
+15,15,Unsupported block type,error,resource,"Unsupported block type [resource, error]",13,4,13,0,3,7,3,0
+15,15,Unsupported argument,error,resource,"Unsupported argument [resource, error]",11,8,11,0,9,2,0,0
+15,15,Invalid character,error,resource,"Invalid character [resource, error]",9,3,9,0,9,0,0,0
+15,15,Reference to undeclared resource,error,resource,"Reference to undeclared resource [resource, error]",8,7,8,0,1,7,0,0
+15,15,Reference to undeclared input variable,error,resource,"Reference to undeclared input variable [resource, error]",8,4,8,0,8,0,0,0
+15,15,Error in function call,error,output,"Error in function call [output, error]",6,1,6,0,0,0,6,0
+15,15,Missing required argument,error,resource,"Missing required argument [resource, error]",3,3,3,0,3,0,0,0
+15,15,Invalid multi-line string,error,resource,"Invalid multi-line string [resource, error]",3,2,3,0,3,0,0,0
+15,15,Reference to undeclared resource,error,output,"Reference to undeclared resource [output, error]",3,2,3,0,0,0,3,0
+15,15,Missing item separator,error,resource,"Missing item separator [resource, error]",2,2,2,0,2,0,0,0
+15,15,Missing newline after argument,error,resource,"Missing newline after argument [resource, error]",2,2,2,0,2,0,0,0
+15,15,Missing required provider,error,Unknown,"Missing required provider [Unknown, error]",2,2,2,0,0,0,2,0
+15,15,Unsupported attribute,error,resource,"Unsupported attribute [resource, error]",2,2,2,0,0,2,0,0
+15,15,Unterminated template string,error,resource,"Unterminated template string [resource, error]",2,2,2,0,2,0,0,0
+15,15,Conflicting configuration arguments,error,resource,"Conflicting configuration arguments [resource, error]",2,1,2,0,2,0,0,0
+15,15,Deprecated Resource,warning,resource,"Deprecated Resource [resource, warning]",2,1,2,0,0,0,2,0
+15,15,Invalid index,error,resource,"Invalid index [resource, error]",2,1,2,0,2,0,0,0
+15,15,Reference to undeclared resource,error,provider,"Reference to undeclared resource [provider, error]",2,1,2,0,0,2,0,0
+15,15,Argument or block definition required,error,data,"Argument or block definition required [data, error]",1,1,1,0,1,0,0,0
+15,15,Deprecated attribute,warning,data,"Deprecated attribute [data, warning]",1,1,1,0,0,1,0,0
+15,15,Invalid String Enum Value,error,resource,"Invalid String Enum Value [resource, error]",1,1,1,0,1,0,0,0
+15,15,Invalid resource type,error,resource,"Invalid resource type [resource, error]",1,1,1,0,1,0,0,0
+15,15,Missing resource instance key,error,resource,"Missing resource instance key [resource, error]",1,1,1,0,0,1,0,0
+15,15,Reference to undeclared resource,error,module,"Reference to undeclared resource [module, error]",1,1,1,0,0,1,0,0
+15,15,"expected domain to be one of [vpc standard], got true",error,resource,"expected domain to be one of [vpc standard], got true [resource, error]",1,1,1,0,1,0,0,0
+15,15,"expected object_lock_enabled to be one of [""Enabled""], got true",error,resource,"expected object_lock_enabled to be one of [""Enabled""], got true [resource, error]",1,1,1,0,1,0,0,0
+16,16,Unsupported block type,error,resource,"Unsupported block type [resource, error]",15,6,15,0,5,7,3,0
+16,16,Unsupported argument,error,resource,"Unsupported argument [resource, error]",11,8,11,0,9,2,0,0
+16,16,Reference to undeclared resource,error,resource,"Reference to undeclared resource [resource, error]",9,7,9,0,2,7,0,0
+16,16,Invalid character,error,resource,"Invalid character [resource, error]",8,2,8,0,8,0,0,0
+16,16,Error in function call,error,output,"Error in function call [output, error]",6,1,6,0,0,0,6,0
+16,16,Reference to undeclared resource,error,output,"Reference to undeclared resource [output, error]",5,2,5,0,0,4,1,0
+16,16,Reference to undeclared input variable,error,resource,"Reference to undeclared input variable [resource, error]",4,4,4,0,4,0,0,0
+16,16,Unsupported attribute,error,resource,"Unsupported attribute [resource, error]",3,3,3,0,1,2,0,0
+16,16,Invalid multi-line string,error,resource,"Invalid multi-line string [resource, error]",3,2,3,0,3,0,0,0
+16,16,Missing item separator,error,resource,"Missing item separator [resource, error]",2,2,2,0,2,0,0,0
+16,16,Missing required argument,error,resource,"Missing required argument [resource, error]",2,2,2,0,2,0,0,0
+16,16,Missing required provider,error,Unknown,"Missing required provider [Unknown, error]",2,2,2,0,0,0,2,0
+16,16,Unterminated template string,error,resource,"Unterminated template string [resource, error]",2,2,2,0,2,0,0,0
+16,16,"expected private_endpoint_network_policies to be one of [""Disabled"" ""Enabled"" ""NetworkSecurityGroupEnabled"" ""RouteTableEnabled""], got false",error,resource,"expected private_endpoint_network_policies to be one of [""Disabled"" ""Enabled"" ""NetworkSecurityGroupEnabled"" ""RouteTableEnabled""], got false [resource, error]",2,2,2,0,2,0,0,0
+16,16,Deprecated Resource,warning,resource,"Deprecated Resource [resource, warning]",2,1,2,0,0,0,2,0
+16,16,Reference to undeclared input variable,error,data,"Reference to undeclared input variable [data, error]",2,1,2,0,2,0,0,0
+16,16,Reference to undeclared resource,error,provider,"Reference to undeclared resource [provider, error]",2,1,2,0,0,2,0,0
+16,16,Argument or block definition required,error,data,"Argument or block definition required [data, error]",1,1,1,0,1,0,0,0
+16,16,Deprecated attribute,warning,data,"Deprecated attribute [data, warning]",1,1,1,0,0,1,0,0
+16,16,Error in function call,error,resource,"Error in function call [resource, error]",1,1,1,0,1,0,0,0
+16,16,Invalid expression,error,resource,"Invalid expression [resource, error]",1,1,1,0,1,0,0,0
+16,16,Invalid resource type,error,resource,"Invalid resource type [resource, error]",1,1,1,0,1,0,0,0
+16,16,Missing newline after argument,error,resource,"Missing newline after argument [resource, error]",1,1,1,0,1,0,0,0
+16,16,Missing resource instance key,error,resource,"Missing resource instance key [resource, error]",1,1,1,0,0,1,0,0
+16,16,Reference to undeclared resource,error,locals,"Reference to undeclared resource [locals, error]",1,1,1,0,0,1,0,0
+16,16,Reference to undeclared resource,error,module,"Reference to undeclared resource [module, error]",1,1,1,0,0,1,0,0
+16,16,Unsupported argument,error,data,"Unsupported argument [data, error]",1,1,1,0,1,0,0,0
+16,16,"expected object_lock_enabled to be one of [""Enabled""], got true",error,resource,"expected object_lock_enabled to be one of [""Enabled""], got true [resource, error]",1,1,1,0,1,0,0,0

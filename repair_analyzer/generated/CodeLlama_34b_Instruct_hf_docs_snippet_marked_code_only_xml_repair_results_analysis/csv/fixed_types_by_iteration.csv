@@ -1,0 +1,497 @@
+iteration_id,iteration_order,original_summary,original_severity,original_block_type,problem_type_label,repairs_attempted,unique_problems,fixed_repairs,strict_fixed_repairs,repairs_with_introduced_diagnostics,fix_rate,strict_fix_rate
+1,1,Unsupported argument,error,resource,"Unsupported argument [resource, error]",34,34,28,21,7,0.8235294117647058,0.6176470588235294
+1,1,Argument is deprecated,warning,resource,"Argument is deprecated [resource, warning]",30,30,16,13,3,0.5333333333333333,0.43333333333333335
+1,1,Quoted references are deprecated,warning,resource,"Quoted references are deprecated [resource, warning]",17,17,13,13,2,0.7647058823529411,0.7647058823529411
+1,1,Deprecated Resource,warning,resource,"Deprecated Resource [resource, warning]",22,22,11,2,10,0.5,0.09090909090909091
+1,1,Missing required argument,error,resource,"Missing required argument [resource, error]",7,7,6,5,1,0.8571428571428571,0.7142857142857143
+1,1,Unsupported block type,error,resource,"Unsupported block type [resource, error]",12,12,6,3,3,0.5,0.25
+1,1,Missing resource instance key,error,resource,"Missing resource instance key [resource, error]",5,5,5,4,1,1.0,0.8
+1,1,Unsupported attribute,error,resource,"Unsupported attribute [resource, error]",7,7,5,3,2,0.7142857142857143,0.42857142857142855
+1,1,Reference to undeclared resource,error,resource,"Reference to undeclared resource [resource, error]",14,14,4,3,1,0.2857142857142857,0.21428571428571427
+1,1,Unsupported argument,error,data,"Unsupported argument [data, error]",3,3,3,2,1,1.0,0.6666666666666666
+1,1,Deprecated Resource,warning,data,"Deprecated Resource [data, warning]",4,4,3,0,3,0.75,0.0
+1,1,Attribute Deprecated,warning,resource,"Attribute Deprecated [resource, warning]",2,2,2,1,1,1.0,0.5
+1,1,Invalid backend configuration,error,data,"Invalid backend configuration [data, error]",2,2,2,1,1,1.0,0.5
+1,1,Quoted references are deprecated,warning,data,"Quoted references are deprecated [data, warning]",3,3,2,1,1,0.6666666666666666,0.3333333333333333
+1,1,Incorrect attribute value type,error,resource,"Incorrect attribute value type [resource, error]",4,4,2,1,1,0.5,0.25
+1,1,Reference to undeclared input variable,error,resource,"Reference to undeclared input variable [resource, error]",13,13,2,2,0,0.15384615384615385,0.15384615384615385
+1,1,Deprecated attribute,warning,resource,"Deprecated attribute [resource, warning]",20,20,2,1,1,0.1,0.05
+1,1,Cannot index a set value,error,resource,"Cannot index a set value [resource, error]",1,1,1,1,0,1.0,1.0
+1,1,Deprecated Parameter,warning,data,"Deprecated Parameter [data, warning]",1,1,1,1,0,1.0,1.0
+1,1,Invalid Attribute Combination,warning,resource,"Invalid Attribute Combination [resource, warning]",2,2,1,1,0,0.5,0.5
+1,1,Unsupported block type,error,data,"Unsupported block type [data, error]",2,2,1,1,0,0.5,0.5
+1,1,Invalid index,error,resource,"Invalid index [resource, error]",11,11,1,1,0,0.09090909090909091,0.09090909090909091
+1,1,Deprecated,warning,data,"Deprecated [data, warning]",1,1,1,0,1,1.0,0.0
+1,1,Error in function call,error,resource,"Error in function call [resource, error]",1,1,1,0,1,1.0,0.0
+1,1,Reference to undeclared local value,error,resource,"Reference to undeclared local value [resource, error]",3,3,1,0,1,0.3333333333333333,0.0
+1,1,Deprecated attribute,warning,data,"Deprecated attribute [data, warning]",3,3,0,0,0,0.0,0.0
+1,1,Invalid Configuration for Read-Only Attribute,error,resource,"Invalid Configuration for Read-Only Attribute [resource, error]",2,2,0,0,0,0.0,0.0
+1,1,Invalid index,error,data,"Invalid index [data, error]",1,1,0,0,0,0.0,0.0
+1,1,"Reference to ""count"" in non-counted context",error,data,"Reference to ""count"" in non-counted context [data, error]",1,1,0,0,0,0.0,0.0
+1,1,"Reference to ""count"" in non-counted context",error,resource,"Reference to ""count"" in non-counted context [resource, error]",1,1,0,0,0,0.0,0.0
+1,1,Reference to undeclared input variable,error,data,"Reference to undeclared input variable [data, error]",9,9,0,0,0,0.0,0.0
+2,2,Unsupported argument,error,resource,"Unsupported argument [resource, error]",34,34,24,18,6,0.7058823529411765,0.5294117647058824
+2,2,Argument is deprecated,warning,resource,"Argument is deprecated [resource, warning]",30,30,18,14,4,0.6,0.4666666666666667
+2,2,Deprecated Resource,warning,resource,"Deprecated Resource [resource, warning]",22,22,12,2,11,0.5454545454545454,0.09090909090909091
+2,2,Quoted references are deprecated,warning,resource,"Quoted references are deprecated [resource, warning]",17,17,11,10,2,0.6470588235294118,0.5882352941176471
+2,2,Unsupported block type,error,resource,"Unsupported block type [resource, error]",12,12,7,3,4,0.5833333333333334,0.25
+2,2,Unsupported attribute,error,resource,"Unsupported attribute [resource, error]",7,7,6,4,2,0.8571428571428571,0.5714285714285714
+2,2,Reference to undeclared resource,error,resource,"Reference to undeclared resource [resource, error]",14,14,6,5,1,0.42857142857142855,0.35714285714285715
+2,2,Missing required argument,error,resource,"Missing required argument [resource, error]",7,7,5,4,1,0.7142857142857143,0.5714285714285714
+2,2,Missing resource instance key,error,resource,"Missing resource instance key [resource, error]",5,5,4,2,2,0.8,0.4
+2,2,Unsupported argument,error,data,"Unsupported argument [data, error]",3,3,3,1,2,1.0,0.3333333333333333
+2,2,Incorrect attribute value type,error,resource,"Incorrect attribute value type [resource, error]",4,4,3,1,2,0.75,0.25
+2,2,Deprecated Resource,warning,data,"Deprecated Resource [data, warning]",4,4,3,0,3,0.75,0.0
+2,2,Invalid Configuration for Read-Only Attribute,error,resource,"Invalid Configuration for Read-Only Attribute [resource, error]",2,2,2,2,0,1.0,1.0
+2,2,Invalid backend configuration,error,data,"Invalid backend configuration [data, error]",2,2,2,2,0,1.0,1.0
+2,2,Quoted references are deprecated,warning,data,"Quoted references are deprecated [data, warning]",3,3,2,2,0,0.6666666666666666,0.6666666666666666
+2,2,Attribute Deprecated,warning,resource,"Attribute Deprecated [resource, warning]",2,2,2,1,1,1.0,0.5
+2,2,Reference to undeclared local value,error,resource,"Reference to undeclared local value [resource, error]",3,3,2,0,2,0.6666666666666666,0.0
+2,2,"Reference to ""count"" in non-counted context",error,data,"Reference to ""count"" in non-counted context [data, error]",1,1,1,1,0,1.0,1.0
+2,2,Invalid Attribute Combination,warning,resource,"Invalid Attribute Combination [resource, warning]",2,2,1,1,1,0.5,0.5
+2,2,Unsupported block type,error,data,"Unsupported block type [data, error]",2,2,1,1,0,0.5,0.5
+2,2,Invalid index,error,resource,"Invalid index [resource, error]",11,11,1,1,0,0.09090909090909091,0.09090909090909091
+2,2,Reference to undeclared input variable,error,resource,"Reference to undeclared input variable [resource, error]",13,13,1,1,0,0.07692307692307693,0.07692307692307693
+2,2,Deprecated Parameter,warning,data,"Deprecated Parameter [data, warning]",1,1,1,0,1,1.0,0.0
+2,2,Deprecated,warning,data,"Deprecated [data, warning]",1,1,1,0,1,1.0,0.0
+2,2,Deprecated attribute,warning,resource,"Deprecated attribute [resource, warning]",20,20,1,0,1,0.05,0.0
+2,2,Error in function call,error,resource,"Error in function call [resource, error]",1,1,1,0,1,1.0,0.0
+2,2,Cannot index a set value,error,resource,"Cannot index a set value [resource, error]",1,1,0,0,0,0.0,0.0
+2,2,Deprecated attribute,warning,data,"Deprecated attribute [data, warning]",3,3,0,0,0,0.0,0.0
+2,2,Invalid index,error,data,"Invalid index [data, error]",1,1,0,0,1,0.0,0.0
+2,2,"Reference to ""count"" in non-counted context",error,resource,"Reference to ""count"" in non-counted context [resource, error]",1,1,0,0,0,0.0,0.0
+2,2,Reference to undeclared input variable,error,data,"Reference to undeclared input variable [data, error]",9,9,0,0,0,0.0,0.0
+3,3,Unsupported argument,error,resource,"Unsupported argument [resource, error]",34,34,23,21,2,0.6764705882352942,0.6176470588235294
+3,3,Argument is deprecated,warning,resource,"Argument is deprecated [resource, warning]",30,30,16,13,3,0.5333333333333333,0.43333333333333335
+3,3,Quoted references are deprecated,warning,resource,"Quoted references are deprecated [resource, warning]",17,17,15,14,1,0.8823529411764706,0.8235294117647058
+3,3,Deprecated Resource,warning,resource,"Deprecated Resource [resource, warning]",22,22,14,2,12,0.6363636363636364,0.09090909090909091
+3,3,Reference to undeclared resource,error,resource,"Reference to undeclared resource [resource, error]",14,14,7,5,2,0.5,0.35714285714285715
+3,3,Unsupported block type,error,resource,"Unsupported block type [resource, error]",12,12,6,3,3,0.5,0.25
+3,3,Missing resource instance key,error,resource,"Missing resource instance key [resource, error]",5,5,5,4,1,1.0,0.8
+3,3,Missing required argument,error,resource,"Missing required argument [resource, error]",7,7,5,4,1,0.7142857142857143,0.5714285714285714
+3,3,Unsupported attribute,error,resource,"Unsupported attribute [resource, error]",7,7,4,3,1,0.5714285714285714,0.42857142857142855
+3,3,Deprecated Resource,warning,data,"Deprecated Resource [data, warning]",4,4,4,0,4,1.0,0.0
+3,3,Unsupported argument,error,data,"Unsupported argument [data, error]",3,3,3,1,2,1.0,0.3333333333333333
+3,3,Invalid backend configuration,error,data,"Invalid backend configuration [data, error]",2,2,2,2,0,1.0,1.0
+3,3,Unsupported block type,error,data,"Unsupported block type [data, error]",2,2,2,2,0,1.0,1.0
+3,3,Quoted references are deprecated,warning,data,"Quoted references are deprecated [data, warning]",3,3,2,2,0,0.6666666666666666,0.6666666666666666
+3,3,Attribute Deprecated,warning,resource,"Attribute Deprecated [resource, warning]",2,2,2,1,1,1.0,0.5
+3,3,Incorrect attribute value type,error,resource,"Incorrect attribute value type [resource, error]",4,4,2,1,1,0.5,0.25
+3,3,Reference to undeclared input variable,error,resource,"Reference to undeclared input variable [resource, error]",13,13,2,2,0,0.15384615384615385,0.15384615384615385
+3,3,Deprecated attribute,warning,resource,"Deprecated attribute [resource, warning]",20,20,2,1,1,0.1,0.05
+3,3,Cannot index a set value,error,resource,"Cannot index a set value [resource, error]",1,1,1,1,0,1.0,1.0
+3,3,Invalid Attribute Combination,warning,resource,"Invalid Attribute Combination [resource, warning]",2,2,1,1,0,0.5,0.5
+3,3,Invalid index,error,resource,"Invalid index [resource, error]",11,11,1,1,0,0.09090909090909091,0.09090909090909091
+3,3,Deprecated Parameter,warning,data,"Deprecated Parameter [data, warning]",1,1,1,0,1,1.0,0.0
+3,3,Deprecated,warning,data,"Deprecated [data, warning]",1,1,1,0,1,1.0,0.0
+3,3,Error in function call,error,resource,"Error in function call [resource, error]",1,1,1,0,1,1.0,0.0
+3,3,Invalid Configuration for Read-Only Attribute,error,resource,"Invalid Configuration for Read-Only Attribute [resource, error]",2,2,1,0,1,0.5,0.0
+3,3,Reference to undeclared input variable,error,data,"Reference to undeclared input variable [data, error]",9,9,1,0,1,0.1111111111111111,0.0
+3,3,Reference to undeclared local value,error,resource,"Reference to undeclared local value [resource, error]",3,3,1,0,1,0.3333333333333333,0.0
+3,3,Deprecated attribute,warning,data,"Deprecated attribute [data, warning]",3,3,0,0,0,0.0,0.0
+3,3,Invalid index,error,data,"Invalid index [data, error]",1,1,0,0,0,0.0,0.0
+3,3,"Reference to ""count"" in non-counted context",error,data,"Reference to ""count"" in non-counted context [data, error]",1,1,0,0,0,0.0,0.0
+3,3,"Reference to ""count"" in non-counted context",error,resource,"Reference to ""count"" in non-counted context [resource, error]",1,1,0,0,0,0.0,0.0
+4,4,Unsupported argument,error,resource,"Unsupported argument [resource, error]",34,34,22,18,4,0.6470588235294118,0.5294117647058824
+4,4,Argument is deprecated,warning,resource,"Argument is deprecated [resource, warning]",30,30,16,13,3,0.5333333333333333,0.43333333333333335
+4,4,Quoted references are deprecated,warning,resource,"Quoted references are deprecated [resource, warning]",17,17,12,12,1,0.7058823529411765,0.7058823529411765
+4,4,Deprecated Resource,warning,resource,"Deprecated Resource [resource, warning]",22,22,10,1,9,0.45454545454545453,0.045454545454545456
+4,4,Reference to undeclared resource,error,resource,"Reference to undeclared resource [resource, error]",14,14,7,6,1,0.5,0.42857142857142855
+4,4,Missing required argument,error,resource,"Missing required argument [resource, error]",7,7,6,4,2,0.8571428571428571,0.5714285714285714
+4,4,Unsupported block type,error,resource,"Unsupported block type [resource, error]",12,12,6,3,3,0.5,0.25
+4,4,Missing resource instance key,error,resource,"Missing resource instance key [resource, error]",5,5,4,3,1,0.8,0.6
+4,4,Unsupported attribute,error,resource,"Unsupported attribute [resource, error]",7,7,4,3,1,0.5714285714285714,0.42857142857142855
+4,4,Unsupported argument,error,data,"Unsupported argument [data, error]",3,3,3,2,1,1.0,0.6666666666666666
+4,4,Deprecated Resource,warning,data,"Deprecated Resource [data, warning]",4,4,3,0,3,0.75,0.0
+4,4,Invalid backend configuration,error,data,"Invalid backend configuration [data, error]",2,2,2,2,0,1.0,1.0
+4,4,Unsupported block type,error,data,"Unsupported block type [data, error]",2,2,2,2,0,1.0,1.0
+4,4,Quoted references are deprecated,warning,data,"Quoted references are deprecated [data, warning]",3,3,2,2,0,0.6666666666666666,0.6666666666666666
+4,4,Attribute Deprecated,warning,resource,"Attribute Deprecated [resource, warning]",2,2,2,1,1,1.0,0.5
+4,4,Reference to undeclared input variable,error,resource,"Reference to undeclared input variable [resource, error]",13,13,2,2,0,0.15384615384615385,0.15384615384615385
+4,4,Deprecated attribute,warning,resource,"Deprecated attribute [resource, warning]",20,20,2,1,1,0.1,0.05
+4,4,Deprecated Parameter,warning,data,"Deprecated Parameter [data, warning]",1,1,1,1,0,1.0,1.0
+4,4,Invalid index,error,data,"Invalid index [data, error]",1,1,1,1,0,1.0,1.0
+4,4,"Reference to ""count"" in non-counted context",error,data,"Reference to ""count"" in non-counted context [data, error]",1,1,1,1,0,1.0,1.0
+4,4,Invalid Attribute Combination,warning,resource,"Invalid Attribute Combination [resource, warning]",2,2,1,1,0,0.5,0.5
+4,4,Deprecated,warning,data,"Deprecated [data, warning]",1,1,1,0,1,1.0,0.0
+4,4,Error in function call,error,resource,"Error in function call [resource, error]",1,1,1,0,1,1.0,0.0
+4,4,Incorrect attribute value type,error,resource,"Incorrect attribute value type [resource, error]",4,4,1,0,1,0.25,0.0
+4,4,Invalid Configuration for Read-Only Attribute,error,resource,"Invalid Configuration for Read-Only Attribute [resource, error]",2,2,1,0,1,0.5,0.0
+4,4,Reference to undeclared local value,error,resource,"Reference to undeclared local value [resource, error]",3,3,1,0,1,0.3333333333333333,0.0
+4,4,Cannot index a set value,error,resource,"Cannot index a set value [resource, error]",1,1,0,0,0,0.0,0.0
+4,4,Deprecated attribute,warning,data,"Deprecated attribute [data, warning]",3,3,0,0,0,0.0,0.0
+4,4,Invalid index,error,resource,"Invalid index [resource, error]",11,11,0,0,0,0.0,0.0
+4,4,"Reference to ""count"" in non-counted context",error,resource,"Reference to ""count"" in non-counted context [resource, error]",1,1,0,0,0,0.0,0.0
+4,4,Reference to undeclared input variable,error,data,"Reference to undeclared input variable [data, error]",9,9,0,0,0,0.0,0.0
+5,5,Unsupported argument,error,resource,"Unsupported argument [resource, error]",34,34,22,19,3,0.6470588235294118,0.5588235294117647
+5,5,Argument is deprecated,warning,resource,"Argument is deprecated [resource, warning]",30,30,14,12,2,0.4666666666666667,0.4
+5,5,Quoted references are deprecated,warning,resource,"Quoted references are deprecated [resource, warning]",17,17,12,11,1,0.7058823529411765,0.6470588235294118
+5,5,Deprecated Resource,warning,resource,"Deprecated Resource [resource, warning]",22,22,12,2,10,0.5454545454545454,0.09090909090909091
+5,5,Reference to undeclared resource,error,resource,"Reference to undeclared resource [resource, error]",14,14,7,5,2,0.5,0.35714285714285715
+5,5,Unsupported block type,error,resource,"Unsupported block type [resource, error]",12,12,6,3,3,0.5,0.25
+5,5,Missing resource instance key,error,resource,"Missing resource instance key [resource, error]",5,5,5,4,1,1.0,0.8
+5,5,Unsupported attribute,error,resource,"Unsupported attribute [resource, error]",7,7,5,4,1,0.7142857142857143,0.5714285714285714
+5,5,Missing required argument,error,resource,"Missing required argument [resource, error]",7,7,5,3,2,0.7142857142857143,0.42857142857142855
+5,5,Invalid backend configuration,error,data,"Invalid backend configuration [data, error]",2,2,2,2,0,1.0,1.0
+5,5,Quoted references are deprecated,warning,data,"Quoted references are deprecated [data, warning]",3,3,2,2,0,0.6666666666666666,0.6666666666666666
+5,5,Unsupported argument,error,data,"Unsupported argument [data, error]",3,3,2,2,0,0.6666666666666666,0.6666666666666666
+5,5,Attribute Deprecated,warning,resource,"Attribute Deprecated [resource, warning]",2,2,2,1,1,1.0,0.5
+5,5,Incorrect attribute value type,error,resource,"Incorrect attribute value type [resource, error]",4,4,2,1,1,0.5,0.25
+5,5,Reference to undeclared input variable,error,resource,"Reference to undeclared input variable [resource, error]",13,13,2,2,0,0.15384615384615385,0.15384615384615385
+5,5,Cannot index a set value,error,resource,"Cannot index a set value [resource, error]",1,1,1,1,0,1.0,1.0
+5,5,Deprecated Parameter,warning,data,"Deprecated Parameter [data, warning]",1,1,1,1,0,1.0,1.0
+5,5,Invalid index,error,data,"Invalid index [data, error]",1,1,1,1,0,1.0,1.0
+5,5,Invalid Attribute Combination,warning,resource,"Invalid Attribute Combination [resource, warning]",2,2,1,1,1,0.5,0.5
+5,5,Reference to undeclared local value,error,resource,"Reference to undeclared local value [resource, error]",3,3,1,1,0,0.3333333333333333,0.3333333333333333
+5,5,Invalid index,error,resource,"Invalid index [resource, error]",11,11,1,1,0,0.09090909090909091,0.09090909090909091
+5,5,Deprecated Resource,warning,data,"Deprecated Resource [data, warning]",4,4,1,0,1,0.25,0.0
+5,5,Deprecated,warning,data,"Deprecated [data, warning]",1,1,1,0,1,1.0,0.0
+5,5,Deprecated attribute,warning,resource,"Deprecated attribute [resource, warning]",20,20,1,0,2,0.05,0.0
+5,5,Error in function call,error,resource,"Error in function call [resource, error]",1,1,1,0,1,1.0,0.0
+5,5,Deprecated attribute,warning,data,"Deprecated attribute [data, warning]",3,3,0,0,0,0.0,0.0
+5,5,Invalid Configuration for Read-Only Attribute,error,resource,"Invalid Configuration for Read-Only Attribute [resource, error]",2,2,0,0,0,0.0,0.0
+5,5,"Reference to ""count"" in non-counted context",error,data,"Reference to ""count"" in non-counted context [data, error]",1,1,0,0,0,0.0,0.0
+5,5,"Reference to ""count"" in non-counted context",error,resource,"Reference to ""count"" in non-counted context [resource, error]",1,1,0,0,0,0.0,0.0
+5,5,Reference to undeclared input variable,error,data,"Reference to undeclared input variable [data, error]",9,9,0,0,0,0.0,0.0
+5,5,Unsupported block type,error,data,"Unsupported block type [data, error]",2,2,0,0,0,0.0,0.0
+6,6,Unsupported argument,error,resource,"Unsupported argument [resource, error]",34,34,22,17,5,0.6470588235294118,0.5
+6,6,Deprecated Resource,warning,resource,"Deprecated Resource [resource, warning]",22,22,15,2,13,0.6818181818181818,0.09090909090909091
+6,6,Argument is deprecated,warning,resource,"Argument is deprecated [resource, warning]",30,30,12,9,3,0.4,0.3
+6,6,Quoted references are deprecated,warning,resource,"Quoted references are deprecated [resource, warning]",17,17,10,8,3,0.5882352941176471,0.47058823529411764
+6,6,Missing resource instance key,error,resource,"Missing resource instance key [resource, error]",5,5,5,4,1,1.0,0.8
+6,6,Missing required argument,error,resource,"Missing required argument [resource, error]",7,7,5,4,1,0.7142857142857143,0.5714285714285714
+6,6,Unsupported attribute,error,resource,"Unsupported attribute [resource, error]",7,7,5,4,1,0.7142857142857143,0.5714285714285714
+6,6,Reference to undeclared resource,error,resource,"Reference to undeclared resource [resource, error]",14,14,5,3,2,0.35714285714285715,0.21428571428571427
+6,6,Unsupported block type,error,resource,"Unsupported block type [resource, error]",12,12,5,2,3,0.4166666666666667,0.16666666666666666
+6,6,Deprecated attribute,warning,resource,"Deprecated attribute [resource, warning]",20,20,3,2,2,0.15,0.1
+6,6,Attribute Deprecated,warning,resource,"Attribute Deprecated [resource, warning]",2,2,2,1,1,1.0,0.5
+6,6,Reference to undeclared local value,error,resource,"Reference to undeclared local value [resource, error]",3,3,2,1,1,0.6666666666666666,0.3333333333333333
+6,6,Invalid index,error,resource,"Invalid index [resource, error]",11,11,2,2,0,0.18181818181818182,0.18181818181818182
+6,6,Deprecated Resource,warning,data,"Deprecated Resource [data, warning]",4,4,2,0,2,0.5,0.0
+6,6,Cannot index a set value,error,resource,"Cannot index a set value [resource, error]",1,1,1,1,0,1.0,1.0
+6,6,Deprecated Parameter,warning,data,"Deprecated Parameter [data, warning]",1,1,1,1,0,1.0,1.0
+6,6,Invalid Attribute Combination,warning,resource,"Invalid Attribute Combination [resource, warning]",2,2,1,1,0,0.5,0.5
+6,6,Invalid Configuration for Read-Only Attribute,error,resource,"Invalid Configuration for Read-Only Attribute [resource, error]",2,2,1,1,0,0.5,0.5
+6,6,Invalid backend configuration,error,data,"Invalid backend configuration [data, error]",2,2,1,1,0,0.5,0.5
+6,6,Unsupported block type,error,data,"Unsupported block type [data, error]",2,2,1,1,0,0.5,0.5
+6,6,Quoted references are deprecated,warning,data,"Quoted references are deprecated [data, warning]",3,3,1,1,0,0.3333333333333333,0.3333333333333333
+6,6,Reference to undeclared input variable,error,resource,"Reference to undeclared input variable [resource, error]",13,13,1,1,0,0.07692307692307693,0.07692307692307693
+6,6,Deprecated,warning,data,"Deprecated [data, warning]",1,1,1,0,1,1.0,0.0
+6,6,Deprecated attribute,warning,data,"Deprecated attribute [data, warning]",3,3,1,0,1,0.3333333333333333,0.0
+6,6,Error in function call,error,resource,"Error in function call [resource, error]",1,1,1,0,1,1.0,0.0
+6,6,Incorrect attribute value type,error,resource,"Incorrect attribute value type [resource, error]",4,4,1,0,1,0.25,0.0
+6,6,Unsupported argument,error,data,"Unsupported argument [data, error]",3,3,1,0,1,0.3333333333333333,0.0
+6,6,Invalid index,error,data,"Invalid index [data, error]",1,1,0,0,0,0.0,0.0
+6,6,"Reference to ""count"" in non-counted context",error,data,"Reference to ""count"" in non-counted context [data, error]",1,1,0,0,0,0.0,0.0
+6,6,"Reference to ""count"" in non-counted context",error,resource,"Reference to ""count"" in non-counted context [resource, error]",1,1,0,0,0,0.0,0.0
+6,6,Reference to undeclared input variable,error,data,"Reference to undeclared input variable [data, error]",9,9,0,0,0,0.0,0.0
+7,7,Unsupported argument,error,resource,"Unsupported argument [resource, error]",34,34,26,20,6,0.7647058823529411,0.5882352941176471
+7,7,Deprecated Resource,warning,resource,"Deprecated Resource [resource, warning]",22,22,18,3,15,0.8181818181818182,0.13636363636363635
+7,7,Quoted references are deprecated,warning,resource,"Quoted references are deprecated [resource, warning]",17,17,15,13,3,0.8823529411764706,0.7647058823529411
+7,7,Argument is deprecated,warning,resource,"Argument is deprecated [resource, warning]",30,30,13,12,2,0.43333333333333335,0.4
+7,7,Missing required argument,error,resource,"Missing required argument [resource, error]",7,7,6,5,1,0.8571428571428571,0.7142857142857143
+7,7,Unsupported block type,error,resource,"Unsupported block type [resource, error]",12,12,6,2,4,0.5,0.16666666666666666
+7,7,Reference to undeclared resource,error,resource,"Reference to undeclared resource [resource, error]",14,14,5,3,2,0.35714285714285715,0.21428571428571427
+7,7,Missing resource instance key,error,resource,"Missing resource instance key [resource, error]",5,5,4,3,1,0.8,0.6
+7,7,Unsupported attribute,error,resource,"Unsupported attribute [resource, error]",7,7,4,3,1,0.5714285714285714,0.42857142857142855
+7,7,Unsupported argument,error,data,"Unsupported argument [data, error]",3,3,3,2,1,1.0,0.6666666666666666
+7,7,Deprecated Resource,warning,data,"Deprecated Resource [data, warning]",4,4,3,0,3,0.75,0.0
+7,7,Invalid backend configuration,error,data,"Invalid backend configuration [data, error]",2,2,2,2,0,1.0,1.0
+7,7,Attribute Deprecated,warning,resource,"Attribute Deprecated [resource, warning]",2,2,2,1,1,1.0,0.5
+7,7,Incorrect attribute value type,error,resource,"Incorrect attribute value type [resource, error]",4,4,2,1,1,0.5,0.25
+7,7,Invalid index,error,resource,"Invalid index [resource, error]",11,11,2,2,0,0.18181818181818182,0.18181818181818182
+7,7,Deprecated attribute,warning,resource,"Deprecated attribute [resource, warning]",20,20,2,1,1,0.1,0.05
+7,7,Reference to undeclared local value,error,resource,"Reference to undeclared local value [resource, error]",3,3,2,0,2,0.6666666666666666,0.0
+7,7,Cannot index a set value,error,resource,"Cannot index a set value [resource, error]",1,1,1,1,0,1.0,1.0
+7,7,Deprecated Parameter,warning,data,"Deprecated Parameter [data, warning]",1,1,1,1,0,1.0,1.0
+7,7,Invalid Attribute Combination,warning,resource,"Invalid Attribute Combination [resource, warning]",2,2,1,1,1,0.5,0.5
+7,7,Invalid Configuration for Read-Only Attribute,error,resource,"Invalid Configuration for Read-Only Attribute [resource, error]",2,2,1,1,0,0.5,0.5
+7,7,Unsupported block type,error,data,"Unsupported block type [data, error]",2,2,1,1,0,0.5,0.5
+7,7,Quoted references are deprecated,warning,data,"Quoted references are deprecated [data, warning]",3,3,1,1,0,0.3333333333333333,0.3333333333333333
+7,7,Deprecated,warning,data,"Deprecated [data, warning]",1,1,1,0,1,1.0,0.0
+7,7,Deprecated attribute,warning,data,"Deprecated attribute [data, warning]",3,3,1,0,1,0.3333333333333333,0.0
+7,7,Error in function call,error,resource,"Error in function call [resource, error]",1,1,1,0,1,1.0,0.0
+7,7,Invalid index,error,data,"Invalid index [data, error]",1,1,0,0,1,0.0,0.0
+7,7,"Reference to ""count"" in non-counted context",error,data,"Reference to ""count"" in non-counted context [data, error]",1,1,0,0,0,0.0,0.0
+7,7,"Reference to ""count"" in non-counted context",error,resource,"Reference to ""count"" in non-counted context [resource, error]",1,1,0,0,0,0.0,0.0
+7,7,Reference to undeclared input variable,error,data,"Reference to undeclared input variable [data, error]",9,9,0,0,0,0.0,0.0
+7,7,Reference to undeclared input variable,error,resource,"Reference to undeclared input variable [resource, error]",13,13,0,0,0,0.0,0.0
+8,8,Unsupported argument,error,resource,"Unsupported argument [resource, error]",34,34,25,21,4,0.7352941176470589,0.6176470588235294
+8,8,Argument is deprecated,warning,resource,"Argument is deprecated [resource, warning]",30,30,17,13,4,0.5666666666666667,0.43333333333333335
+8,8,Quoted references are deprecated,warning,resource,"Quoted references are deprecated [resource, warning]",17,17,13,11,3,0.7647058823529411,0.6470588235294118
+8,8,Deprecated Resource,warning,resource,"Deprecated Resource [resource, warning]",22,22,12,2,10,0.5454545454545454,0.09090909090909091
+8,8,Missing required argument,error,resource,"Missing required argument [resource, error]",7,7,6,4,2,0.8571428571428571,0.5714285714285714
+8,8,Reference to undeclared resource,error,resource,"Reference to undeclared resource [resource, error]",14,14,6,5,1,0.42857142857142855,0.35714285714285715
+8,8,Unsupported attribute,error,resource,"Unsupported attribute [resource, error]",7,7,5,3,2,0.7142857142857143,0.42857142857142855
+8,8,Unsupported block type,error,resource,"Unsupported block type [resource, error]",12,12,4,2,3,0.3333333333333333,0.16666666666666666
+8,8,Missing resource instance key,error,resource,"Missing resource instance key [resource, error]",5,5,3,2,1,0.6,0.4
+8,8,Deprecated Resource,warning,data,"Deprecated Resource [data, warning]",4,4,3,0,3,0.75,0.0
+8,8,Reference to undeclared local value,error,resource,"Reference to undeclared local value [resource, error]",3,3,3,0,3,1.0,0.0
+8,8,Invalid backend configuration,error,data,"Invalid backend configuration [data, error]",2,2,2,2,0,1.0,1.0
+8,8,Attribute Deprecated,warning,resource,"Attribute Deprecated [resource, warning]",2,2,2,1,1,1.0,0.5
+8,8,Quoted references are deprecated,warning,data,"Quoted references are deprecated [data, warning]",3,3,2,1,1,0.6666666666666666,0.3333333333333333
+8,8,Unsupported argument,error,data,"Unsupported argument [data, error]",3,3,2,1,1,0.6666666666666666,0.3333333333333333
+8,8,Incorrect attribute value type,error,resource,"Incorrect attribute value type [resource, error]",4,4,2,1,1,0.5,0.25
+8,8,Invalid index,error,resource,"Invalid index [resource, error]",11,11,2,2,0,0.18181818181818182,0.18181818181818182
+8,8,Deprecated attribute,warning,resource,"Deprecated attribute [resource, warning]",20,20,2,1,1,0.1,0.05
+8,8,Cannot index a set value,error,resource,"Cannot index a set value [resource, error]",1,1,1,1,0,1.0,1.0
+8,8,"Reference to ""count"" in non-counted context",error,data,"Reference to ""count"" in non-counted context [data, error]",1,1,1,1,0,1.0,1.0
+8,8,Invalid Attribute Combination,warning,resource,"Invalid Attribute Combination [resource, warning]",2,2,1,1,0,0.5,0.5
+8,8,Unsupported block type,error,data,"Unsupported block type [data, error]",2,2,1,1,0,0.5,0.5
+8,8,Reference to undeclared input variable,error,resource,"Reference to undeclared input variable [resource, error]",13,13,1,1,0,0.07692307692307693,0.07692307692307693
+8,8,Deprecated Parameter,warning,data,"Deprecated Parameter [data, warning]",1,1,1,0,1,1.0,0.0
+8,8,Deprecated,warning,data,"Deprecated [data, warning]",1,1,1,0,1,1.0,0.0
+8,8,Error in function call,error,resource,"Error in function call [resource, error]",1,1,1,0,1,1.0,0.0
+8,8,Deprecated attribute,warning,data,"Deprecated attribute [data, warning]",3,3,0,0,0,0.0,0.0
+8,8,Invalid Configuration for Read-Only Attribute,error,resource,"Invalid Configuration for Read-Only Attribute [resource, error]",2,2,0,0,0,0.0,0.0
+8,8,Invalid index,error,data,"Invalid index [data, error]",1,1,0,0,1,0.0,0.0
+8,8,"Reference to ""count"" in non-counted context",error,resource,"Reference to ""count"" in non-counted context [resource, error]",1,1,0,0,0,0.0,0.0
+8,8,Reference to undeclared input variable,error,data,"Reference to undeclared input variable [data, error]",9,9,0,0,0,0.0,0.0
+9,9,Unsupported argument,error,resource,"Unsupported argument [resource, error]",34,34,24,21,3,0.7058823529411765,0.6176470588235294
+9,9,Argument is deprecated,warning,resource,"Argument is deprecated [resource, warning]",30,30,16,13,4,0.5333333333333333,0.43333333333333335
+9,9,Deprecated Resource,warning,resource,"Deprecated Resource [resource, warning]",22,22,12,1,11,0.5454545454545454,0.045454545454545456
+9,9,Quoted references are deprecated,warning,resource,"Quoted references are deprecated [resource, warning]",17,17,11,10,1,0.6470588235294118,0.5882352941176471
+9,9,Reference to undeclared resource,error,resource,"Reference to undeclared resource [resource, error]",14,14,8,6,2,0.5714285714285714,0.42857142857142855
+9,9,Unsupported block type,error,resource,"Unsupported block type [resource, error]",12,12,7,3,4,0.5833333333333334,0.25
+9,9,Missing resource instance key,error,resource,"Missing resource instance key [resource, error]",5,5,5,4,1,1.0,0.8
+9,9,Missing required argument,error,resource,"Missing required argument [resource, error]",7,7,5,4,1,0.7142857142857143,0.5714285714285714
+9,9,Unsupported attribute,error,resource,"Unsupported attribute [resource, error]",7,7,5,4,1,0.7142857142857143,0.5714285714285714
+9,9,Unsupported argument,error,data,"Unsupported argument [data, error]",3,3,3,1,2,1.0,0.3333333333333333
+9,9,Deprecated Resource,warning,data,"Deprecated Resource [data, warning]",4,4,3,0,4,0.75,0.0
+9,9,Invalid backend configuration,error,data,"Invalid backend configuration [data, error]",2,2,2,2,0,1.0,1.0
+9,9,Unsupported block type,error,data,"Unsupported block type [data, error]",2,2,2,2,0,1.0,1.0
+9,9,Attribute Deprecated,warning,resource,"Attribute Deprecated [resource, warning]",2,2,2,1,1,1.0,0.5
+9,9,Quoted references are deprecated,warning,data,"Quoted references are deprecated [data, warning]",3,3,2,1,1,0.6666666666666666,0.3333333333333333
+9,9,Deprecated attribute,warning,resource,"Deprecated attribute [resource, warning]",20,20,2,1,1,0.1,0.05
+9,9,Cannot index a set value,error,resource,"Cannot index a set value [resource, error]",1,1,1,1,0,1.0,1.0
+9,9,Invalid Attribute Combination,warning,resource,"Invalid Attribute Combination [resource, warning]",2,2,1,1,0,0.5,0.5
+9,9,Invalid Configuration for Read-Only Attribute,error,resource,"Invalid Configuration for Read-Only Attribute [resource, error]",2,2,1,1,0,0.5,0.5
+9,9,Invalid index,error,resource,"Invalid index [resource, error]",11,11,1,1,0,0.09090909090909091,0.09090909090909091
+9,9,Reference to undeclared input variable,error,resource,"Reference to undeclared input variable [resource, error]",13,13,1,1,0,0.07692307692307693,0.07692307692307693
+9,9,Deprecated Parameter,warning,data,"Deprecated Parameter [data, warning]",1,1,1,0,1,1.0,0.0
+9,9,Deprecated,warning,data,"Deprecated [data, warning]",1,1,1,0,1,1.0,0.0
+9,9,Deprecated attribute,warning,data,"Deprecated attribute [data, warning]",3,3,1,0,1,0.3333333333333333,0.0
+9,9,Incorrect attribute value type,error,resource,"Incorrect attribute value type [resource, error]",4,4,1,0,1,0.25,0.0
+9,9,Error in function call,error,resource,"Error in function call [resource, error]",1,1,0,0,0,0.0,0.0
+9,9,Invalid index,error,data,"Invalid index [data, error]",1,1,0,0,0,0.0,0.0
+9,9,"Reference to ""count"" in non-counted context",error,data,"Reference to ""count"" in non-counted context [data, error]",1,1,0,0,0,0.0,0.0
+9,9,"Reference to ""count"" in non-counted context",error,resource,"Reference to ""count"" in non-counted context [resource, error]",1,1,0,0,0,0.0,0.0
+9,9,Reference to undeclared input variable,error,data,"Reference to undeclared input variable [data, error]",9,9,0,0,0,0.0,0.0
+9,9,Reference to undeclared local value,error,resource,"Reference to undeclared local value [resource, error]",3,3,0,0,0,0.0,0.0
+10,10,Unsupported argument,error,resource,"Unsupported argument [resource, error]",34,34,25,21,4,0.7352941176470589,0.6176470588235294
+10,10,Argument is deprecated,warning,resource,"Argument is deprecated [resource, warning]",30,30,14,11,4,0.4666666666666667,0.36666666666666664
+10,10,Deprecated Resource,warning,resource,"Deprecated Resource [resource, warning]",22,22,14,3,11,0.6363636363636364,0.13636363636363635
+10,10,Quoted references are deprecated,warning,resource,"Quoted references are deprecated [resource, warning]",17,17,10,9,1,0.5882352941176471,0.5294117647058824
+10,10,Missing required argument,error,resource,"Missing required argument [resource, error]",7,7,7,6,1,1.0,0.8571428571428571
+10,10,Unsupported block type,error,resource,"Unsupported block type [resource, error]",12,12,7,2,5,0.5833333333333334,0.16666666666666666
+10,10,Missing resource instance key,error,resource,"Missing resource instance key [resource, error]",5,5,5,4,1,1.0,0.8
+10,10,Unsupported attribute,error,resource,"Unsupported attribute [resource, error]",7,7,5,4,1,0.7142857142857143,0.5714285714285714
+10,10,Reference to undeclared resource,error,resource,"Reference to undeclared resource [resource, error]",14,14,5,3,2,0.35714285714285715,0.21428571428571427
+10,10,Unsupported argument,error,data,"Unsupported argument [data, error]",3,3,3,2,1,1.0,0.6666666666666666
+10,10,Deprecated attribute,warning,resource,"Deprecated attribute [resource, warning]",20,20,3,1,2,0.15,0.05
+10,10,Invalid backend configuration,error,data,"Invalid backend configuration [data, error]",2,2,2,2,0,1.0,1.0
+10,10,Unsupported block type,error,data,"Unsupported block type [data, error]",2,2,2,2,0,1.0,1.0
+10,10,Attribute Deprecated,warning,resource,"Attribute Deprecated [resource, warning]",2,2,2,1,1,1.0,0.5
+10,10,Quoted references are deprecated,warning,data,"Quoted references are deprecated [data, warning]",3,3,2,1,1,0.6666666666666666,0.3333333333333333
+10,10,Reference to undeclared local value,error,resource,"Reference to undeclared local value [resource, error]",3,3,2,1,1,0.6666666666666666,0.3333333333333333
+10,10,Incorrect attribute value type,error,resource,"Incorrect attribute value type [resource, error]",4,4,2,1,1,0.5,0.25
+10,10,Invalid index,error,resource,"Invalid index [resource, error]",11,11,2,2,0,0.18181818181818182,0.18181818181818182
+10,10,Reference to undeclared input variable,error,resource,"Reference to undeclared input variable [resource, error]",13,13,2,2,0,0.15384615384615385,0.15384615384615385
+10,10,Cannot index a set value,error,resource,"Cannot index a set value [resource, error]",1,1,1,1,0,1.0,1.0
+10,10,Deprecated Parameter,warning,data,"Deprecated Parameter [data, warning]",1,1,1,1,0,1.0,1.0
+10,10,Invalid Attribute Combination,warning,resource,"Invalid Attribute Combination [resource, warning]",2,2,1,1,0,0.5,0.5
+10,10,Deprecated Resource,warning,data,"Deprecated Resource [data, warning]",4,4,1,0,2,0.25,0.0
+10,10,Deprecated,warning,data,"Deprecated [data, warning]",1,1,1,0,1,1.0,0.0
+10,10,Error in function call,error,resource,"Error in function call [resource, error]",1,1,1,0,1,1.0,0.0
+10,10,Reference to undeclared input variable,error,data,"Reference to undeclared input variable [data, error]",9,9,1,0,1,0.1111111111111111,0.0
+10,10,Deprecated attribute,warning,data,"Deprecated attribute [data, warning]",3,3,0,0,0,0.0,0.0
+10,10,Invalid Configuration for Read-Only Attribute,error,resource,"Invalid Configuration for Read-Only Attribute [resource, error]",2,2,0,0,0,0.0,0.0
+10,10,Invalid index,error,data,"Invalid index [data, error]",1,1,0,0,0,0.0,0.0
+10,10,"Reference to ""count"" in non-counted context",error,data,"Reference to ""count"" in non-counted context [data, error]",1,1,0,0,0,0.0,0.0
+10,10,"Reference to ""count"" in non-counted context",error,resource,"Reference to ""count"" in non-counted context [resource, error]",1,1,0,0,0,0.0,0.0
+11,11,Unsupported argument,error,resource,"Unsupported argument [resource, error]",34,34,26,23,3,0.7647058823529411,0.6764705882352942
+11,11,Argument is deprecated,warning,resource,"Argument is deprecated [resource, warning]",30,30,15,12,3,0.5,0.4
+11,11,Deprecated Resource,warning,resource,"Deprecated Resource [resource, warning]",22,22,13,3,10,0.5909090909090909,0.13636363636363635
+11,11,Quoted references are deprecated,warning,resource,"Quoted references are deprecated [resource, warning]",17,17,12,11,2,0.7058823529411765,0.6470588235294118
+11,11,Unsupported block type,error,resource,"Unsupported block type [resource, error]",12,12,7,3,4,0.5833333333333334,0.25
+11,11,Missing required argument,error,resource,"Missing required argument [resource, error]",7,7,6,3,3,0.8571428571428571,0.42857142857142855
+11,11,Missing resource instance key,error,resource,"Missing resource instance key [resource, error]",5,5,5,4,1,1.0,0.8
+11,11,Unsupported attribute,error,resource,"Unsupported attribute [resource, error]",7,7,5,4,1,0.7142857142857143,0.5714285714285714
+11,11,Unsupported argument,error,data,"Unsupported argument [data, error]",3,3,3,1,2,1.0,0.3333333333333333
+11,11,Reference to undeclared resource,error,resource,"Reference to undeclared resource [resource, error]",14,14,3,2,1,0.21428571428571427,0.14285714285714285
+11,11,Deprecated Resource,warning,data,"Deprecated Resource [data, warning]",4,4,3,0,3,0.75,0.0
+11,11,Invalid backend configuration,error,data,"Invalid backend configuration [data, error]",2,2,2,2,0,1.0,1.0
+11,11,Attribute Deprecated,warning,resource,"Attribute Deprecated [resource, warning]",2,2,2,1,1,1.0,0.5
+11,11,Quoted references are deprecated,warning,data,"Quoted references are deprecated [data, warning]",3,3,2,1,1,0.6666666666666666,0.3333333333333333
+11,11,Incorrect attribute value type,error,resource,"Incorrect attribute value type [resource, error]",4,4,2,1,1,0.5,0.25
+11,11,Deprecated attribute,warning,resource,"Deprecated attribute [resource, warning]",20,20,2,0,2,0.1,0.0
+11,11,Invalid index,error,data,"Invalid index [data, error]",1,1,1,1,0,1.0,1.0
+11,11,Invalid Attribute Combination,warning,resource,"Invalid Attribute Combination [resource, warning]",2,2,1,1,1,0.5,0.5
+11,11,Unsupported block type,error,data,"Unsupported block type [data, error]",2,2,1,1,0,0.5,0.5
+11,11,Invalid index,error,resource,"Invalid index [resource, error]",11,11,1,1,0,0.09090909090909091,0.09090909090909091
+11,11,Deprecated Parameter,warning,data,"Deprecated Parameter [data, warning]",1,1,1,0,1,1.0,0.0
+11,11,Deprecated,warning,data,"Deprecated [data, warning]",1,1,1,0,1,1.0,0.0
+11,11,Error in function call,error,resource,"Error in function call [resource, error]",1,1,1,0,1,1.0,0.0
+11,11,Invalid Configuration for Read-Only Attribute,error,resource,"Invalid Configuration for Read-Only Attribute [resource, error]",2,2,1,0,1,0.5,0.0
+11,11,Reference to undeclared input variable,error,data,"Reference to undeclared input variable [data, error]",9,9,1,0,1,0.1111111111111111,0.0
+11,11,Reference to undeclared input variable,error,resource,"Reference to undeclared input variable [resource, error]",13,13,1,0,1,0.07692307692307693,0.0
+11,11,Reference to undeclared local value,error,resource,"Reference to undeclared local value [resource, error]",3,3,1,0,1,0.3333333333333333,0.0
+11,11,Cannot index a set value,error,resource,"Cannot index a set value [resource, error]",1,1,0,0,0,0.0,0.0
+11,11,Deprecated attribute,warning,data,"Deprecated attribute [data, warning]",3,3,0,0,0,0.0,0.0
+11,11,"Reference to ""count"" in non-counted context",error,data,"Reference to ""count"" in non-counted context [data, error]",1,1,0,0,0,0.0,0.0
+11,11,"Reference to ""count"" in non-counted context",error,resource,"Reference to ""count"" in non-counted context [resource, error]",1,1,0,0,0,0.0,0.0
+12,12,Unsupported argument,error,resource,"Unsupported argument [resource, error]",34,34,26,23,3,0.7647058823529411,0.6764705882352942
+12,12,Deprecated Resource,warning,resource,"Deprecated Resource [resource, warning]",22,22,14,2,13,0.6363636363636364,0.09090909090909091
+12,12,Quoted references are deprecated,warning,resource,"Quoted references are deprecated [resource, warning]",17,17,12,10,2,0.7058823529411765,0.5882352941176471
+12,12,Argument is deprecated,warning,resource,"Argument is deprecated [resource, warning]",30,30,12,9,4,0.4,0.3
+12,12,Unsupported block type,error,resource,"Unsupported block type [resource, error]",12,12,7,3,4,0.5833333333333334,0.25
+12,12,Missing required argument,error,resource,"Missing required argument [resource, error]",7,7,6,6,0,0.8571428571428571,0.8571428571428571
+12,12,Reference to undeclared resource,error,resource,"Reference to undeclared resource [resource, error]",14,14,6,4,2,0.42857142857142855,0.2857142857142857
+12,12,Missing resource instance key,error,resource,"Missing resource instance key [resource, error]",5,5,5,4,1,1.0,0.8
+12,12,Unsupported attribute,error,resource,"Unsupported attribute [resource, error]",7,7,4,3,1,0.5714285714285714,0.42857142857142855
+12,12,Incorrect attribute value type,error,resource,"Incorrect attribute value type [resource, error]",4,4,3,1,2,0.75,0.25
+12,12,Reference to undeclared input variable,error,resource,"Reference to undeclared input variable [resource, error]",13,13,3,3,0,0.23076923076923078,0.23076923076923078
+12,12,Deprecated attribute,warning,resource,"Deprecated attribute [resource, warning]",20,20,3,1,2,0.15,0.05
+12,12,Invalid backend configuration,error,data,"Invalid backend configuration [data, error]",2,2,2,2,0,1.0,1.0
+12,12,Attribute Deprecated,warning,resource,"Attribute Deprecated [resource, warning]",2,2,2,1,1,1.0,0.5
+12,12,Unsupported argument,error,data,"Unsupported argument [data, error]",3,3,2,1,1,0.6666666666666666,0.3333333333333333
+12,12,Cannot index a set value,error,resource,"Cannot index a set value [resource, error]",1,1,1,1,0,1.0,1.0
+12,12,Deprecated Parameter,warning,data,"Deprecated Parameter [data, warning]",1,1,1,1,0,1.0,1.0
+12,12,Invalid Attribute Combination,warning,resource,"Invalid Attribute Combination [resource, warning]",2,2,1,1,0,0.5,0.5
+12,12,Quoted references are deprecated,warning,data,"Quoted references are deprecated [data, warning]",3,3,1,1,0,0.3333333333333333,0.3333333333333333
+12,12,Deprecated Resource,warning,data,"Deprecated Resource [data, warning]",4,4,1,0,1,0.25,0.0
+12,12,Deprecated,warning,data,"Deprecated [data, warning]",1,1,1,0,1,1.0,0.0
+12,12,Deprecated attribute,warning,data,"Deprecated attribute [data, warning]",3,3,1,0,1,0.3333333333333333,0.0
+12,12,Error in function call,error,resource,"Error in function call [resource, error]",1,1,1,0,1,1.0,0.0
+12,12,Reference to undeclared local value,error,resource,"Reference to undeclared local value [resource, error]",3,3,1,0,1,0.3333333333333333,0.0
+12,12,Invalid Configuration for Read-Only Attribute,error,resource,"Invalid Configuration for Read-Only Attribute [resource, error]",2,2,0,0,0,0.0,0.0
+12,12,Invalid index,error,data,"Invalid index [data, error]",1,1,0,0,0,0.0,0.0
+12,12,Invalid index,error,resource,"Invalid index [resource, error]",11,11,0,0,0,0.0,0.0
+12,12,"Reference to ""count"" in non-counted context",error,data,"Reference to ""count"" in non-counted context [data, error]",1,1,0,0,0,0.0,0.0
+12,12,"Reference to ""count"" in non-counted context",error,resource,"Reference to ""count"" in non-counted context [resource, error]",1,1,0,0,0,0.0,0.0
+12,12,Reference to undeclared input variable,error,data,"Reference to undeclared input variable [data, error]",9,9,0,0,0,0.0,0.0
+12,12,Unsupported block type,error,data,"Unsupported block type [data, error]",2,2,0,0,0,0.0,0.0
+13,13,Unsupported argument,error,resource,"Unsupported argument [resource, error]",34,34,24,20,4,0.7058823529411765,0.5882352941176471
+13,13,Deprecated Resource,warning,resource,"Deprecated Resource [resource, warning]",22,22,14,3,11,0.6363636363636364,0.13636363636363635
+13,13,Argument is deprecated,warning,resource,"Argument is deprecated [resource, warning]",30,30,13,11,3,0.43333333333333335,0.36666666666666664
+13,13,Quoted references are deprecated,warning,resource,"Quoted references are deprecated [resource, warning]",17,17,11,10,2,0.6470588235294118,0.5882352941176471
+13,13,Reference to undeclared resource,error,resource,"Reference to undeclared resource [resource, error]",14,14,7,4,3,0.5,0.2857142857142857
+13,13,Unsupported block type,error,resource,"Unsupported block type [resource, error]",12,12,6,2,4,0.5,0.16666666666666666
+13,13,Missing resource instance key,error,resource,"Missing resource instance key [resource, error]",5,5,5,4,1,1.0,0.8
+13,13,Missing required argument,error,resource,"Missing required argument [resource, error]",7,7,5,4,1,0.7142857142857143,0.5714285714285714
+13,13,Unsupported attribute,error,resource,"Unsupported attribute [resource, error]",7,7,5,4,1,0.7142857142857143,0.5714285714285714
+13,13,Unsupported argument,error,data,"Unsupported argument [data, error]",3,3,3,2,1,1.0,0.6666666666666666
+13,13,Incorrect attribute value type,error,resource,"Incorrect attribute value type [resource, error]",4,4,3,1,2,0.75,0.25
+13,13,Reference to undeclared input variable,error,resource,"Reference to undeclared input variable [resource, error]",13,13,3,2,1,0.23076923076923078,0.15384615384615385
+13,13,Deprecated attribute,warning,resource,"Deprecated attribute [resource, warning]",20,20,3,1,2,0.15,0.05
+13,13,Invalid backend configuration,error,data,"Invalid backend configuration [data, error]",2,2,2,2,0,1.0,1.0
+13,13,Unsupported block type,error,data,"Unsupported block type [data, error]",2,2,2,2,0,1.0,1.0
+13,13,Quoted references are deprecated,warning,data,"Quoted references are deprecated [data, warning]",3,3,2,2,0,0.6666666666666666,0.6666666666666666
+13,13,Attribute Deprecated,warning,resource,"Attribute Deprecated [resource, warning]",2,2,2,1,1,1.0,0.5
+13,13,Deprecated Resource,warning,data,"Deprecated Resource [data, warning]",4,4,2,0,2,0.5,0.0
+13,13,Cannot index a set value,error,resource,"Cannot index a set value [resource, error]",1,1,1,1,0,1.0,1.0
+13,13,Invalid Attribute Combination,warning,resource,"Invalid Attribute Combination [resource, warning]",2,2,1,1,0,0.5,0.5
+13,13,Deprecated Parameter,warning,data,"Deprecated Parameter [data, warning]",1,1,1,0,1,1.0,0.0
+13,13,Deprecated,warning,data,"Deprecated [data, warning]",1,1,1,0,1,1.0,0.0
+13,13,Invalid Configuration for Read-Only Attribute,error,resource,"Invalid Configuration for Read-Only Attribute [resource, error]",2,2,1,0,1,0.5,0.0
+13,13,Reference to undeclared local value,error,resource,"Reference to undeclared local value [resource, error]",3,3,1,0,1,0.3333333333333333,0.0
+13,13,Deprecated attribute,warning,data,"Deprecated attribute [data, warning]",3,3,0,0,0,0.0,0.0
+13,13,Error in function call,error,resource,"Error in function call [resource, error]",1,1,0,0,0,0.0,0.0
+13,13,Invalid index,error,data,"Invalid index [data, error]",1,1,0,0,0,0.0,0.0
+13,13,Invalid index,error,resource,"Invalid index [resource, error]",11,11,0,0,0,0.0,0.0
+13,13,"Reference to ""count"" in non-counted context",error,data,"Reference to ""count"" in non-counted context [data, error]",1,1,0,0,0,0.0,0.0
+13,13,"Reference to ""count"" in non-counted context",error,resource,"Reference to ""count"" in non-counted context [resource, error]",1,1,0,0,0,0.0,0.0
+13,13,Reference to undeclared input variable,error,data,"Reference to undeclared input variable [data, error]",9,9,0,0,0,0.0,0.0
+14,14,Unsupported argument,error,resource,"Unsupported argument [resource, error]",34,34,26,22,4,0.7647058823529411,0.6470588235294118
+14,14,Argument is deprecated,warning,resource,"Argument is deprecated [resource, warning]",30,30,17,11,7,0.5666666666666667,0.36666666666666664
+14,14,Deprecated Resource,warning,resource,"Deprecated Resource [resource, warning]",22,22,14,3,11,0.6363636363636364,0.13636363636363635
+14,14,Quoted references are deprecated,warning,resource,"Quoted references are deprecated [resource, warning]",17,17,13,12,1,0.7647058823529411,0.7058823529411765
+14,14,Unsupported block type,error,resource,"Unsupported block type [resource, error]",12,12,7,3,4,0.5833333333333334,0.25
+14,14,Unsupported attribute,error,resource,"Unsupported attribute [resource, error]",7,7,6,4,2,0.8571428571428571,0.5714285714285714
+14,14,Missing resource instance key,error,resource,"Missing resource instance key [resource, error]",5,5,5,4,1,1.0,0.8
+14,14,Missing required argument,error,resource,"Missing required argument [resource, error]",7,7,5,4,1,0.7142857142857143,0.5714285714285714
+14,14,Reference to undeclared resource,error,resource,"Reference to undeclared resource [resource, error]",14,14,4,2,2,0.2857142857142857,0.14285714285714285
+14,14,Quoted references are deprecated,warning,data,"Quoted references are deprecated [data, warning]",3,3,3,3,0,1.0,1.0
+14,14,Deprecated Resource,warning,data,"Deprecated Resource [data, warning]",4,4,3,0,3,0.75,0.0
+14,14,Invalid backend configuration,error,data,"Invalid backend configuration [data, error]",2,2,2,2,0,1.0,1.0
+14,14,Attribute Deprecated,warning,resource,"Attribute Deprecated [resource, warning]",2,2,2,1,1,1.0,0.5
+14,14,Unsupported argument,error,data,"Unsupported argument [data, error]",3,3,2,1,1,0.6666666666666666,0.3333333333333333
+14,14,Incorrect attribute value type,error,resource,"Incorrect attribute value type [resource, error]",4,4,2,1,1,0.5,0.25
+14,14,Reference to undeclared input variable,error,resource,"Reference to undeclared input variable [resource, error]",13,13,2,1,1,0.15384615384615385,0.07692307692307693
+14,14,Cannot index a set value,error,resource,"Cannot index a set value [resource, error]",1,1,1,1,0,1.0,1.0
+14,14,Invalid Attribute Combination,warning,resource,"Invalid Attribute Combination [resource, warning]",2,2,1,1,1,0.5,0.5
+14,14,Unsupported block type,error,data,"Unsupported block type [data, error]",2,2,1,1,0,0.5,0.5
+14,14,Deprecated Parameter,warning,data,"Deprecated Parameter [data, warning]",1,1,1,0,1,1.0,0.0
+14,14,Deprecated,warning,data,"Deprecated [data, warning]",1,1,1,0,1,1.0,0.0
+14,14,Deprecated attribute,warning,resource,"Deprecated attribute [resource, warning]",20,20,1,0,1,0.05,0.0
+14,14,Error in function call,error,resource,"Error in function call [resource, error]",1,1,1,0,1,1.0,0.0
+14,14,Reference to undeclared input variable,error,data,"Reference to undeclared input variable [data, error]",9,9,1,0,1,0.1111111111111111,0.0
+14,14,Reference to undeclared local value,error,resource,"Reference to undeclared local value [resource, error]",3,3,1,0,1,0.3333333333333333,0.0
+14,14,Deprecated attribute,warning,data,"Deprecated attribute [data, warning]",3,3,0,0,0,0.0,0.0
+14,14,Invalid Configuration for Read-Only Attribute,error,resource,"Invalid Configuration for Read-Only Attribute [resource, error]",2,2,0,0,0,0.0,0.0
+14,14,Invalid index,error,data,"Invalid index [data, error]",1,1,0,0,0,0.0,0.0
+14,14,Invalid index,error,resource,"Invalid index [resource, error]",11,11,0,0,0,0.0,0.0
+14,14,"Reference to ""count"" in non-counted context",error,data,"Reference to ""count"" in non-counted context [data, error]",1,1,0,0,0,0.0,0.0
+14,14,"Reference to ""count"" in non-counted context",error,resource,"Reference to ""count"" in non-counted context [resource, error]",1,1,0,0,0,0.0,0.0
+15,15,Unsupported argument,error,resource,"Unsupported argument [resource, error]",34,34,21,19,2,0.6176470588235294,0.5588235294117647
+15,15,Argument is deprecated,warning,resource,"Argument is deprecated [resource, warning]",30,30,15,11,6,0.5,0.36666666666666664
+15,15,Deprecated Resource,warning,resource,"Deprecated Resource [resource, warning]",22,22,15,3,12,0.6818181818181818,0.13636363636363635
+15,15,Quoted references are deprecated,warning,resource,"Quoted references are deprecated [resource, warning]",17,17,12,12,2,0.7058823529411765,0.7058823529411765
+15,15,Unsupported block type,error,resource,"Unsupported block type [resource, error]",12,12,7,3,4,0.5833333333333334,0.25
+15,15,Missing required argument,error,resource,"Missing required argument [resource, error]",7,7,6,5,1,0.8571428571428571,0.7142857142857143
+15,15,Unsupported attribute,error,resource,"Unsupported attribute [resource, error]",7,7,6,4,2,0.8571428571428571,0.5714285714285714
+15,15,Missing resource instance key,error,resource,"Missing resource instance key [resource, error]",5,5,5,4,1,1.0,0.8
+15,15,Reference to undeclared resource,error,resource,"Reference to undeclared resource [resource, error]",14,14,5,3,2,0.35714285714285715,0.21428571428571427
+15,15,Reference to undeclared input variable,error,resource,"Reference to undeclared input variable [resource, error]",13,13,3,3,0,0.23076923076923078,0.23076923076923078
+15,15,Invalid backend configuration,error,data,"Invalid backend configuration [data, error]",2,2,2,2,0,1.0,1.0
+15,15,Attribute Deprecated,warning,resource,"Attribute Deprecated [resource, warning]",2,2,2,1,1,1.0,0.5
+15,15,Unsupported argument,error,data,"Unsupported argument [data, error]",3,3,2,1,1,0.6666666666666666,0.3333333333333333
+15,15,Deprecated Resource,warning,data,"Deprecated Resource [data, warning]",4,4,2,0,2,0.5,0.0
+15,15,Deprecated attribute,warning,resource,"Deprecated attribute [resource, warning]",20,20,2,0,2,0.1,0.0
+15,15,Incorrect attribute value type,error,resource,"Incorrect attribute value type [resource, error]",4,4,2,0,2,0.5,0.0
+15,15,Cannot index a set value,error,resource,"Cannot index a set value [resource, error]",1,1,1,1,0,1.0,1.0
+15,15,Deprecated Parameter,warning,data,"Deprecated Parameter [data, warning]",1,1,1,1,0,1.0,1.0
+15,15,Invalid Attribute Combination,warning,resource,"Invalid Attribute Combination [resource, warning]",2,2,1,1,1,0.5,0.5
+15,15,Invalid Configuration for Read-Only Attribute,error,resource,"Invalid Configuration for Read-Only Attribute [resource, error]",2,2,1,1,0,0.5,0.5
+15,15,Unsupported block type,error,data,"Unsupported block type [data, error]",2,2,1,1,0,0.5,0.5
+15,15,Quoted references are deprecated,warning,data,"Quoted references are deprecated [data, warning]",3,3,1,1,0,0.3333333333333333,0.3333333333333333
+15,15,Reference to undeclared local value,error,resource,"Reference to undeclared local value [resource, error]",3,3,1,1,0,0.3333333333333333,0.3333333333333333
+15,15,Invalid index,error,resource,"Invalid index [resource, error]",11,11,1,1,0,0.09090909090909091,0.09090909090909091
+15,15,Deprecated,warning,data,"Deprecated [data, warning]",1,1,1,0,1,1.0,0.0
+15,15,Error in function call,error,resource,"Error in function call [resource, error]",1,1,1,0,1,1.0,0.0
+15,15,Deprecated attribute,warning,data,"Deprecated attribute [data, warning]",3,3,0,0,0,0.0,0.0
+15,15,Invalid index,error,data,"Invalid index [data, error]",1,1,0,0,0,0.0,0.0
+15,15,"Reference to ""count"" in non-counted context",error,data,"Reference to ""count"" in non-counted context [data, error]",1,1,0,0,0,0.0,0.0
+15,15,"Reference to ""count"" in non-counted context",error,resource,"Reference to ""count"" in non-counted context [resource, error]",1,1,0,0,0,0.0,0.0
+15,15,Reference to undeclared input variable,error,data,"Reference to undeclared input variable [data, error]",9,9,0,0,0,0.0,0.0
+16,16,Unsupported argument,error,resource,"Unsupported argument [resource, error]",34,34,26,20,6,0.7647058823529411,0.5882352941176471
+16,16,Argument is deprecated,warning,resource,"Argument is deprecated [resource, warning]",30,30,15,10,6,0.5,0.3333333333333333
+16,16,Deprecated Resource,warning,resource,"Deprecated Resource [resource, warning]",22,22,13,2,11,0.5909090909090909,0.09090909090909091
+16,16,Quoted references are deprecated,warning,resource,"Quoted references are deprecated [resource, warning]",17,17,9,8,1,0.5294117647058824,0.47058823529411764
+16,16,Missing required argument,error,resource,"Missing required argument [resource, error]",7,7,6,5,1,0.8571428571428571,0.7142857142857143
+16,16,Unsupported attribute,error,resource,"Unsupported attribute [resource, error]",7,7,6,5,1,0.8571428571428571,0.7142857142857143
+16,16,Unsupported block type,error,resource,"Unsupported block type [resource, error]",12,12,6,3,3,0.5,0.25
+16,16,Reference to undeclared resource,error,resource,"Reference to undeclared resource [resource, error]",14,14,6,3,3,0.42857142857142855,0.21428571428571427
+16,16,Missing resource instance key,error,resource,"Missing resource instance key [resource, error]",5,5,5,4,1,1.0,0.8
+16,16,Unsupported argument,error,data,"Unsupported argument [data, error]",3,3,3,2,1,1.0,0.6666666666666666
+16,16,Reference to undeclared local value,error,resource,"Reference to undeclared local value [resource, error]",3,3,3,1,2,1.0,0.3333333333333333
+16,16,Deprecated Resource,warning,data,"Deprecated Resource [data, warning]",4,4,3,0,3,0.75,0.0
+16,16,Invalid backend configuration,error,data,"Invalid backend configuration [data, error]",2,2,2,2,0,1.0,1.0
+16,16,Attribute Deprecated,warning,resource,"Attribute Deprecated [resource, warning]",2,2,2,1,1,1.0,0.5
+16,16,Incorrect attribute value type,error,resource,"Incorrect attribute value type [resource, error]",4,4,2,0,2,0.5,0.0
+16,16,Invalid Attribute Combination,warning,resource,"Invalid Attribute Combination [resource, warning]",2,2,1,1,0,0.5,0.5
+16,16,Unsupported block type,error,data,"Unsupported block type [data, error]",2,2,1,1,0,0.5,0.5
+16,16,Quoted references are deprecated,warning,data,"Quoted references are deprecated [data, warning]",3,3,1,1,0,0.3333333333333333,0.3333333333333333
+16,16,Reference to undeclared input variable,error,data,"Reference to undeclared input variable [data, error]",9,9,1,1,0,0.1111111111111111,0.1111111111111111
+16,16,Invalid index,error,resource,"Invalid index [resource, error]",11,11,1,1,0,0.09090909090909091,0.09090909090909091
+16,16,Reference to undeclared input variable,error,resource,"Reference to undeclared input variable [resource, error]",13,13,1,1,0,0.07692307692307693,0.07692307692307693
+16,16,Deprecated Parameter,warning,data,"Deprecated Parameter [data, warning]",1,1,1,0,1,1.0,0.0
+16,16,Deprecated,warning,data,"Deprecated [data, warning]",1,1,1,0,1,1.0,0.0
+16,16,Deprecated attribute,warning,resource,"Deprecated attribute [resource, warning]",20,20,1,0,2,0.05,0.0
+16,16,Error in function call,error,resource,"Error in function call [resource, error]",1,1,1,0,1,1.0,0.0
+16,16,Invalid Configuration for Read-Only Attribute,error,resource,"Invalid Configuration for Read-Only Attribute [resource, error]",2,2,1,0,1,0.5,0.0
+16,16,Cannot index a set value,error,resource,"Cannot index a set value [resource, error]",1,1,0,0,0,0.0,0.0
+16,16,Deprecated attribute,warning,data,"Deprecated attribute [data, warning]",3,3,0,0,0,0.0,0.0
+16,16,Invalid index,error,data,"Invalid index [data, error]",1,1,0,0,0,0.0,0.0
+16,16,"Reference to ""count"" in non-counted context",error,data,"Reference to ""count"" in non-counted context [data, error]",1,1,0,0,0,0.0,0.0
+16,16,"Reference to ""count"" in non-counted context",error,resource,"Reference to ""count"" in non-counted context [resource, error]",1,1,0,0,0,0.0,0.0

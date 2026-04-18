@@ -1,5 +1,6 @@
 import argparse
 import os
+from repair_analyzer.repair_analysis import generate_repair_analysis_artifacts
 from repair_pipeline.repair_driver import RepairEvaluator
 
 if __name__ == "__main__":
@@ -21,6 +22,16 @@ if __name__ == "__main__":
         "--debug-matching",
         action="store_true",
         help="Print verbose diagnostics about OID/specific_oid matching and block coordinate lookups"
+    )
+    parser.add_argument(
+        "--analysis-dir",
+        default=None,
+        help="Optional directory for iteration-aware repair analysis outputs"
+    )
+    parser.add_argument(
+        "--skip-analysis",
+        action="store_true",
+        help="Skip generation of iteration-aware repair analysis artifacts"
     )
     
     args = parser.parse_args()
@@ -47,3 +58,16 @@ if __name__ == "__main__":
         parallel=args.parallel,
         num_workers=args.parallel_workers
     )
+
+    if not args.skip_analysis:
+        analysis_outputs = generate_repair_analysis_artifacts(
+            fixes_csv=args.fixes_csv,
+            outcomes_csv=args.outcomes_csv,
+            diagnostics_csv=args.output_csv,
+            analysis_dir=args.analysis_dir,
+            problems_csv=args.problems_dataset,
+            report_title=f"TFRepair Analysis for {os.path.basename(args.fixes_csv)}",
+        )
+        print("Analysis artifacts:")
+        for name, path in analysis_outputs.items():
+            print(f"  {name}: {path}")

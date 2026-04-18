@@ -1,0 +1,24 @@
+original_summary,repairs_attempted,unique_problems,fixed_repairs,strict_fixed_repairs,fix_rate,strict_fix_rate
+Unsupported argument,592,37,431,346,0.7280405405405406,0.5844594594594594
+Argument is deprecated,480,30,239,187,0.4979166666666667,0.38958333333333334
+Deprecated Resource,416,26,253,36,0.6081730769230769,0.08653846153846154
+Deprecated attribute,368,23,36,11,0.09782608695652174,0.029891304347826088
+Reference to undeclared input variable,352,22,32,25,0.09090909090909091,0.07102272727272728
+Quoted references are deprecated,320,20,219,197,0.684375,0.615625
+Reference to undeclared resource,224,14,91,62,0.40625,0.2767857142857143
+Unsupported block type,224,14,119,62,0.53125,0.2767857142857143
+Invalid index,192,12,19,19,0.09895833333333333,0.09895833333333333
+Missing required argument,112,7,90,70,0.8035714285714286,0.625
+Unsupported attribute,112,7,80,59,0.7142857142857143,0.5267857142857143
+Missing resource instance key,80,5,75,58,0.9375,0.725
+Incorrect attribute value type,64,4,32,11,0.5,0.171875
+Reference to undeclared local value,48,3,23,5,0.4791666666666667,0.10416666666666667
+Invalid backend configuration,32,2,31,30,0.96875,0.9375
+Attribute Deprecated,32,2,32,16,1.0,0.5
+Invalid Attribute Combination,32,2,16,16,0.5,0.5
+Invalid Configuration for Read-Only Attribute,32,2,11,6,0.34375,0.1875
+"Reference to ""count"" in non-counted context",32,2,3,3,0.09375,0.09375
+Cannot index a set value,16,1,12,12,0.75,0.75
+Deprecated Parameter,16,1,16,8,1.0,0.5
+Deprecated,16,1,16,0,1.0,0.0
+Error in function call,16,1,14,0,0.875,0.0

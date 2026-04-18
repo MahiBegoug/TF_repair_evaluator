@@ -18,6 +18,32 @@ To run the evaluation, use the `main.py` script.
 python main.py --fixes-csv llms_fixes_results/fullfile_llm_repairs.csv --output-csv repair_eval_diagnostics.csv --clones-dir ../TFReproducer/clones
 ```
 
+By default, `main.py` now also generates an iteration-aware analysis bundle under the root component directory `repair_analyzer/generated/`. That bundle includes:
+- `iteration_summary.csv`
+- `fixed_types_overall.csv` and `fixed_types_by_iteration.csv`
+- `introduced_types_overall.csv` and `introduced_types_by_iteration.csv`
+- `type_transitions.csv`
+- `repair_analysis_report.html`
+- paper figures such as `top_fixed_types.pdf`, `top_introduced_types.pdf`, and `summary_resolution_radar.pdf`
+
+You can control this with:
+- `--analysis-dir <dir>` to choose the output directory
+- `--skip-analysis` to disable the analysis stage
+
+## Repair Analyzer Component
+
+The repair analyzer is now organized as an independent root-level component:
+
+- `repair_analyzer/repair_analysis.py`: analyzer implementation and CLI
+- `repair_analyzer/generated/`: generated CSV summaries, HTML reports, and figures
+- `repair_analyzer/README.md`: component-specific usage notes
+
+You can run it directly with:
+
+```bash
+python -m repair_analyzer.repair_analysis --fixes-csv <fixes.csv> --outcomes-csv <outcomes.csv>
+```
+
 ## Output
 
 The script produces a CSV file (specified by `--output-csv`) containing any diagnostics found after applying the fixes. If the repair is successful, the file will contain headers but no diagnostic rows for that file.
@@ -102,8 +128,9 @@ python evaluation/evaluate_all_models.py
 This script will:
 1.  **Generate Data** (Optional): If `generate_synthetic_data` is true, it generates synthetic fix files.
 2.  **Apply & Validate**: For each model's fix file, it applies the fixes and runs `terraform validate`.
-3.  **Calculate Metrics**: It computes `pass@k` scores for each model.
-4.  **Save Results**:
+3.  **Analyze Repair Behavior**: It generates iteration-aware summaries of what each model fixed, what new diagnostics it introduced, and an HTML dashboard with figures.
+4.  **Calculate Metrics**: It computes `pass@k` scores for each model.
+5.  **Save Results**:
     - Individual results: `evaluation/results/<model>_pass_at_k.csv`
     - Aggregated summary: `evaluation/results/summary_pass_at_k.csv`
 

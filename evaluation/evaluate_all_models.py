@@ -108,7 +108,8 @@ def main():
                 "--fixes-csv", csv_file,
                 "--output-csv", results_csv,
                 "--outcomes-csv", outcomes_csv,
-                "--clones-dir", clones_dir
+                "--clones-dir", clones_dir,
+                "--problems-dataset", problems_csv,
             ]
             
             print(f"Running: {' '.join(cmd)}")
