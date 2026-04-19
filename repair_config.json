@@ -1,9 +1,16 @@
 {
-    "problems_dataset": "problems/problems.csv",
+    "problems_dataset": "problems/benchmark_template_dedup_deterministic.csv",
     "responses": {
         "input_dir": "llm_responses",
         "models": [
-            "CodeLlama_34b_Instruct_hf_docs_snippet_marked_code_only_xml.csv"
+            "CodeLlama_34b_Instruct_hf_docs_snippet_marked_code_only_xml.csv",
+            "CodeLlama_34b_Instruct_hf_snippet_marked_code_only_xml.csv",
+            "Codestral_22B_v0.1_docs_snippet_marked_code_only_xml.csv",
+            "Codestral_22B_v0.1_snippet_marked_code_only_xml.csv",
+            "deepseek_coder_33b_instruct_docs_snippet_marked_code_only_xml.csv",
+            "deepseek_coder_33b_instruct_snippet_marked_code_only_xml.csv",
+            "gpt_oss_20b_docs_snippet_marked_code_only_xml.csv",
+            "gpt_oss_20b_snippet_marked_code_only_xml.csv"
         ]
     },
     "output_dir": "llms_fixes_results",
