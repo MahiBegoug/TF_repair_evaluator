@@ -1,6 +1,7 @@
 import subprocess
 import json
 
+
 class TerraformValidator:
     """
     Runs terraform validate -json only.
@@ -8,22 +9,36 @@ class TerraformValidator:
     """
 
     @staticmethod
-    def validate(tf_dir: str) -> dict:
+    def validate(tf_dir: str, timeout_seconds: int | None = None) -> dict:
         print(f"[INFO] Validating module: {tf_dir}")
 
         result = {
             "path": tf_dir,
             "validate_success": False,
             "diagnostics": [],
-            "validate_json": None
+            "validate_json": None,
+            "timed_out": False,
         }
 
-        proc = subprocess.run(
-            ["terraform", "validate", "-no-color", "-json"],
-            cwd=tf_dir,
-            capture_output=True,
-            text=True
-        )
+        try:
+            proc = subprocess.run(
+                ["terraform", "validate", "-no-color", "-json"],
+                cwd=tf_dir,
+                capture_output=True,
+                text=True,
+                timeout=timeout_seconds,
+            )
+        except subprocess.TimeoutExpired as exc:
+            result["timed_out"] = True
+            print(f"[ERROR] terraform validate timed out after {timeout_seconds}s in {tf_dir}")
+            if exc.stdout:
+                try:
+                    data = json.loads(exc.stdout)
+                    result["validate_json"] = data
+                    result["diagnostics"] = data.get("diagnostics", [])
+                except json.JSONDecodeError:
+                    pass
+            return result
 
         result["validate_success"] = (proc.returncode == 0)
 

@@ -130,6 +130,7 @@ class ParallelRepairEvaluator:
             "outcomes_csv": self.parent.outcomes_csv,
             "problems_dataset": self.parent.problems_dataset_path,
             "debug_matching": self.parent.debug_matching,
+            "validation_timeout_seconds": self.parent.validation_timeout_seconds,
         }
 
         tasks_by_module = {}  # norm_module_dir -> [task_data]

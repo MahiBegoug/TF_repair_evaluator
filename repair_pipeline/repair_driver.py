@@ -16,7 +16,7 @@ class RepairEvaluator:
 
     def __init__(self, output_csv="repair_eval_diagnostics.csv", outcomes_csv="repair_outcomes.csv",
                  clones_root="clones", repair_mode="auto", problems_dataset=None, clear_existing=False,
-                 debug_matching: bool | None = None):
+                 debug_matching: bool | None = None, validation_timeout_seconds: int | None = None):
         """
         This CSV will contain the diagnostics AFTER each LLM repair.
         And will follow the EXACT SAME format as DiagnosticsWriter.
@@ -33,12 +33,17 @@ class RepairEvaluator:
         self.clones_root = clones_root
         self.repair_mode = repair_mode
         self.debug_matching = debug_matching
+        self.validation_timeout_seconds = validation_timeout_seconds
         self.problems_dataset_path = problems_dataset  # Save path for parallel workers
         self.problems = pd.read_csv(problems_dataset) if problems_dataset and os.path.exists(problems_dataset) else None
         self.error_matcher = ErrorMatchingService(line_tolerance=3)
         self.file_resolver = FileCoordinateResolver(clones_root=clones_root, problems_dataset=self.problems, debug_matching=debug_matching)
         self.metrics_calculator = MetricsCalculator(clones_root=clones_root, error_matcher=self.error_matcher, problems_dataset=self.problems, debug_matching=debug_matching)
-        self.validation_service = ValidationService(clones_root=clones_root, output_csv=output_csv)
+        self.validation_service = ValidationService(
+            clones_root=clones_root,
+            output_csv=output_csv,
+            validation_timeout_seconds=validation_timeout_seconds,
+        )
         self.error_categorizer = ErrorCategorizer(clones_root=clones_root, problems_dataset=self.problems, output_csv=output_csv)
 
         # Clear existing CSV files if requested (fresh start)
@@ -222,54 +227,53 @@ class RepairEvaluator:
             # Caching is handled internally by ErrorCategorizer
             baseline_errors = self._get_baseline_errors(original_file, project)
 
-            backup_path = FixApplier.apply_fix(
-                original_file,
-                fixed_file_content,
-                start_line=start_line,
-                end_line=end_line
-            )
+            backup_path = None
+            try:
+                backup_path = FixApplier.apply_fix(
+                    original_file,
+                    fixed_file_content,
+                    start_line=start_line,
+                    end_line=end_line
+                )
 
-            # Apply fix, validate, and extract diagnostics (with baseline for categorization)
-            extracted_rows = self._apply_and_validate(
-                original_file, project, fixed_file_content, 
-                start_line, end_line, row.get("iteration_id"),
-                baseline_errors=baseline_errors,  # Pass baseline for categorization
-                original_problem_oid=row.get("oid"),  # Link new errors to original problem (location oid)
-                original_problem_specific_oid=input_specific_oid,
-            )
+                # Apply fix, validate, and extract diagnostics (with baseline for categorization)
+                extracted_rows = self._apply_and_validate(
+                    original_file, project, fixed_file_content,
+                    start_line, end_line, row.get("iteration_id"),
+                    baseline_errors=baseline_errors,  # Pass baseline for categorization
+                    original_problem_oid=row.get("oid"),  # Link new errors to original problem (location oid)
+                    original_problem_specific_oid=input_specific_oid,
+                )
 
-            # Evaluate if error was resolved
-            resolution_metrics = self._evaluate_resolution_metrics(
-                row, extracted_rows, start_line, end_line, fixed_file_content
-            )
+                # Evaluate if error was resolved
+                resolution_metrics = self._evaluate_resolution_metrics(
+                    row, extracted_rows, start_line, end_line, fixed_file_content
+                )
 
-            # Calculate error counts with categorization and block scoping.
-            #
-            # IMPORTANT: The LLM response CSV's `oid` often does NOT match the benchmark problems `oid`.
-            # Resolution evaluation can match via computed specific_oid and return a benchmark `matched_oid`.
-            # Block-scoped metrics must use that benchmark OID; otherwise block_* metrics remain all zeros.
-            target_oid = resolution_metrics.get("matched_oid") or row.get("oid")
-            error_counts = self._calculate_error_metrics(
-                extracted_rows,
-                original_file,
-                baseline_errors,
-                target_oid=target_oid,
-            )
-            print(f'[Metrics] Total: {error_counts["total"]}, Original: {error_counts["original"]}, '
-                  f'New to Dataset: {error_counts["new_to_dataset"]}, '
-                  f'Introduced This Iteration: {error_counts["introduced_this_iteration"]}, File: {error_counts["in_file"]}')
+                # IMPORTANT: Block-scoped metrics must use the benchmark OID when available.
+                target_oid = resolution_metrics.get("matched_oid") or row.get("oid")
+                error_counts = self._calculate_error_metrics(
+                    extracted_rows,
+                    original_file,
+                    baseline_errors,
+                    target_oid=target_oid,
+                )
+                print(f'[Metrics] Total: {error_counts["total"]}, Original: {error_counts["original"]}, '
+                      f'New to Dataset: {error_counts["new_to_dataset"]}, '
+                      f'Introduced This Iteration: {error_counts["introduced_this_iteration"]}, File: {error_counts["in_file"]}')
 
-            # Create and save outcome row
-            outcome_row = self._create_outcome_row(
-                row, original_file, resolution_metrics, error_counts
-            )
-            pd.DataFrame([outcome_row], columns=self.outcomes_columns).to_csv(
-                self.outcomes_csv,
-                mode="a",
-                header=False,
-                index=False,
-            )
-
-            # Restore original file
-            FixApplier.restore_original(original_file, backup_path)
+                outcome_row = self._create_outcome_row(
+                    row, original_file, resolution_metrics, error_counts
+                )
+                pd.DataFrame([outcome_row], columns=self.outcomes_columns).to_csv(
+                    self.outcomes_csv,
+                    mode="a",
+                    header=False,
+                    index=False,
+                )
+            except Exception as e:
+                print(f"[REJECT] Failed task for OID {row.get('oid')}: {e}")
+            finally:
+                if backup_path:
+                    FixApplier.restore_original(original_file, backup_path)
 

@@ -1,95 +1,74 @@
+import os
+import tempfile
 import unittest
-from unittest.mock import patch, mock_open
+
 from repair_pipeline.apply_fix import FixApplier
 
 
 class TestFixApplier(unittest.TestCase):
 
-    @patch('os.path.exists')
-    @patch('os.path.abspath')
-    @patch('shutil.copyfile')
-    def test_apply_fix_success(self, mock_copyfile, mock_abspath, mock_exists):
-        mock_abspath.side_effect = lambda x: x
-        mock_exists.return_value = True
+    def test_apply_fix_full_replacement_and_restore(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            module_dir = os.path.join(tmpdir, "module")
+            os.makedirs(module_dir, exist_ok=True)
+            original_file = os.path.join(module_dir, "main.tf")
 
-        original_file = "test.tf"
-        fixed_content = "resource \"aws_instance\" \"test\" {}"
+            with open(original_file, "w", encoding="utf-8") as f:
+                f.write('resource "aws_instance" "old" {}\n')
 
-        with patch("builtins.open", mock_open()) as mock_file:
-            backup_path = FixApplier.apply_fix(original_file, fixed_content)
+            backup_path = FixApplier.apply_fix(original_file, 'resource "aws_instance" "new" {}')
 
-            self.assertEqual(backup_path, "test.tf.bak")
-            mock_copyfile.assert_called_once_with("test.tf", "test.tf.bak")
-            mock_file.assert_called_once_with("test.tf", "w", encoding="utf-8")
-            # Full file replacement checks
-            mock_file().write.assert_called_once_with(fixed_content)
+            self.assertTrue(os.path.exists(original_file))
+            self.assertTrue(os.path.exists(backup_path))
+            self.assertNotEqual(os.path.dirname(backup_path), module_dir)
 
-    @patch('os.path.exists')
-    @patch('os.path.abspath')
-    @patch('shutil.copyfile')
-    def test_apply_fix_partial(self, mock_copyfile, mock_abspath, mock_exists):
-        mock_abspath.side_effect = lambda x: x
-        mock_exists.return_value = True
+            with open(original_file, "r", encoding="utf-8") as f:
+                self.assertEqual(f.read(), 'resource "aws_instance" "new" {}\n')
 
-        original_file = "test.tf"
-        # Original content has 5 lines
-        original_content = "line1\nline2\nline3\nline4\nline5"
-        
-        # We replace lines 2-4 (indices 1-4) with "new_line\n"
-        # start_line=2, end_line=4
-        # Expected result: "line1\n" + "new_line\n" + "line5"
-        
-        fixed_block = "new_line" 
+            FixApplier.restore_original(original_file, backup_path)
 
-        with patch("builtins.open", mock_open(read_data=original_content)) as mock_file:
-            # mock_open doesn't implement readlines well for iteration usually, but readlines() is standard.
-            # We need to manually set return value of readlines if we want robust test or trust mock_open implementation in this environment.
-            # Standard mock_open doesn't automatically split read_data on readlines call in older python versions, let's explicit it.
-            mock_file.return_value.readlines.return_value = ["line1\n", "line2\n", "line3\n", "line4\n", "line5"]
+            with open(original_file, "r", encoding="utf-8") as f:
+                self.assertEqual(f.read(), 'resource "aws_instance" "old" {}\n')
+            self.assertFalse(os.path.exists(backup_path))
 
-            backup_path = FixApplier.apply_fix(original_file, fixed_block, start_line=2, end_line=4)
+    def test_apply_fix_partial_replacement(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            module_dir = os.path.join(tmpdir, "module")
+            os.makedirs(module_dir, exist_ok=True)
+            original_file = os.path.join(module_dir, "main.tf")
 
-            mock_file.assert_called_with("test.tf", "w", encoding="utf-8")
-            
-            # Reconstruct expected write
-            # lines[:1] -> ["line1\n"]
-            # lines[4:] -> ["line5"]
-            # "line1\n" + "new_line\n" + "line5"
-            expected_content = "line1\nnew_line\nline5"
-            
-            mock_file().write.assert_called_once_with(expected_content)
+            with open(original_file, "w", encoding="utf-8") as f:
+                f.write("line1\nline2\nline3\nline4\nline5")
 
-    @patch('os.path.exists')
-    @patch('os.path.abspath')
-    def test_apply_fix_file_not_found(self, mock_abspath, mock_exists):
-        mock_abspath.side_effect = lambda x: x
-        mock_exists.return_value = False
+            backup_path = FixApplier.apply_fix(original_file, "new_line", start_line=2, end_line=4)
 
+            with open(original_file, "r", encoding="utf-8") as f:
+                self.assertEqual(f.read(), "line1\nnew_line\nline5")
+
+            FixApplier.restore_original(original_file, backup_path)
+
+    def test_apply_fix_file_not_found(self):
         with self.assertRaises(FileNotFoundError):
             FixApplier.apply_fix("missing.tf", "content")
 
-    @patch('os.path.exists')
-    @patch('os.path.abspath')
-    @patch('shutil.move')
-    def test_restore_original_success(self, mock_move, mock_abspath, mock_exists):
-        mock_abspath.side_effect = lambda x: x
-        mock_exists.return_value = True
+    def test_restore_pending_backups_restores_registered_file(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            module_dir = os.path.join(tmpdir, "module")
+            os.makedirs(module_dir, exist_ok=True)
+            original_file = os.path.join(module_dir, "main.tf")
 
-        FixApplier.restore_original("test.tf", "test.tf.bak")
+            with open(original_file, "w", encoding="utf-8") as f:
+                f.write('resource "aws_instance" "old" {}\n')
 
-        mock_move.assert_called_once_with("test.tf.bak", "test.tf")
+            backup_path = FixApplier.apply_fix(original_file, 'resource "aws_instance" "new" {}')
+            restored = FixApplier.restore_pending_backups(reason="test cleanup")
 
-    @patch('os.path.exists')
-    @patch('os.path.abspath')
-    @patch('shutil.move')
-    def test_restore_original_no_backup(self, mock_move, mock_abspath, mock_exists):
-        mock_abspath.side_effect = lambda x: x
-        mock_exists.return_value = False
+            self.assertEqual(restored, 1)
+            self.assertFalse(os.path.exists(backup_path))
 
-        FixApplier.restore_original("test.tf", "test.tf.bak")
-
-        mock_move.assert_not_called()
+            with open(original_file, "r", encoding="utf-8") as f:
+                self.assertEqual(f.read(), 'resource "aws_instance" "old" {}\n')
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

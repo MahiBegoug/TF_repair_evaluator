@@ -12,7 +12,7 @@ from terraform_validation.writer import DiagnosticsWriter
 class ValidationService:
     """Executes Terraform validation and extracts diagnostics."""
     
-    def __init__(self, clones_root="clones", output_csv=None):
+    def __init__(self, clones_root="clones", output_csv=None, validation_timeout_seconds=None):
         """
         Initialize validation service.
         
@@ -22,6 +22,7 @@ class ValidationService:
         """
         self.clones_root = clones_root
         self.output_csv = output_csv
+        self.validation_timeout_seconds = validation_timeout_seconds
     
     def validate_and_extract(self, original_file, project, iteration_id=None, original_problem_oid=None, write_to_csv=True):
         """
@@ -46,7 +47,10 @@ class ValidationService:
         
         # Run terraform validate
         print(f'[VALIDATE] Validating directory: {module_dir}')
-        validation_result = TerraformValidator.validate(module_dir)
+        validation_result = TerraformValidator.validate(
+            module_dir,
+            timeout_seconds=self.validation_timeout_seconds,
+        )
         
         # Debug: Check how many diagnostics terraform validate returned
         raw_diagnostics = validation_result.get("diagnostics", [])

@@ -1,6 +1,7 @@
 import argparse
 import os
 from repair_analyzer.repair_analysis import generate_repair_analysis_artifacts
+from repair_pipeline.clone_lock import clone_tree_lock
 from repair_pipeline.repair_driver import RepairEvaluator
 
 if __name__ == "__main__":
@@ -33,6 +34,12 @@ if __name__ == "__main__":
         action="store_true",
         help="Skip generation of iteration-aware repair analysis artifacts"
     )
+    parser.add_argument(
+        "--validation-timeout-seconds",
+        type=int,
+        default=None,
+        help="Optional timeout for each terraform validate invocation"
+    )
     
     args = parser.parse_args()
     
@@ -43,21 +50,23 @@ if __name__ == "__main__":
     print(f"Reading fixes from: {args.fixes_csv}")
     print(f"Writing results to: {args.output_csv}")
     
-    evaluator = RepairEvaluator(
-        output_csv=args.output_csv,
-        outcomes_csv=args.outcomes_csv,
-        clones_root=clones_dir,
-        repair_mode=args.repair_mode,
-        problems_dataset=args.problems_dataset,
-        clear_existing=args.clear_existing,
-        debug_matching=args.debug_matching
-    )
-    
-    evaluator.evaluate_repairs(
-        llm_fixes_csv=args.fixes_csv,
-        parallel=args.parallel,
-        num_workers=args.parallel_workers
-    )
+    with clone_tree_lock(clones_dir):
+        evaluator = RepairEvaluator(
+            output_csv=args.output_csv,
+            outcomes_csv=args.outcomes_csv,
+            clones_root=clones_dir,
+            repair_mode=args.repair_mode,
+            problems_dataset=args.problems_dataset,
+            clear_existing=args.clear_existing,
+            debug_matching=args.debug_matching,
+            validation_timeout_seconds=args.validation_timeout_seconds,
+        )
+        
+        evaluator.evaluate_repairs(
+            llm_fixes_csv=args.fixes_csv,
+            parallel=args.parallel,
+            num_workers=args.parallel_workers
+        )
 
     if not args.skip_analysis:
         analysis_outputs = generate_repair_analysis_artifacts(

@@ -40,6 +40,7 @@ def main():
     use_parallel = config.get("use_parallel", False)
     parallel_workers = config.get("parallel_workers", 4)
     config_debug_matching = bool(config.get("debug_matching", False))
+    validation_timeout_seconds = config.get("validation_timeout_seconds", None)
 
     if not os.path.exists(input_dir):
         print(f"Error: Input directory '{input_dir}' does not exist.")
@@ -96,6 +97,9 @@ def main():
         if use_parallel:
             cmd.append("--parallel")
             cmd.extend(["--parallel-workers", str(parallel_workers)])
+
+        if validation_timeout_seconds is not None:
+            cmd.extend(["--validation-timeout-seconds", str(validation_timeout_seconds)])
 
         if args.clear_existing:
             cmd.append("--clear-existing")
