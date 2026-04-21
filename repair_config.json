@@ -13,7 +13,7 @@
             "gpt_oss_20b_snippet_marked_code_only_xml.csv"
         ]
     },
-    "output_dir": "llms_fixes_results",
+    "output_dir": "llms_fixes_results/eval_1",
     "clones_dir": "../TF_validation_reproducer/clones",
     "repair_mode": "block",
     "use_parallel": true,
