@@ -183,6 +183,10 @@ class RepairEvaluator:
     def _create_outcome_row(self, row, original_file, resolution_metrics, error_counts):
         """Create outcome row for CSV - delegates to metrics_calculator."""
         return self.metrics_calculator.create_outcome_row(row, original_file, resolution_metrics, error_counts)
+
+    def _create_skipped_outcome_row(self, row, original_file, project, reason="no usable fix content"):
+        """Create explicit failed outcome row for skipped/no-op attempts."""
+        return self.metrics_calculator.create_skipped_outcome_row(row, original_file, project, reason=reason)
     
     def evaluate_repairs(self, llm_fixes_csv: str, parallel=False, num_workers=4):
         """
@@ -220,7 +224,18 @@ class RepairEvaluator:
             fixed_file_content, start_line, end_line = self._get_fix_content_and_coordinates(row)
 
             if fixed_file_content is None or pd.isna(fixed_file_content):
-                print(f"Skipping row, no fixed content found for: {original_file} (Mode: {self.repair_mode})")
+                outcome_row = self._create_skipped_outcome_row(
+                    row,
+                    original_file,
+                    project,
+                    reason=f"no fixed content found (mode={self.repair_mode})",
+                )
+                pd.DataFrame([outcome_row], columns=self.outcomes_columns).to_csv(
+                    self.outcomes_csv,
+                    mode="a",
+                    header=False,
+                    index=False,
+                )
                 continue
             
             # BASELINE: Capture errors from original file

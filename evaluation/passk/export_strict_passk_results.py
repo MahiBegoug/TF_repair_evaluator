@@ -60,7 +60,7 @@ def main() -> None:
     parser.add_argument("--clear-results-files", action="store_true", help="Delete top-level files in results-dir before exporting")
     args = parser.parse_args()
 
-    root = Path(__file__).resolve().parents[1]
+    root = Path(__file__).resolve().parents[2]
     problems_csv = root / args.problems_csv
     repairs_dir = root / args.repairs_dir
     results_dir = root / args.results_dir

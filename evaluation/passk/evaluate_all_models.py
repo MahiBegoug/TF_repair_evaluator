@@ -5,7 +5,7 @@ import argparse
 
 def main():
     parser = argparse.ArgumentParser(description="Evaluate all LLM fixes in llms_fixes_results")
-    parser.add_argument("--config", default="evaluation/evaluation_config.json", help="Path to configuration file")
+    parser.add_argument("--config", default="evaluation/config/evaluation_config.json", help="Path to configuration file")
     args = parser.parse_args()
 
     import json
@@ -39,7 +39,7 @@ def main():
     if generate_synthetic:
         print("\n=== Generating Synthetic Data ===")
         cmd_gen = [
-            "python", "evaluation/generate_synthetic_outcomes.py",
+            "python", "evaluation/passk/generate_synthetic_outcomes.py",
             "--output-dir", fixes_dir
         ]
         print(f"Running: {' '.join(cmd_gen)}")
@@ -123,7 +123,7 @@ def main():
         # 3. Calculate pass@k
         pass_at_k_csv = os.path.join(results_dir, f"{model_name}_pass_at_k.csv")
         cmd_calc = [
-            "python", "evaluation/calculate_corrected.py",
+            "python", "evaluation/passk/calculate_corrected.py",
             "--problems-csv", problems_csv,
             "--fixes-csv", outcomes_csv,
             "--k-values", *[str(k) for k in k_values],

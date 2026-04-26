@@ -1,102 +1,76 @@
-# Pass@k Evaluation
+# Evaluation
 
-This directory contains scripts to evaluate the performance of LLM repairs using the **pass@k** metric.
+This directory is organized by evaluation task. Run scripts from the project root
+(`C:\Users\Admin\PycharmProjects\TFRepair`) unless a script says otherwise.
 
-## How it Works
+## Layout
 
-**pass@k** measures the probability that *at least one* out of $k$ generated samples is correct (or in our case, a "plausible fix" that passes `terraform validate`).
+- `passk/`: pass@k estimators, strict pass@k export, synthetic outcome generation, and the end-to-end evaluator.
+- `prompt_context/`: prompt-size, token/character, and docs-vs-snippet analyses.
+- `statistics/`: paired model/significance tests and compatibility analysis wrappers.
+- `tables/`: LaTeX/table/figure helper generators.
+- `config/`: evaluation configuration files.
+- `data/`: small input/output CSVs that are not generated result bundles.
+- `results/`: generated result CSVs, reports, figures, and test outputs.
 
-Instead of just checking if the "best" sample works, we generate $n$ samples for each problem and estimate the probability that a user would find a working solution within their first $k$ attempts.
+## Common Commands
 
-We use the **unbiased estimator** proposed by [Chen et al. (2021)](https://arxiv.org/abs/2107.03374):
+Generate synthetic outcomes:
 
+```bash
+python evaluation/passk/generate_synthetic_outcomes.py
 ```
+
+Calculate pass@k:
+
+```bash
+python evaluation/passk/calculate_pass_at_k.py --problems-csv evaluation/data/problems.csv --fixes-csv evaluation/data/gemini_synthetic_fixes.csv --k-values 1 5 10
+```
+
+Evaluate all configured models:
+
+```bash
+python evaluation/passk/evaluate_all_models.py --config evaluation/config/evaluation_config.json
+```
+
+Export block/module strict pass@k files:
+
+```bash
+python evaluation/passk/export_strict_passk_results.py
+```
+
+Run the paired docs-vs-snippet block-strict test:
+
+```bash
+python evaluation/prompt_context/analyze_docs_vs_snippet_block_strict_pairs.py
+```
+
+Run the rigorous iteration-1 docs-vs-snippet analysis with corrected per-model tests:
+
+```bash
+python evaluation/prompt_context/analyze_docs_vs_snippet_block_strict_rigorous.py
+```
+
+Run prompt-character analyses:
+
+```bash
+python evaluation/prompt_context/analyze_docs_prompt_chars_block_strict_iter1.py
+python evaluation/prompt_context/analyze_docs_prompt_chars_block_strict_by_iteration.py
+```
+
+## Main Result Locations
+
+- `results/tests/docs_vs_snippet_block_strict_paired/`: realistic paired docs-vs-snippet McNemar tests.
+- `results/tests/docs_prompt_chars_block_strict_iter1/`: iteration-1 prompt-char correlation tests.
+- `results/tests/docs_prompt_chars_block_strict_by_iteration/`: per-iteration prompt-char correlation tests.
+- `results/eval_1_completed_from_prior/`: completed eval-1 strict pass@k tables and figures.
+
+## Pass@k Definition
+
+For `n` generated samples and `c` correct samples:
+
+```text
 pass@k = 1 - E [ combination(n-c, k) / combination(n, k) ]
 ```
 
-Where:
-- `n`: Total number of samples generated per problem.
-- `c`: Number of plausible fixes found among the `n` samples.
-- `k`: The budget of attempts (e.g., k=1, 5, 10).
-
-### Synthetic Data Format
-
-The evaluation uses two CSV files:
-
-1.  **Problems CSV** (`problems.csv`): Defines the problems to be evaluated.
-    - `oid`: Unique identifier for the problem.
-    - `filename`: The file being repaired.
-
-2.  **Fixes CSV** (`<model>_fixes.csv`): Contains the repair outcomes for a specific model.
-    - `oid`: Unique identifier for the problem (must match `problems.csv`).
-    - `iteration_id`: The attempt number.
-    - `plausible_fix`: Boolean indicating if the fix was syntactically valid.
-
-### Usage
-
-### 1. Generate Synthetic Data (Testing)
-To test the metric, you can generate synthetic data:
-
-```bash
-python evaluation/generate_synthetic_outcomes.py
-```
-This creates `evaluation/data/problems.csv` and separate fix files like `evaluation/data/gemini_synthetic_fixes.csv`.
-
-### 2. Calculate pass@k
-Run the calculation script specifying the problems file and the fixes file for a specific model:
-
-```bash
-python evaluation/calculate_pass_at_k.py --problems-csv evaluation/data/problems.csv --fixes-csv evaluation/data/gemini_synthetic_fixes.csv --k-values 1 5 10
-```
-
-### Example Output
-
-```text
-      LLM  pass@1    pass@5   pass@10
-0  gemini   0.770  0.999678  1.000000
-```
-
-- **pass@10**: Probability that at least one correct solution is found within 10 attempts.
-
-### 3. Evaluate Real LLM Fixes (End-to-End)
-
-To evaluate all LLM fixes located in the `llms_fixes_results` directory, you can use the `evaluate_all_models.py` script.
-
-#### Configuration
-
-The evaluation is controlled by `evaluation_config.json`. You can modify this file to change directories or `k` values:
-
-```json
-{
-    "fixes_dir": "llms_fixes_results",
-    "output_dir": "evaluation/data",
-    "clones_dir": "../TFReproducer/clones",
-    "k_values": [1, 5, 10],
-    "models": ["gemini", "chatgpt4.1"],
-    "generate_synthetic_data": false,
-    "data_type": "all"
-}
-```
-
-- **models**: List of model names to evaluate (substring match). Leave empty `[]` to evaluate all.
-- **generate_synthetic_data**: If `true`, generates synthetic data into `fixes_dir` before evaluation.
-- **data_type**: Filter for input files:
-    - `"all"`: Process all CSVs.
-    - `"synthetic"`: Process only files with "synthetic" in the name.
-    - `"real"`: Process only files WITHOUT "synthetic" in the name.
-
-#### Running the Evaluation
-
-Simply run the script:
-
-```bash
-python evaluate_all_models.py
-```
-
-This script will:
-1.  Read settings from `evaluation_config.json`.
-2.  Iterate through each CSV file in `fixes_dir`.
-3.  Run `main.py` to apply fixes and validate them (if outcomes are not pre-computed).
-4.  Generate outcome files in `output_dir`.
-5.  Calculate `pass@k` metrics for each model and save them to `output_dir`.
-6.  Save an aggregated summary to `output_dir/summary_pass_at_k.csv`.
+This is the unbiased estimator from Chen et al. (2021).

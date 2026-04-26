@@ -67,6 +67,106 @@ class MetricsCalculator:
                 f"by_specific_oid={len(self._problems_by_specific_oid)}, by_oid={len(self._problems_by_oid)}"
             )
 
+    def _baseline_scope_rows(self, original_file, project=None):
+        """Return the baseline problems rows for the module/file scope of this repair."""
+        if self.problems is None or self.problems.empty:
+            return None
+
+        has_project_col = 'project_name' in self.problems.columns
+        basename = os.path.basename(original_file)
+        norm_original = str(original_file).replace("\\", "/")
+
+        def _full_path_match(prob_filename):
+            rel = str(prob_filename).replace("\\", "/").lstrip("/")
+            return norm_original.endswith(rel)
+
+        if project and has_project_col:
+            project_mask = self.problems['project_name'].astype(str) == str(project)
+            scoped = self.problems[project_mask]
+            if scoped.empty:
+                scoped = self.problems[self.problems['filename'].apply(_full_path_match)]
+        else:
+            scoped = self.problems[self.problems['filename'].apply(_full_path_match)]
+            if scoped.empty:
+                scoped = self.problems[self.problems['filename'].str.contains(basename, na=False, regex=False)]
+        return scoped.copy()
+
+    def create_skipped_outcome_row(self, row, original_file, project=None, reason="no usable fix content"):
+        """
+        Create an explicit failed outcome row for cases we skip before validation
+        (e.g. empty/null fix content).
+        """
+        relative_filename = FileCoordinateResolver.normalize_path(original_file)
+        location_oid = row.get("oid", "")
+
+        scoped = self._baseline_scope_rows(original_file, project)
+        module_total = 0
+        file_errors = 0
+        module_original = 0
+        block_total = 0
+        block_original = 0
+        matched_oid = ""
+        matched_specific_oid = ""
+
+        if scoped is not None and not scoped.empty:
+            scoped = scoped.copy()
+            scoped["__norm_filename"] = scoped["filename"].apply(FileCoordinateResolver.normalize_path)
+            module_total = int(len(scoped))
+            module_original = module_total
+            file_errors = int((scoped["__norm_filename"] == relative_filename).sum())
+
+            p_row = None
+            target_spec_oid = str(row.get("specific_oid", "") or "").strip()
+            if target_spec_oid and target_spec_oid in self._problems_by_specific_oid:
+                p_row = self._problems_by_specific_oid[target_spec_oid]
+            elif str(location_oid).strip() in self._problems_by_oid:
+                p_row = self._problems_by_oid[str(location_oid).strip()]
+
+            if p_row is not None:
+                matched_oid = p_row.get("oid", "") or ""
+                matched_specific_oid = p_row.get("specific_oid", "") or ""
+                p_file = FileCoordinateResolver.normalize_path(p_row.get("filename", ""))
+                p_type = str(p_row.get("block_type", "")).strip()
+                p_idents = str(p_row.get("block_identifiers", "")).strip()
+                block_mask = (
+                    (scoped["__norm_filename"] == p_file)
+                    & (scoped["block_type"].fillna("").astype(str).str.strip() == p_type)
+                    & (scoped["block_identifiers"].fillna("").astype(str).str.strip() == p_idents)
+                )
+                block_total = int(block_mask.sum())
+                block_original = block_total
+
+        computed_spec_oid = ""
+        try:
+            from terraform_validation.extractor import DiagnosticsExtractor
+            computed_spec_oid = DiagnosticsExtractor.compute_specific_oid(row)
+        except Exception:
+            computed_spec_oid = ""
+
+        final_spec_oid = matched_specific_oid or row.get("specific_oid", "") or computed_spec_oid
+
+        print(f"[SKIP] Recording explicit failed outcome for {relative_filename}: {reason}")
+
+        return {
+            "oid": location_oid,
+            "benchmark_oid": matched_oid,
+            "specific_oid": final_spec_oid,
+            "iteration_id": row.get("iteration_id", ""),
+            "llm_name": row.get("llm_name", ""),
+            "filename": relative_filename,
+            "is_fixed": False,
+            "line_is_clean": False,
+            "line_specific_error_fixed": False,
+            "module_total_errors": module_total,
+            "file_errors": file_errors,
+            "module_errors": module_total,
+            "module_original_errors_remaining": module_original,
+            "module_fix_introduced_errors": 0,
+            "block_total_errors": block_total,
+            "block_original_errors_remaining": block_original,
+            "block_fix_introduced_errors": 0,
+        }
+
     
     def calculate_error_metrics(self, extracted_rows, original_file, baseline_errors=None, target_oid=None):
         """

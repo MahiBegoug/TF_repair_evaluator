@@ -15,3 +15,4 @@ llms_fixes_results_old_20260329_163857/
 story/
 scripts/finalize_test_set.py
 .tools
+scripts/

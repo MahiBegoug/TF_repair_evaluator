@@ -40,6 +40,26 @@ def process_module_repair_tasks(module_tasks, clones_root, repair_mode, evaluato
 
         backup_path = None
         try:
+            if fixed_file_content is None or pd.isna(fixed_file_content):
+                outcome_row = evaluator._create_skipped_outcome_row(
+                    row,
+                    original_file,
+                    project,
+                    reason=f"no fixed content found (mode={repair_mode})",
+                )
+                results.append(
+                    {
+                        "success": True,
+                        "outcome_row": outcome_row,
+                        "extracted_rows": [],
+                        "oid": oid,
+                        "original_problem_specific_oid": original_problem_specific_oid,
+                        "iteration": iteration_id,
+                        "module": os.path.dirname(original_file) if original_file else None,
+                    }
+                )
+                continue
+
             baseline_errors = evaluator._get_baseline_errors(original_file, project)
 
             backup_path = FixApplier.apply_fix(
@@ -142,9 +162,6 @@ class ParallelRepairEvaluator:
 
             original_file = self.parent._get_original_file_path(row["filename"])
             fixed_file_content, start_line, end_line = self.parent._get_fix_content_and_coordinates(row)
-
-            if fixed_file_content is None or pd.isna(fixed_file_content):
-                continue
 
             module_dir = os.path.normpath(os.path.dirname(original_file))
             tasks_by_module.setdefault(module_dir, []).append(

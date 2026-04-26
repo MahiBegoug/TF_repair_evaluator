@@ -20,6 +20,18 @@ def rank_biserial(x: np.ndarray, y: np.ndarray) -> float:
     return (pos_sum - neg_sum) / total
 
 
+def paired_probability_of_superiority(x: np.ndarray, y: np.ndarray) -> tuple[float, float, float, int, int, int]:
+    xa = np.asarray(x, dtype=float)
+    xb = np.asarray(y, dtype=float)
+    pos = int(np.sum(xa > xb))
+    neg = int(np.sum(xa < xb))
+    ties = int(np.sum(xa == xb))
+    n = len(xa)
+    if n == 0:
+        return 0.0, 0.0, 0.0, 0, 0, 0
+    return pos / n, neg / n, ties / n, pos, neg, ties
+
+
 def rank_biserial_magnitude(effect: float) -> str:
     a = abs(effect)
     if a < 0.10:
@@ -73,6 +85,7 @@ def run_family(results_dir: Path, suffix: str) -> pd.DataFrame:
             col_b = f"pass@{k}_b"
             xa = merged[col_a].to_numpy(dtype=float)
             xb = merged[col_b].to_numpy(dtype=float)
+            a_superiority, b_superiority, tie_rate, n_pos, n_neg, n_ties = paired_probability_of_superiority(xa, xb)
             if np.allclose(xa, xb):
                 stat = 0.0
                 p_value = 1.0
@@ -94,6 +107,12 @@ def run_family(results_dir: Path, suffix: str) -> pd.DataFrame:
                     "wilcoxon_p_value": p_value,
                     "rank_biserial": effect,
                     "rank_biserial_magnitude": rank_biserial_magnitude(effect),
+                    "a_strict_superiority": a_superiority,
+                    "b_strict_superiority": b_superiority,
+                    "tie_rate": tie_rate,
+                    "n_a_gt_b": n_pos,
+                    "n_b_gt_a": n_neg,
+                    "n_ties": n_ties,
                     "n_instances": len(merged),
                 }
             )
@@ -106,7 +125,7 @@ def main() -> None:
     parser.add_argument("--output-dir", default="evaluation/results/statistical_test")
     args = parser.parse_args()
 
-    root = Path(__file__).resolve().parents[1]
+    root = Path(__file__).resolve().parents[2]
     results_dir = root / args.results_dir
     output_dir = root / args.output_dir
     output_dir.mkdir(parents=True, exist_ok=True)
